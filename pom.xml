@@ -6,6 +6,10 @@
 	<artifactId>esther</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+	<properties>
+		<slf4jVersion>2.0.0-alpha1</slf4jVersion>
+	</properties>
+
 	<repositories>
 		<!-- Repo of the grph library -->
 		<repository>
@@ -47,20 +51,32 @@
 			<artifactId>guava</artifactId>
 			<version>23.6-jre</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4jVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4jVersion}</version>
+		</dependency>
+		
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
-		        <groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-compiler-plugin</artifactId>
-		        <configuration>
-		            <source>1.8</source>
-		            <target>1.8</target>
-		        </configuration>
-		    </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 
 		</plugins>
 	</build>
-	
+
 </project>

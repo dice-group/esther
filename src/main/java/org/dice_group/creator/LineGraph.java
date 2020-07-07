@@ -14,8 +14,11 @@ import org.dice_group.edges.UndirectedEdge;
 import org.dice_group.util.GraphUtils;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.WeightedPseudograph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LineGraph {
+	private static final Logger LOGGER = LoggerFactory.getLogger(LineGraph.class);
 
 	private Graph<Property, UndirectedEdge> graph;
 
