@@ -6,6 +6,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.edges.UndirectedEdge;
 import org.jgrapht.Graph;
+import org.jgrapht.graph.WeightedPseudograph;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,6 +16,8 @@ public class LineGraphTest {
 	private final String LABEL2 = "LABEL2";
 	private final String DUMMY_TARGET = "dummyTarget";
 	private final String DUMMY_SOURCE = "dummySource";
+	private final Property REL1 = ResourceFactory.createProperty("http://example.org/relation1");
+	private final Property REL2 = ResourceFactory.createProperty("http://example.org/relation2");
 	
 	@Test
 	public void testUndirectedEdges() {
@@ -35,8 +38,9 @@ public class LineGraphTest {
 		otherEdge3.setTarget(ResourceFactory.createProperty(DUMMY_SOURCE));
 		
 		Assert.assertTrue(edge.equals(otherEdge));
-		Assert.assertFalse(edge.equals(otherEdge2));
 		Assert.assertTrue(otherEdge2.equals(otherEdge3));
+		
+		Assert.assertFalse(edge.equals(otherEdge2));
 		Assert.assertFalse(otherEdge.equals(otherEdge3));
 	}
 	
@@ -46,11 +50,40 @@ public class LineGraphTest {
 		model.read("graph1.n3");
 		
 		LineGraph graph = new LineGraph(model);
-		
 		Graph<Property, UndirectedEdge> lineGraph = graph.getGraph();
-		for(UndirectedEdge edge : lineGraph.edgeSet())
-			System.out.println(edge + " \t " + lineGraph.getEdgeWeight(edge));
-		System.out.println();
+		
+		UndirectedEdge objEdge = new UndirectedEdge("OBJ");
+		objEdge.setSource(REL1);
+		objEdge.setTarget(REL1);
+		
+		UndirectedEdge mixEdge = new UndirectedEdge("MIXED");
+		mixEdge.setSource(REL1);
+		mixEdge.setTarget(REL2);
+		
+		UndirectedEdge subEdge = new UndirectedEdge("SUBJ");
+		subEdge.setSource(REL2);
+		subEdge.setTarget(REL1);
+		
+		UndirectedEdge selfSubEdge = new UndirectedEdge("SUBJ");
+		selfSubEdge.setSource(REL1);
+		selfSubEdge.setTarget(REL1);
+		
+		Graph<Property, UndirectedEdge> expected = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
+		expected.addVertex(REL1);
+		expected.addVertex(REL2);
+		
+		expected.addEdge(REL1, REL2, mixEdge);
+		expected.setEdgeWeight(mixEdge, 1);
+		expected.addEdge(REL1, REL1, objEdge);
+		expected.setEdgeWeight(objEdge, 1);
+		expected.addEdge(REL2, REL1, subEdge);
+		expected.setEdgeWeight(subEdge, 2);
+		expected.addEdge(REL1, REL1, selfSubEdge);
+		expected.setEdgeWeight(selfSubEdge, 1);
+		
+		Assert.assertEquals(expected.vertexSet(), lineGraph.vertexSet());
+		Assert.assertEquals(expected.edgeSet(), lineGraph.edgeSet());
+		
 	}
 
 }

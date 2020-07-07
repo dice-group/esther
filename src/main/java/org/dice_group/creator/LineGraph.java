@@ -1,6 +1,7 @@
 package org.dice_group.creator;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ public class LineGraph {
 	private final String[] types = { "SUBJ", "OBJ", "MIXED" };
 
 	public LineGraph() {
+		graph = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
 	}
 
 	public LineGraph(Model model) {
@@ -42,6 +44,17 @@ public class LineGraph {
 	}
 
 	private void addResultsToGraph(List<QuerySolution> solutions, String type) {
+		// removing the inverted statements (duplicates), there might be a better
+		// solution to this problem 
+		Iterator<QuerySolution> iter = solutions.iterator();
+		while (iter.hasNext()) {
+			QuerySolution curSol = iter.next();
+			if (solutions.stream()
+					.anyMatch(b -> b.get("n2").equals(curSol.get("q")) && b.get("q").equals(curSol.get("n2")))) {
+				iter.remove();
+			}
+		}
+
 		for (QuerySolution curSol : solutions) {
 			RDFNode p1 = curSol.get("p1");
 			RDFNode p2 = curSol.get("p2");
@@ -64,6 +77,10 @@ public class LineGraph {
 
 	public Graph<Property, UndirectedEdge> getGraph() {
 		return graph;
+	}
+
+	public void setGraph(Graph<Property, UndirectedEdge> graph) {
+		this.graph = graph;
 	}
 
 }

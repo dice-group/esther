@@ -3,7 +3,7 @@ package org.dice_group.edges;
 import org.apache.jena.rdf.model.Property;
 
 /**
- * Target and source nodes do not matter, as the equals has been overridden.
+ * Target and source nodes do not matter, as the hashcode/equals have been overridden.
  * 
  */
 public class UndirectedEdge {
@@ -81,7 +81,7 @@ public class UndirectedEdge {
 
 	@Override
 	public String toString() {
-		return type + " : " + this.getSource() + " - " + this.getTarget();
+		return type + "\t" + this.getSource() + " - " + this.getTarget();
 	}
 
 }
