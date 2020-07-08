@@ -11,9 +11,10 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.edges.UndirectedEdge;
+import org.dice_group.util.Constants;
 import org.dice_group.util.GraphUtils;
 import org.jgrapht.Graph;
-import org.jgrapht.graph.WeightedPseudograph;
+import org.jgrapht.graph.DirectedWeightedPseudograph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,22 +23,21 @@ public class LineGraph {
 
 	private Graph<Property, UndirectedEdge> graph;
 
-	private final String[] types = { "SUBJ", "OBJ", "MIXED" };
-
 	public LineGraph() {
-		graph = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
+		graph = new DirectedWeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
 	}
 
 	public LineGraph(Model model) {
-		graph = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
+		graph = new DirectedWeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
 		createLineGraph(model);
 	}
 
 	public void createLineGraph(Model model) {
 		Map<String, String> edgeTypes = new HashMap<String, String>();
-		edgeTypes.put(types[0], "select * where { ?n ?p1 ?q . ?n ?p2 ?n2 . filter (?p1!=?p2 || ?q!=?n2). } ");
-		edgeTypes.put(types[1], "select * where { ?q ?p1 ?n . ?n2 ?p2 ?n . filter (?p1!=?p2 || ?q!=?n2). } ");
-		edgeTypes.put(types[2], "select * where { ?n ?p1 ?q . ?n2 ?p2 ?n . filter (?p1!=?p2 || ?q!=?n2). } ");
+		edgeTypes.put(Constants.SUB_TYPE, Constants.SUB_QUERY);
+		edgeTypes.put(Constants.OBJ_TYPE, Constants.OBJ_QUERY);
+		edgeTypes.put(Constants.SO_TYPE, Constants.SO_QUERY);
+		edgeTypes.put(Constants.OS_TYPE, Constants.OS_QUERY);
 
 		edgeTypes.forEach((id, query) -> {
 			List<QuerySolution> solutions = GraphUtils.selectModel(model, query);
@@ -48,7 +48,7 @@ public class LineGraph {
 
 	private void addResultsToGraph(List<QuerySolution> solutions, String type) {
 		// removing the inverted statements (duplicates), there might be a better
-		// solution to this problem 
+		// solution to this problem
 		Iterator<QuerySolution> iter = solutions.iterator();
 		while (iter.hasNext()) {
 			QuerySolution curSol = iter.next();

@@ -5,6 +5,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.edges.UndirectedEdge;
+import org.dice_group.util.Constants;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.WeightedPseudograph;
 import org.junit.Assert;
@@ -52,28 +53,39 @@ public class LineGraphTest {
 		LineGraph graph = new LineGraph(model);
 		Graph<Property, UndirectedEdge> lineGraph = graph.getGraph();
 		
-		UndirectedEdge objEdge = new UndirectedEdge("OBJ");
+		UndirectedEdge objEdge = new UndirectedEdge(Constants.OBJ_TYPE);
 		objEdge.setSource(REL1);
 		objEdge.setTarget(REL1);
 		
-		UndirectedEdge mixEdge = new UndirectedEdge("MIXED");
-		mixEdge.setSource(REL1);
-		mixEdge.setTarget(REL2);
+		UndirectedEdge soEdge = new UndirectedEdge(Constants.SO_TYPE);
+		soEdge.setSource(REL1);
+		soEdge.setTarget(REL2);
 		
-		UndirectedEdge subEdge = new UndirectedEdge("SUBJ");
+		UndirectedEdge osEdge = new UndirectedEdge(Constants.OS_TYPE);
+		osEdge.setSource(REL1);
+		osEdge.setTarget(REL2);
+		
+		UndirectedEdge subEdge = new UndirectedEdge(Constants.SUB_TYPE);
 		subEdge.setSource(REL2);
 		subEdge.setTarget(REL1);
 		
-		UndirectedEdge selfSubEdge = new UndirectedEdge("SUBJ");
+		UndirectedEdge selfSubEdge = new UndirectedEdge(Constants.SUB_TYPE);
 		selfSubEdge.setSource(REL1);
 		selfSubEdge.setTarget(REL1);
+		
+		for(UndirectedEdge edge: lineGraph.edgeSet()) {
+			System.out.println(lineGraph.getEdgeWeight(edge)+"\t"+edge.toString());
+		}
+			
 		
 		Graph<Property, UndirectedEdge> expected = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
 		expected.addVertex(REL1);
 		expected.addVertex(REL2);
 		
-		expected.addEdge(REL1, REL2, mixEdge);
-		expected.setEdgeWeight(mixEdge, 1);
+		expected.addEdge(REL1, REL2, soEdge);
+		expected.setEdgeWeight(soEdge, 1);
+		expected.addEdge(REL1, REL2, osEdge);
+		expected.setEdgeWeight(osEdge, 1);
 		expected.addEdge(REL1, REL1, objEdge);
 		expected.setEdgeWeight(objEdge, 1);
 		expected.addEdge(REL2, REL1, subEdge);
