@@ -14,7 +14,7 @@ import org.dice_group.edges.UndirectedEdge;
 import org.dice_group.util.Constants;
 import org.dice_group.util.GraphUtils;
 import org.jgrapht.Graph;
-import org.jgrapht.graph.DirectedWeightedPseudograph;
+import org.jgrapht.graph.WeightedPseudograph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +24,11 @@ public class LineGraph {
 	private Graph<Property, UndirectedEdge> graph;
 
 	public LineGraph() {
-		graph = new DirectedWeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
+		graph = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
 	}
 
 	public LineGraph(Model model) {
-		graph = new DirectedWeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
+		graph = new WeightedPseudograph<Property, UndirectedEdge>(UndirectedEdge.class);
 		createLineGraph(model);
 	}
 
