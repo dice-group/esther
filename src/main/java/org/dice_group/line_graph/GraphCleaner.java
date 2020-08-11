@@ -1,4 +1,4 @@
-package org.dice_group.creator;
+package org.dice_group.line_graph;
 
 import java.util.List;
 

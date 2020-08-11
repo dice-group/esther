@@ -1,4 +1,4 @@
-package org.dice_group.creator;
+package org.dice_group.line_graph;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,7 +10,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.dice_group.edges.UndirectedEdge;
+import org.dice_group.line_graph.edges.UndirectedEdge;
 import org.dice_group.util.Constants;
 import org.dice_group.util.GraphUtils;
 import org.jgrapht.Graph;
