@@ -44,8 +44,8 @@ public class Dictionary {
 	
 	public void addRelation(String relToBeAdded) {
 		if(!relations2ID.containsKey(relToBeAdded)) {
-			relations2ID.put(relToBeAdded, entCount);
-			id2Relations.put(entCount, relToBeAdded);
+			relations2ID.put(relToBeAdded, relCount);
+			id2Relations.put(relCount, relToBeAdded);
 			relCount++;
 		}
 	}

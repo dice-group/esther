@@ -13,6 +13,12 @@ import org.apache.jena.rdf.model.Model;
 
 public class GraphUtils {
 
+	/**
+	 * 
+	 * @param graph
+	 * @param sparqlQuery
+	 * @return
+	 */
 	public static List<QuerySolution> selectModel(Model graph, String sparqlQuery) {
 		Query query = QueryFactory.create(sparqlQuery);
 		QueryExecution queryExecution = QueryExecutionFactory.create(query, graph);

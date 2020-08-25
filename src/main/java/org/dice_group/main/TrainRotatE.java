@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
-import org.dice_group.util.CSVParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,27 +28,28 @@ public class TrainRotatE {
 		double gamma = Double.valueOf(mapArgs.get("-g"));
 		double alpha = Double.valueOf(mapArgs.get("-a"));
 		double lr = Double.valueOf(mapArgs.get("-lr"));
-
+		
 		// create dictionary and write it
 		LOGGER.info("Indexing entities and relations...");
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		dictHelper.createDictionary(dataFolderPath + "/train.txt");
 		dictHelper.saveDict2File(dataFolderPath);
 		
-		Dictionary dict = dictHelper.getDictionary();
+		//Dictionary dict = dictHelper.getDictionary();
 
 		// run kge on given dataset
 		File validFile = getValidModelPath(rotateProjectPath);
-		trainEmbeddings(rotateProjectPath, negSampleSize, batchSize, dataFolderPath, gamma, dim, maxSteps, testSize, lr,
-				alpha, validFile);
+		if(!trainEmbeddings(rotateProjectPath, negSampleSize, batchSize, dataFolderPath, gamma, dim, maxSteps, testSize, lr,
+				alpha, validFile))
+			return;
 
 		// get the embeddings as arrays
-		LOGGER.info("Parsing CSV results to multi-dimentional arrays.");
-		CSVParser parser = new CSVParser();
-		double[][] entities = parser.readCSVFile(validFile.getAbsolutePath() + "/entity_embedding.csv",
-				dict.getEntCount(), 2 * dim);
-		double[][] relations = parser.readCSVFile(validFile.getAbsolutePath() + "/relation_embedding.csv",
-				dict.getRelCount(), dim);
+//		LOGGER.info("Parsing CSV results to multi-dimentional arrays.");
+//		CSVParser parser = new CSVParser();
+//		double[][] entities = parser.readCSVFile(validFile.getAbsolutePath() + "/entity_embedding.csv",
+//				dict.getEntCount(), 2 * dim);
+//		double[][] relations = parser.readCSVFile(validFile.getAbsolutePath() + "/relation_embedding.csv",
+//				dict.getRelCount(), dim);
 
 	}
 
@@ -87,7 +84,7 @@ public class TrainRotatE {
 	 * @param alpha
 	 * @param file
 	 */
-	public static void trainEmbeddings(String rotateProjectPath, int negSampleSize, int batchSize,
+	public static boolean trainEmbeddings(String rotateProjectPath, int negSampleSize, int batchSize,
 			String dataFolderPath, double gamma, int dim, int maxSteps, int testSize, double lr, double alpha,
 			File file) {
 		try {
@@ -97,6 +94,7 @@ public class TrainRotatE {
 					+ " -a " + alpha + " -adv -lr " + lr + " --max_steps " + maxSteps + " -save "
 					+ file.getAbsolutePath() + " --test_batch_size " + testSize + " -de";
 			LOGGER.info("Command: " + cmd);
+			LOGGER.info("Saving model under: "+file.getAbsolutePath());
 			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd).inheritIO();
 			Process p = pb.start();
 			int exitVal = p.waitFor();
@@ -108,7 +106,7 @@ public class TrainRotatE {
 					p.getErrorStream().read(buf);
 					LOGGER.error(new String(buf));
 				}
-				return;
+				return false;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -117,6 +115,7 @@ public class TrainRotatE {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return true;
 	}
 
 	private static Map<String, String> parseArguments(String[] args) {
