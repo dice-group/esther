@@ -71,9 +71,12 @@ public class Graph {
 		List<Node> succNodes = new ArrayList<Node>();
 		IntSet edges = grph.getEdgesIncidentTo(node.getNodeID());
 		for (int i : edges) {
-			IntSet nodes = grph.getVerticesAccessibleThrough(node.getNodeID(), i);
+			//IntSet nodes = grph.getVerticesAccessibleThrough(node.getNodeID(), i);
+			IntSet nodes = grph.getVerticesIncidentToEdge(i);
 			double score = scorer.computeDistance(node, relations[i]);
 			for (int j : nodes) {
+				if(j == node.getNodeID())
+					continue;
 				succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, score));
 			}
 		}

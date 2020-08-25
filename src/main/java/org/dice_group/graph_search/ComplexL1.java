@@ -46,7 +46,7 @@ public class ComplexL1 implements Distance {
 		// || (r_1 ° r_2 ° ... °r_n) - r_p ||
 		double[] temp = ArrayUtils.computeAbsoluteValue(realPart, imPart);
 
-		return -DoubleStream.of(temp).sum();
+		return DoubleStream.of(temp).sum();
 	}
 
 	public double[] getTargetEdge() {

@@ -83,4 +83,14 @@ public class Node implements Comparable<Node> {
 		}
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder("ID: "+ this.nodeID);
+		String del = " - ";
+		if (this.from != null) {
+			builder.append(del).append(this.from.getEdge()).append(del).append(this.from.getNode().toString());
+		}
+		return builder.toString();
+	}
+
 }

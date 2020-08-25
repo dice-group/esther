@@ -3,11 +3,14 @@ package org.dice_group.path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.dice_group.graph_search.algorithms.AStarSearch;
-import org.dice_group.graph_search.algorithms.SearchAlgorithm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PathCreator {
+	private static final Logger LOGGER = LoggerFactory.getLogger(PathCreator.class);
 
 	private Graph graph;
 	private double[][] entities;
@@ -23,7 +26,7 @@ public class PathCreator {
 		this.relations = relations;
 	}
 
-	public void findOtherPaths(String source, String edge, String destination) {
+	public Set<Node> findOtherPaths(String source, String edge, String destination) {
 		Map<String, Integer> entities2ID = graph.getDictionary().getEntities2ID();
 		Map<String, Integer> rel2ID = graph.getDictionary().getRelations2ID();
 
@@ -34,16 +37,11 @@ public class PathCreator {
 
 		// if any isn't found, return. It's an error
 		if (sourceID < 0 || destID < 0 || edgeID < 0)
-			return;
+			throw new IllegalArgumentException("Could not find the given resources' embedding");
 
 		// search for paths
 		AStarSearch search = new AStarSearch();
-		List<Node> endNodes = new ArrayList<Node>();
-		for (int i = 0; i < SearchAlgorithm.MAX_PATHS; i++) {
-			endNodes.add(search.findOtherPaths(graph, sourceID, edgeID, destID, relations));
-		}
-
-		// validate the paths found , are they consistent?
+		return search.findPaths(graph, sourceID, edgeID, destID, relations);
 	}
 
 	public Graph getGraph() {

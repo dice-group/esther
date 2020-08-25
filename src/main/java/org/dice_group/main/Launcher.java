@@ -1,10 +1,13 @@
 package org.dice_group.main;
 
+import java.util.Set;
+
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
 import org.dice_group.path.Graph;
+import org.dice_group.path.Node;
 import org.dice_group.path.PathCreator;
 import org.dice_group.util.CSVParser;
 
@@ -15,7 +18,7 @@ public class Launcher {
 		String rdfPath = "";
 		String dictFilePath = "";
 		String modelFilePath = "";
-
+		
 		// testing data 
 		String subject = "www.example.com:a";
 		String predicate = "www.example.com:h";
@@ -39,7 +42,7 @@ public class Launcher {
 		// find paths
 		Graph graph = new Graph(model, dict);
 		PathCreator creator = new PathCreator(graph, entities, relations);
-		creator.findOtherPaths(subject, predicate, object); //TODO 
+		Set<Node> paths = creator.findOtherPaths(subject, predicate, object); 
 		
 		//TODO still needs to read the ontology
 		//TODO 
