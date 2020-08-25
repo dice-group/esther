@@ -7,5 +7,5 @@ public interface SearchAlgorithm {
 	// TODO for now it's a constant, should be given value
 	int MAX_PATHS = 10;
 
-	Node findOtherPaths(Graph grph, int sourceID, int edgeID, int destID, double[][] entitites, double[][] relations);
+	Node findOtherPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations);
 }

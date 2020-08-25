@@ -1,21 +1,68 @@
 package org.dice_group.graph_search;
 
+import java.util.Arrays;
+import java.util.stream.DoubleStream;
+
+import org.dice_group.path.Node;
+import org.dice_group.util.ArrayUtils;
+
 /**
- * Computes the L1-norm for Complex vectors 
+ * Computes the L1-norm for Complex vectors d = || (r_1 ° r_2 ° ... °r_n) - r_p
+ * || = sum [sqrt(real² + im²)]
  *
  */
-public class ComplexL1 implements Distance{
+public class ComplexL1 implements Distance {
+	/**
+	 * r_p ( the predicate we are trying to approximate - given )
+	 */
+	private double[] targetEdge;
+
+	/**
+	 * (r_1 ° r_2 ° ... ) to aid the calculation
+	 */
+	private double[] concat;
+
+	public ComplexL1(double[] targetEdge) {
+		this.targetEdge = targetEdge;
+	}
 
 	@Override
-	public double computeDistance(double[] head, double[] tail, double[] relation) {
-		// h =  || h ° (r_1 ° r_2 ° ... ° r_n) - t|| -> if h is the curNode and tail the destination node
-		// h = -||(r_1 ° r_2 ° ... ° r_n) - r_p||
-		// L¹ norm of complex numbers is the sum of the absolute values of the vectors for all dimensions
-		// r is unitary complex vector, but h and t aren't
-		
-		
-		
-		return 0;
+	public double computeDistance(Node node, double[] newEdge) {
+		// (r_1 ° r_2 ° ... °r_n)
+		if (concat == null) {
+			concat = newEdge;
+		} else {
+			concat = ArrayUtils.computeHadamardProduct(concat, newEdge);
+		}
+
+		// (r_1 ° r_2 ° ... °r_n) - r_p
+		double[] res = ArrayUtils.computeVectorSubtraction(concat, targetEdge);
+
+		// separate the real and imaginary part of the vector
+		int offset = (int) Math.floor(res.length / 2);
+		double[] realPart = Arrays.copyOfRange(res, 0, offset);
+		double[] imPart = Arrays.copyOfRange(res, offset, res.length);
+
+		// || (r_1 ° r_2 ° ... °r_n) - r_p ||
+		double[] temp = ArrayUtils.computeAbsoluteValue(realPart, imPart);
+
+		return -DoubleStream.of(temp).sum();
+	}
+
+	public double[] getTargetEdge() {
+		return targetEdge;
+	}
+
+	public void setTargetEdge(double[] targetEdge) {
+		this.targetEdge = targetEdge;
+	}
+
+	public double[] getConcat() {
+		return concat;
+	}
+
+	public void setConcat(double[] concat) {
+		this.concat = concat;
 	}
 
 }

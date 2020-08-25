@@ -41,7 +41,7 @@ public class Node implements Comparable<Node> {
 		return from;
 	}
 
-	public void setFromNode(BackPointer from) {
+	public void setFrom(BackPointer from) {
 		this.from = from;
 	}
 

@@ -40,10 +40,36 @@ public class PathCreator {
 		AStarSearch search = new AStarSearch();
 		List<Node> endNodes = new ArrayList<Node>();
 		for (int i = 0; i < SearchAlgorithm.MAX_PATHS; i++) {
-			endNodes.add(search.findOtherPaths(graph, sourceID, edgeID, destID, entities, relations));
+			endNodes.add(search.findOtherPaths(graph, sourceID, edgeID, destID, relations));
 		}
 
 		// validate the paths found , are they consistent?
 	}
+
+	public Graph getGraph() {
+		return graph;
+	}
+
+	public void setGraph(Graph graph) {
+		this.graph = graph;
+	}
+
+	public double[][] getEntities() {
+		return entities;
+	}
+
+	public void setEntities(double[][] entities) {
+		this.entities = entities;
+	}
+
+	public double[][] getRelations() {
+		return relations;
+	}
+
+	public void setRelations(double[][] relations) {
+		this.relations = relations;
+	}
+	
+	
 
 }

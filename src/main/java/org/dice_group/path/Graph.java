@@ -8,6 +8,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.graph_search.ComplexL1;
 
 import grph.Grph;
 import grph.in_memory.InMemoryGrph;
@@ -65,15 +66,15 @@ public class Graph {
 	public void setDictionary(Dictionary dictionary) {
 		this.dictionary = dictionary;
 	}
-
-	public List<Node> getUndirectedSuccessors(Node node) {
+	
+	public List<Node> getUndirectedSuccessors(Node node, ComplexL1 scorer, double[][] relations) {
 		List<Node> succNodes = new ArrayList<Node>();
 		IntSet edges = grph.getEdgesIncidentTo(node.getNodeID());
 		for (int i : edges) {
 			IntSet nodes = grph.getVerticesAccessibleThrough(node.getNodeID(), i);
+			double score = scorer.computeDistance(node, relations[i]);
 			for (int j : nodes) {
-				// TODO replace 0 with the actual score computation
-				succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, 0));
+				succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, score));
 			}
 		}
 		return succNodes;

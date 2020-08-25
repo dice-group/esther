@@ -17,11 +17,8 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.dice_group.util.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DictionaryHelper {
-	private static final Logger LOGGER = LoggerFactory.getLogger(DictionaryHelper.class);
 
 	private Dictionary dictionary;
 
@@ -31,6 +28,7 @@ public class DictionaryHelper {
 
 	/**
 	 * Reads the dictionary from a given file path
+	 * 
 	 * @param dataFolderPath
 	 */
 	public void readDictionary(String dataFolderPath) {
