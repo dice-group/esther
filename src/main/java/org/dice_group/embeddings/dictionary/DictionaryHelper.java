@@ -72,10 +72,31 @@ public class DictionaryHelper {
 			String predicate = curStmt.getPredicate().toString();
 			RDFNode object = curStmt.getObject();
 
-			dictionary.addEntity(subject);
-			dictionary.addRelation(predicate);
-			if (object.isResource())
+			if (object.isResource()) {
+				dictionary.addEntity(subject);
+				dictionary.addRelation(predicate);
 				dictionary.addEntity(object.asResource().toString());
+			} else {
+				stmtIterator.remove();
+			}
+				
+		}
+		
+		String fileName = "dbpedia_data/train.txt";
+		FileWriter out = null;
+		try {
+			out = new FileWriter( fileName );
+			model.write( out, "TTL" );
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				out.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
