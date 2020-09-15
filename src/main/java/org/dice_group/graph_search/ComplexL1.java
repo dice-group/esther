@@ -17,10 +17,6 @@ public class ComplexL1 implements Distance {
 	 */
 	private double[] targetEdge;
 
-	/**
-	 * (r_1 ° r_2 ° ... ) to aid the calculation
-	 */
-	private double[] concat;
 
 	public ComplexL1(double[] targetEdge) {
 		this.targetEdge = targetEdge;
@@ -29,11 +25,12 @@ public class ComplexL1 implements Distance {
 	@Override
 	public double computeDistance(Node node, double[] newEdge) {
 		// (r_1 ° r_2 ° ... °r_n)
-		if (concat == null) {
-			concat = newEdge;
+		if(node.getTempInner() == null) {
+			node.setTempInner(newEdge);
 		} else {
-			concat = ArrayUtils.computeHadamardProduct(concat, newEdge);
+			node.setTempInner(ArrayUtils.computeHadamardProduct(node.getTempInner(), newEdge));
 		}
+		double [] concat = node.getTempInner();
 
 		// (r_1 ° r_2 ° ... °r_n) - r_p
 		double[] res = ArrayUtils.computeVectorSubtraction(concat, targetEdge);
@@ -57,12 +54,5 @@ public class ComplexL1 implements Distance {
 		this.targetEdge = targetEdge;
 	}
 
-	public double[] getConcat() {
-		return concat;
-	}
-
-	public void setConcat(double[] concat) {
-		this.concat = concat;
-	}
 
 }

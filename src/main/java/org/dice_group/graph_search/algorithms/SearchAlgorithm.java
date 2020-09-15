@@ -7,7 +7,7 @@ import org.dice_group.path.Node;
 
 public interface SearchAlgorithm {
 	// TODO for now it's a constant, should be given value
-	int MAX_PATHS = 2;
+	int MAX_PATHS = 5;
 
 	Set<Node> findPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations);
 }

@@ -1,5 +1,8 @@
 package org.dice_group.creator;
 
+import java.util.Arrays;
+import java.util.BitSet;
+
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -48,6 +51,7 @@ public class LineGraphTest {
 	
 	@Test
 	public void testGraphCreation() {
+		
 		Model model = ModelFactory.createDefaultModel();
 		model.read("graph1.n3");
 		

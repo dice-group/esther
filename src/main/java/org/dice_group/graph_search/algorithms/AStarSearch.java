@@ -1,5 +1,6 @@
 package org.dice_group.graph_search.algorithms;
 
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -12,18 +13,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AStarSearch implements SearchAlgorithm {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(AStarSearch.class);
+
+	private BitSet[] matrix;
+
+	public AStarSearch(BitSet[] matrix) {
+		this.matrix = matrix;
+	}
 
 	@Override
 	public Set<Node> findPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations) {
 		Set<Node> paths = new HashSet<Node>();
-		
+
 		Queue<Node> queue = new PriorityQueue<Node>();
 		queue.add(new Node(sourceID));
 
 		int iterations = 0;
 
-		ComplexL1 scorer = new ComplexL1(relations[destID]);
+		ComplexL1 scorer = new ComplexL1(relations[edgeID]);
 
 		while (!queue.isEmpty() && iterations < SearchAlgorithm.MAX_PATHS) {
 			// get first and remove it from queue
@@ -32,17 +40,25 @@ public class AStarSearch implements SearchAlgorithm {
 			// goal node reached
 			if (node.getNodeID() == destID) {
 				iterations++;
-				LOGGER.info("Path found->" + node.toString());
+				LOGGER.info("Path found -> " + node.toString());
 				paths.add(node);
 				continue;
 			}
 
 			// get in and outgoing edges (we want to look for paths in both directions)
 			queue.addAll(graph.getUndirectedSuccessors(node, scorer, relations));
-
-
 		}
 		return paths;
 	}
+
+	public BitSet[] getMatrix() {
+		return matrix;
+	}
+
+	public void setMatrix(BitSet[] matrix) {
+		this.matrix = matrix;
+	}
+	
+	
 
 }
