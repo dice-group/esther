@@ -21,7 +21,8 @@ public class Launcher {
 
 		// testing data
 		String subject = "www.example.com:a";
-		String predicate = "www.example.com:h";
+		//String predicate = "www.example.com:h";
+		String predicate = "http://dbpedia.org/ontology/GrandPrix/distance";
 		String object = "www.example.com:e";
 
 		Statement fact = ResourceFactory.createStatement(ResourceFactory.createResource(subject),

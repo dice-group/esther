@@ -1,8 +1,7 @@
 package org.dice_group.graph_search.modes;
 
-import java.util.Map;
-
 import org.apache.jena.ontology.OntModel;
+import org.dice_group.embeddings.dictionary.Dictionary;
 
 /**
  * Doesn't care at all for domain and range consistency, thus all bits are set.
@@ -10,14 +9,14 @@ import org.apache.jena.ontology.OntModel;
  */
 public class IrrelevantDR extends Matrix {
 
-	public IrrelevantDR(OntModel ontModel) {
-		super(ontModel);
+	public IrrelevantDR(OntModel ontModel, Dictionary dictionary) {
+		super(ontModel, dictionary);
 	}
 
 	@Override
-	public void compute(Map<String, Integer> rel2id, String edge) {
-		for(int i = 0; i< matrix.length; i++) {
-			matrix[i].set(0, matrix.length); // square matrix
+	public void compute(String edge) {
+		for (int i = 0; i < edgeAdjMatrix.length; i++) {
+			edgeAdjMatrix[i].set(0, edgeAdjMatrix.length); // square matrix
 		}
 	}
 }

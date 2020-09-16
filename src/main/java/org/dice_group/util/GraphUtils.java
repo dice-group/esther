@@ -1,8 +1,14 @@
 package org.dice_group.util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntResource;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -10,6 +16,15 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.RDF;
+
+import com.google.common.collect.Streams;
 
 public class GraphUtils {
 
@@ -32,6 +47,29 @@ public class GraphUtils {
 			queryExecution.close();
 		}
 		return querySolutionList;
+	}
+	
+
+	/**
+	 * Returns a new model without the literal statements and without RDF.type statements
+	 * @param model
+	 * @return
+	 */
+	public static Model cleanGraph(Model model) {
+		Model cleanModel = ModelFactory.createDefaultModel();
+		cleanModel.add(model);
+		
+		cleanModel.remove(cleanModel.listStatements(null, RDF.type, (RDFNode)null));
+		
+		List<Statement> literalStmts = cleanModel.listStatements().toList();
+		literalStmts.removeIf(k->!k.getObject().isURIResource());
+		cleanModel.remove(literalStmts);
+		
+		return cleanModel;
+	}
+	
+	public static Set<?> getElementsInCommon(Iterator<?> a, Iterator<?> b) {
+		return Streams.stream(a).filter(w -> Streams.stream(b).anyMatch(t -> t.equals(w))).collect(Collectors.toSet());
 	}
 
 }

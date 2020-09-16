@@ -6,8 +6,8 @@ import java.util.Set;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.rdf.model.Statement;
 import org.dice_group.graph_search.algorithms.AStarSearch;
+import org.dice_group.graph_search.modes.ChainedDR;
 import org.dice_group.graph_search.modes.Matrix;
-import org.dice_group.graph_search.modes.StrictDR;
 
 public class PathCreator {
 	// private static final Logger LOGGER =
@@ -51,15 +51,12 @@ public class PathCreator {
 		if (sourceID < 0 || destID < 0 || edgeID < 0)
 			throw new IllegalArgumentException("Could not find the given resources' embeddings");
 
-		// build hierarchy
-		Matrix matrix = new StrictDR(ontModel);
-		matrix.compute(rel2ID, edge);
-
-		// TODO translate the matrix in terms of nodes
-		matrix.translate();
-
+		// build combinations TODO different matrix types depending on input
+		Matrix matrix = new ChainedDR(ontModel, graph.getDictionary());
+		matrix.compute(edge);
+		
 		// search for paths
-		AStarSearch search = new AStarSearch(matrix.getMatrix());
+		AStarSearch search = new AStarSearch(matrix.getEdgeAdjMatrix());
 		return search.findPaths(graph, sourceID, edgeID, destID, relations);
 	}
 

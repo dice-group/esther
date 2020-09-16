@@ -1,4 +1,4 @@
-package org.dice_group.line_graph.edges;
+package org.dice_group.line_graph;
 
 import org.apache.jena.rdf.model.Property;
 

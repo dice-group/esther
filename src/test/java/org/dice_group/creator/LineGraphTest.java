@@ -1,14 +1,11 @@
 package org.dice_group.creator;
 
-import java.util.Arrays;
-import java.util.BitSet;
-
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.line_graph.LineGraph;
-import org.dice_group.line_graph.edges.UndirectedEdge;
+import org.dice_group.line_graph.UndirectedEdge;
 import org.dice_group.util.Constants;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.WeightedPseudograph;

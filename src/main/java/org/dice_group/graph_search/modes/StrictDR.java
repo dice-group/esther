@@ -1,11 +1,14 @@
 package org.dice_group.graph_search.modes;
 
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntResource;
-import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.RDFS;
+import org.dice_group.embeddings.dictionary.Dictionary;
 
 /**
  * The domain and range of other paths have to match exactly the one of the given predicate.
@@ -13,23 +16,41 @@ import org.apache.jena.util.iterator.ExtendedIterator;
  */
 public class StrictDR extends Matrix {
 
-	public StrictDR(OntModel ontModel) {
-		super(ontModel);
+	public StrictDR(OntModel ontology, Dictionary dictionary) {
+		super(ontology, dictionary);
 	}
 
 	@Override
-	public void compute(Map<String, Integer> rel2id, String edge) {
-		ExtendedIterator<? extends OntResource> domain = ontModel.getOntProperty(edge).listDomain();
-		Set<? extends OntResource> range = ontModel.getOntProperty(edge).listRange().toSet();
-		while (domain.hasNext()) {
-			OntResource curRes = domain.next();
-			int startID = class2id.get(curRes.toString());
-			for (OntResource curDest : range) {
-				int destID = class2id.get(curDest.toString());
-				// TODO confirm whether we want it to be a symmetric matrix or not m(i,j) = m(j,i)
-				matrix[startID].set(destID);
-				matrix[destID].set(startID);
+	public void compute(String edge) {
+		Set<? extends OntResource> domain = ontology.getOntProperty(edge).listDomain().toSet();
+		Set<? extends OntResource> range = ontology.getOntProperty(edge).listRange().toSet();
+		
+		Set<Resource> allowedProperties = new HashSet<Resource>();
+		
+		for(OntResource curRes : domain) {
+			ResIterator dProp = ontology.listSubjectsWithProperty(RDFS.domain, curRes); // find properties with same domain
+			while(dProp.hasNext()) {
+				Resource c = dProp.next();
+				if(domain.contains(c))
+					allowedProperties.add(c);
 			}
 		}
+		
+		Set<Resource> rProp = new HashSet<Resource>();
+		for(OntResource curRes : range) {
+			rProp.addAll(ontology.listSubjectsWithProperty(RDFS.range, curRes).toSet());			
+		}
+		allowedProperties.retainAll(rProp);
+		
+		// TODO  we do get a set of possible edges (open set in A* search)
+		
+		
 	}
+	
+	
+	//int destID = dictionary.getRelations2ID().get(curDest.toString());
+	// TODO confirm whether we want it to be a symmetric matrix or not m(i,j) = m(j,i)
+	//edgeAdjMatrix[startID].set(destID);
+	//edgeAdjMatrix[destID].set(startID);
+	
 }

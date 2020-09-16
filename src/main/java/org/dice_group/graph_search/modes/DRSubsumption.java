@@ -1,8 +1,7 @@
 package org.dice_group.graph_search.modes;
 
-import java.util.Map;
-
 import org.apache.jena.ontology.OntModel;
+import org.dice_group.embeddings.dictionary.Dictionary;
 
 /**
  * Different scenarios will come under this
@@ -13,15 +12,17 @@ import org.apache.jena.ontology.OntModel;
  */
 public class DRSubsumption extends Matrix{
 
-	public DRSubsumption(OntModel ontModel) {
-		super(ontModel);
+	public DRSubsumption(OntModel ontModel, Dictionary dictionary) {
+		super(ontModel, dictionary);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	public void compute(Map<String, Integer> rel2id, String edge) {
+	public void compute(String edge) {
 		// TODO Auto-generated method stub
 		
 	}
+
+	
 
 }
