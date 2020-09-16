@@ -1,5 +1,8 @@
 package org.dice_group.util;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,6 +48,15 @@ public class DataReductor {
 		}
 		
 		LOGGER.info(model.size()+" after");
+		
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream("out.txt");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		model.write(out, "NT");
 		
 
 	}
