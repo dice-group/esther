@@ -32,7 +32,7 @@ public class TrainRotatE {
 		// create dictionary and write it
 		LOGGER.info("Indexing entities and relations...");
 		DictionaryHelper dictHelper = new DictionaryHelper();
-		dictHelper.createDictionary(dataFolderPath + "/trainX.txt");
+		dictHelper.createDictionary(dataFolderPath + "/train.txt");
 		dictHelper.saveDict2File(dataFolderPath);
 		
 		//Dictionary dict = dictHelper.getDictionary();
