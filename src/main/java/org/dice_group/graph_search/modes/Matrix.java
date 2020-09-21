@@ -26,6 +26,13 @@ public abstract class Matrix implements MatrixInterface {
 	}
 
 	public void populateMatrix(OntModel ontology) {
+		if(this instanceof IrrelevantDR) {
+			for (int i = 0; i < edgeAdjMatrix.length; i++) {
+				edgeAdjMatrix[i].set(0, edgeAdjMatrix.length);
+			}
+			return;
+		}
+		
 		Map<Integer, String> id2relmap = dictionary.getId2Relations();
 
 		for (int i = 0; i < dictionary.getRelCount(); i++) {

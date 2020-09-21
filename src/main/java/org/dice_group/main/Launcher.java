@@ -1,6 +1,10 @@
 package org.dice_group.main;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -19,15 +23,17 @@ import org.dice_group.util.CSVParser;
 public class Launcher {
 
 	public static void main(String[] args) {
-		// TODO need to put in the same workspace
-		String rdfPath = "";
-		String dictFilePath = "";
-		String modelFilePath = "";
+		Map<String, String> mapArgs = parseArguments(args);
+
+		// embeddings file path
+		String modelFilePath = mapArgs.get("-emb");
+
+		// folder where the model and dictionary are saved
+		String folderPath = mapArgs.get("-data");
 
 		// testing data
 		String subject = "www.example.com:a";
-		//String predicate = "www.example.com:h";
-		String predicate = "http://dbpedia.org/ontology/GrandPrix/distance";
+		String predicate = "www.example.com:h";
 		String object = "www.example.com:e";
 
 		Statement fact = ResourceFactory.createStatement(ResourceFactory.createResource(subject),
@@ -35,43 +41,71 @@ public class Launcher {
 
 		// read model - TODO change this to a sparql endpoint instead
 		Model model = ModelFactory.createDefaultModel();
-		model.read(rdfPath, "TTL");
+		model.read(folderPath + "/train.txt", "TTL");
 
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
-		dictHelper.readDictionary(dictFilePath);
+		dictHelper.readDictionary(folderPath);
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		int dim = 5; // TODO read number of dimensions from file
-		CSVParser parser = new CSVParser();
-		double[][] entities = parser.readCSVFile(modelFilePath + "/entity_embedding.csv", dict.getEntCount(), 2 * dim);
-		double[][] relations = parser.readCSVFile(modelFilePath + "/relation_embedding.csv", dict.getRelCount(), dim);
+		double[][] entities = CSVParser.readCSVFile(modelFilePath + "/entity_embedding.csv", dict.getEntCount(), 2);
+		double[][] relations = CSVParser.readCSVFile(modelFilePath + "/relation_embedding.csv", dict.getRelCount(), 1);
 
-		// read ontology
-		OntModel ontModel = ModelFactory.createOntologyModel();
-		ontModel.read("");
+		// read and create ontology with OWL inference
+		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
+		ontModel.read(folderPath+"/ontology.owl");
 
-		// TODO get matrix type from user
-		String type = "";
-		Matrix matrix = null;
-		if(type.equals("ND")) {
-			 matrix = new NotDisjointDR(ontModel, dict);
-		} else if(type.equals("S")){
-			 matrix = new StrictDR(ontModel, dict);
-		} else if(type.equals("SS")){
-			 matrix = new SubsumedDR(ontModel, dict);
+		// get matrix type from user
+		String type = mapArgs.get("-matrix");
+		Matrix matrix;
+		if (type.equals("ND")) {
+			matrix = new NotDisjointDR(ontModel, dict);
+		} else if (type.equals("S")) {
+			matrix = new StrictDR(ontModel, dict);
+		} else if (type.equals("SS")) {
+			matrix = new SubsumedDR(ontModel, dict);
 		} else {
-			 matrix = new IrrelevantDR(ontModel, dict);
+			matrix = new IrrelevantDR(ontModel, dict);
 		}
 
 		// find paths
 		Graph graph = new Graph(model, dict);
 		PathCreator creator = new PathCreator(graph, entities, relations);
 		// Set<Node> paths =
-		creator.findOtherPaths(fact, matrix); // TODO
+		creator.findOtherPaths(fact, matrix); 
 
 		// TODO
+	}
+
+	/**
+	 * -emb: embeddings full file path
+	 * 
+	 * -matrix: type of matrix generation
+	 * 
+	 * -data: data folder path
+	 * 
+	 * @param args
+	 * @return
+	 */
+	private static Map<String, String> parseArguments(String[] args) {
+		Map<String, String> mapArgs = new HashMap<String, String>();
+		if (args.length != 0) {
+			for (int i = 0; i < args.length; i++) {
+				String param = args[i];
+				if ((i + 1) < args.length) {
+					String value = args[i + 1];
+					if (param.equalsIgnoreCase("-emb")) {
+						mapArgs.put("-emb", value);
+					} else if (param.equalsIgnoreCase("-matrix")) {
+						mapArgs.put("-matrix", value);
+					} else if (param.equalsIgnoreCase("-data")) {
+						mapArgs.put("-data", value);
+					}
+				}
+			}
+		}
+		return mapArgs;
 	}
 
 }

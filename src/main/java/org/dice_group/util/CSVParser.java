@@ -1,23 +1,38 @@
 package org.dice_group.util;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.Arrays;
 
 public class CSVParser {
-	
-	public CSVParser() {
-	}
 
 	/**
-	 * Reads a CSV file and returns the corresponding multi-dimensional array [entities/relations count][dimensionsCount]
+	 * Reads a CSV file and returns the corresponding multi-dimensional array
+	 * [entities/relations count][dimensionsCount]
+	 * 
 	 * @param filePath
 	 * @param elementCount
 	 * @param dim
 	 * @return
 	 */
-	public double[][] readCSVFile(String filePath, int elementCount, int dim) {
+	public static double[][] readCSVFile(String filePath, int elementCount, int factor) {
+		int dim = 0;
+		try (LineNumberReader reader = new LineNumberReader(new FileReader(filePath))) {
+			reader.skip(Integer.MAX_VALUE);
+			dim = factor * (reader.getLineNumber() + 1);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (dim == 0)
+			throw new IllegalArgumentException("Number of dimensions cannot be 0.");
+
 		double[][] embedding = new double[elementCount][dim];
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -32,6 +47,5 @@ public class CSVParser {
 		}
 		return embedding;
 	}
-
 
 }

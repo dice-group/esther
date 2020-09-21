@@ -1,7 +1,9 @@
 package org.dice_group.graph_search.modes;
 
+import java.util.Collections;
 import java.util.Set;
 
+import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntResource;
 import org.dice_group.embeddings.dictionary.Dictionary;
@@ -11,9 +13,12 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  *
  */
 public class SubsumedDR extends Matrix {
+	
+	private OntModel ontModel;
 
 	public SubsumedDR(OntModel ontModel, Dictionary dictionary) {
 		super(ontModel, dictionary);
+		this.ontModel = ontModel;
 	}
 
 	@Override
@@ -28,7 +33,7 @@ public class SubsumedDR extends Matrix {
 	 * @param b
 	 * @return true if set a subsumes b
 	 */
-	private boolean isSubsumedBy(Set<?> a, Set<?> b) {
+	private boolean isSubsumedBy(Set<? extends OntResource> a, Set<? extends OntResource> b) {
 		if (a.equals(b) || isSubSetOf(a, b)) {
 			return true;
 		}
@@ -42,9 +47,16 @@ public class SubsumedDR extends Matrix {
 	 * @param b
 	 * @return true if a is subset of b
 	 */
-	private boolean isSubSetOf(Set<?> a, Set<?> b) {
-
-		return false;
+	private boolean isSubSetOf(Set<? extends OntResource> a, Set<? extends OntResource> b) {
+		for(OntResource cur: b) {
+			OntClass curClass = ontModel.getOntClass(cur.toString());
+			Set<OntClass> sub = curClass.listSubClasses(false).toSet();
+			
+			if(Collections.disjoint(a, sub)) {
+				return false;
+			} 
+		}
+		return true;
 	}
 
 }
