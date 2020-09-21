@@ -6,7 +6,7 @@ import java.util.Set;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.rdf.model.Statement;
 import org.dice_group.graph_search.algorithms.AStarSearch;
-import org.dice_group.graph_search.modes.ChainedDR;
+import org.dice_group.graph_search.modes.NotDisjointDR;
 import org.dice_group.graph_search.modes.Matrix;
 
 public class PathCreator {
@@ -52,8 +52,8 @@ public class PathCreator {
 			throw new IllegalArgumentException("Could not find the given resources' embeddings");
 
 		// build combinations TODO different matrix types depending on input
-		Matrix matrix = new ChainedDR(ontModel, graph.getDictionary());
-		matrix.compute(edge);
+		Matrix matrix = new NotDisjointDR(ontModel, graph.getDictionary());
+		matrix.populateMatrix();
 		
 		// search for paths
 		AStarSearch search = new AStarSearch(matrix.getEdgeAdjMatrix());

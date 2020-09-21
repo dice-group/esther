@@ -1,6 +1,9 @@
 package org.dice_group.graph_search.modes;
 
+import java.util.Set;
+
 import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntResource;
 import org.dice_group.embeddings.dictionary.Dictionary;
 
 /**
@@ -14,9 +17,10 @@ public class IrrelevantDR extends Matrix {
 	}
 
 	@Override
-	public void compute(String edge) {
-		for (int i = 0; i < edgeAdjMatrix.length; i++) {
-			edgeAdjMatrix[i].set(0, edgeAdjMatrix.length); // square matrix
+	public void compute(Set<? extends OntResource> domainI, Set<? extends OntResource> rangeI,
+			Set<? extends OntResource> domainJ, Set<? extends OntResource> rangeJ, int i, int j) {
+		for (int w = 0; w < edgeAdjMatrix.length; w++) {
+			edgeAdjMatrix[w].set(0, edgeAdjMatrix.length); // square matrix
 		}
 	}
 }
