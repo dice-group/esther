@@ -1,12 +1,12 @@
 package org.dice_group.graph_search.algorithms;
 
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
 import org.dice_group.graph_search.ComplexL1;
+import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.path.Graph;
 import org.dice_group.path.Node;
 import org.slf4j.Logger;
@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 public class AStarSearch implements SearchAlgorithm {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AStarSearch.class);
+	
+	private Matrix matrix;
 
-	private BitSet[] matrix;
-
-	public AStarSearch(BitSet[] matrix) {
+	public AStarSearch(Matrix matrix) {
 		this.matrix = matrix;
 	}
 
@@ -50,15 +50,4 @@ public class AStarSearch implements SearchAlgorithm {
 		}
 		return paths;
 	}
-
-	public BitSet[] getMatrix() {
-		return matrix;
-	}
-
-	public void setMatrix(BitSet[] matrix) {
-		this.matrix = matrix;
-	}
-	
-	
-
 }

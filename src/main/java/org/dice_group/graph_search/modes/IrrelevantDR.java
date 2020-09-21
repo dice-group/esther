@@ -17,10 +17,7 @@ public class IrrelevantDR extends Matrix {
 	}
 
 	@Override
-	public void compute(Set<? extends OntResource> domainI, Set<? extends OntResource> rangeI,
-			Set<? extends OntResource> domainJ, Set<? extends OntResource> rangeJ, int i, int j) {
-		for (int w = 0; w < edgeAdjMatrix.length; w++) {
-			edgeAdjMatrix[w].set(0, edgeAdjMatrix.length); // square matrix
-		}
+	public boolean compareSets(Set<? extends OntResource> a, Set<? extends OntResource> b) {
+		return true;
 	}
 }

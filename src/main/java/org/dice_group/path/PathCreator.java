@@ -3,10 +3,8 @@ package org.dice_group.path;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.ontology.OntModel;
 import org.apache.jena.rdf.model.Statement;
 import org.dice_group.graph_search.algorithms.AStarSearch;
-import org.dice_group.graph_search.modes.NotDisjointDR;
 import org.dice_group.graph_search.modes.Matrix;
 
 public class PathCreator {
@@ -34,7 +32,7 @@ public class PathCreator {
 	 * @param destination goal node
 	 * @return
 	 */
-	public Set<Node> findOtherPaths(Statement stmt, OntModel ontModel) {
+	public Set<Node> findOtherPaths(Statement stmt, Matrix matrix) {
 		Map<String, Integer> entities2ID = graph.getDictionary().getEntities2ID();
 		Map<String, Integer> rel2ID = graph.getDictionary().getRelations2ID();
 
@@ -50,13 +48,9 @@ public class PathCreator {
 		// if any isn't found, return. It's an error
 		if (sourceID < 0 || destID < 0 || edgeID < 0)
 			throw new IllegalArgumentException("Could not find the given resources' embeddings");
-
-		// build combinations TODO different matrix types depending on input
-		Matrix matrix = new NotDisjointDR(ontModel, graph.getDictionary());
-		matrix.populateMatrix();
 		
 		// search for paths
-		AStarSearch search = new AStarSearch(matrix.getEdgeAdjMatrix());
+		AStarSearch search = new AStarSearch(matrix);
 		return search.findPaths(graph, sourceID, edgeID, destID, relations);
 	}
 
