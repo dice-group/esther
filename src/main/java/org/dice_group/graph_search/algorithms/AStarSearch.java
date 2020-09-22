@@ -2,7 +2,6 @@ package org.dice_group.graph_search.algorithms;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -18,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import grph.Grph;
-import it.unimi.dsi.fastutil.ints.IntSet;
+import toools.collections.primitive.LucIntSet;
 
 public class AStarSearch implements SearchAlgorithm {
 
@@ -40,53 +39,101 @@ public class AStarSearch implements SearchAlgorithm {
 		int iterations = 0;
 
 		// scores are calculated in comparison to P
-		// TODO obtain the embedding if we don't already have it
 		ComplexL1 scorer = new ComplexL1(relations[edgeID]);
 
 		while (!queue.isEmpty() && iterations < SearchAlgorithm.MAX_PATHS) {
 			// get first and remove it from queue
 			Node node = queue.poll();
 
-			// goal node reached
-			if (node.getNodeID() == destID) {
+			// goal node reached, does it match the range?
+			if (node.getNodeID() == destID && isRangeAllowing(node, destID, relations.length)) {
 				iterations++;
 				LOGGER.info("Path found -> " + node.toString());
 				paths.add(node);
 				continue;
 			}
 
-			// get in and outgoing edges (we want to look for paths in both directions)
-			matrix.getEdgeAdjMatrix();
+			// get next in line
+			queue.addAll(getNextTargets(node, graph.getGrph(), scorer, relations, edgeID));
 
-			queue.addAll(graph.getUndirectedSuccessors(node, scorer, relations));
-			
-			// get nodes from allowed edges //TODO 
-			BitSet[] mat = matrix.getEdgeAdjMatrix();
-			queue.addAll(getNextTargets(node, graph.getGrph()));
-			
-			
 		}
 		return paths;
 	}
+	
+	private boolean isRangeAllowing(Node node, int destID, int offset) {
+		int edgeID = node.getFrom().getEdge();
+		BitSet[] mat = matrix.getEdgeAdjMatrix();
+		if(mat[destID].equals(mat[edgeID]) || mat[destID].equals(mat[edgeID+offset])) {
+			return true;
+		}
+		return false;
+	}
 
 	/**
-	 * Get the nodes connected to the edges that are allowed TODO
+	 * Get the nodes connected to the edges that are allowed by the matrix
+	 * 
 	 * @param node
-	 * @return 
+	 * @return
 	 */
-	public Collection<? extends Node> getNextTargets(Node node, Grph grph) {
-		int FromEdgeID = node.getFrom().getEdge();
-		
-		// all edges from/to this vertex
-		IntSet edges = grph.getEdgesIncidentTo(node.getNodeID());
-		
-		// TODO keep only allowed edges
-		
-		for (int i : edges) {
-			IntSet nodes = grph.getVerticesIncidentToEdge(i);
+	public List<Node> getNextTargets(Node node, Grph grph, ComplexL1 scorer, double[][] relations, int pID) {
+		List<Node> succNodes = new ArrayList<Node>();
+		int offset = relations.length;
+
+		// keep only the allowed edges
+		BitSet[] mat = matrix.getEdgeAdjMatrix();
+		BackPointer back = node.getFrom();
+
+		// compare r(x_i) with d(x_i+1)
+		if (back != null) {
+			BitSet range = mat[node.getFrom().getEdge() + offset];
+			getAllowedNodes(range, grph, node, mat, scorer, relations);
 		}
+		// no backpointer, means it's coming from the source node, so compare
+		// d(p) and d(x_i)
+		else {
+			BitSet domainP = mat[pID];
+			getAllowedNodes(domainP, grph, node, mat, scorer, relations);
+		}
+		return succNodes;
+	}
+
+	/**
+	 * 
+	 * @param compareWith bitset that we want to compare the candidates with
+	 * @param grph
+	 * @param node current node
+	 * @param mat edge adjacency matrix of domain and range
+	 * @param scorer
+	 * @param relations
+	 * @return list of allowed nodes dictated by the matrix
+	 */
+	private List<Node> getAllowedNodes(BitSet compareWith, Grph grph, Node node, BitSet[] mat, ComplexL1 scorer, double[][] relations) {
+		List<Node> succNodes = new ArrayList<Node>();
+		int offset = relations.length;
 		
-		
-		return null; //TODO
+		// check the outgoing edges
+		LucIntSet outEdges = grph.getOutOnlyEdges(node.getNodeID());
+		for (int i : outEdges) {
+			BitSet domain = mat[i];
+			if (compareWith.equals(domain)) {
+				double score = scorer.computeDistance(node, relations[i]);
+				for (int j : grph.getDirectedHyperEdgeTail(i)) {
+					succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, score));
+				}
+			}
+		}
+
+		// check the incoming edges (offset applies)
+		LucIntSet inEdges = grph.getInOnlyEdges(node.getNodeID());
+		for (int i : inEdges) {
+			BitSet domain = mat[i + offset];
+			if (compareWith.equals(domain)) {
+				double score = scorer.computeDistance(node, relations[i]);
+				for (int j : grph.getDirectedHyperEdgeHead(i)) {
+					succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, score));
+				}
+			}
+		}
+		return succNodes;
 	}
 }
