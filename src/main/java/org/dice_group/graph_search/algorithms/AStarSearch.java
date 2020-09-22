@@ -8,7 +8,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import org.dice_group.graph_search.ComplexL1;
+import org.dice_group.graph_search.Distance;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.path.BackPointer;
 import org.dice_group.path.Graph;
@@ -30,17 +30,14 @@ public class AStarSearch implements SearchAlgorithm {
 	}
 
 	@Override
-	public Set<Node> findPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations) {
+	public Set<Node> findPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations, Distance scorer) {
 		Set<Node> paths = new HashSet<Node>();
 
+		// start with the source node
 		Queue<Node> queue = new PriorityQueue<Node>();
 		queue.add(new Node(sourceID));
 
 		int iterations = 0;
-
-		// scores are calculated in comparison to P
-		ComplexL1 scorer = new ComplexL1(relations[edgeID]);
-
 		while (!queue.isEmpty() && iterations < SearchAlgorithm.MAX_PATHS) {
 			// get first and remove it from queue
 			Node node = queue.poll();
@@ -53,29 +50,41 @@ public class AStarSearch implements SearchAlgorithm {
 				continue;
 			}
 
-			// get next in line
-			queue.addAll(getNextTargets(node, graph.getGrph(), scorer, relations, edgeID));
+			// get next nodes in line
+			queue.addAll(getNextNodes(node, graph.getGrph(), scorer, relations, edgeID));
 
 		}
 		return paths;
 	}
-	
-	private boolean isRangeAllowing(Node node, int destID, int offset) {
+
+	/**
+	 * 
+	 * @param node   current node
+	 * @param pID    id of the given edge P
+	 * @param offset represents the offset in matrix between the property and its
+	 *               inverse
+	 * @return true if the range of the given predicate matches the range of the
+	 *         last property of the path
+	 */
+	private boolean isRangeAllowing(Node node, int pID, int offset) {
 		int edgeID = node.getFrom().getEdge();
 		BitSet[] mat = matrix.getEdgeAdjMatrix();
-		if(mat[destID].equals(mat[edgeID]) || mat[destID].equals(mat[edgeID+offset])) {
+		if (mat[pID + offset].equals(mat[edgeID]) || mat[pID + offset].equals(mat[edgeID + offset])) {
 			return true;
 		}
 		return false;
 	}
 
 	/**
-	 * Get the nodes connected to the edges that are allowed by the matrix
 	 * 
-	 * @param node
-	 * @return
+	 * @param node current node
+	 * @param grph
+	 * @param scorer
+	 * @param relations relations embeddings
+	 * @param pID id of the given edge P
+	 * @return a list of nodes filtered by the matrix
 	 */
-	public List<Node> getNextTargets(Node node, Grph grph, ComplexL1 scorer, double[][] relations, int pID) {
+	public List<Node> getNextNodes(Node node, Grph grph, Distance scorer, double[][] relations, int pID) {
 		List<Node> succNodes = new ArrayList<Node>();
 		int offset = relations.length;
 
@@ -101,37 +110,36 @@ public class AStarSearch implements SearchAlgorithm {
 	 * 
 	 * @param compareWith bitset that we want to compare the candidates with
 	 * @param grph
-	 * @param node current node
-	 * @param mat edge adjacency matrix of domain and range
+	 * @param node        current node
+	 * @param mat         edge adjacency matrix of domain and range
 	 * @param scorer
 	 * @param relations
 	 * @return list of allowed nodes dictated by the matrix
 	 */
-	private List<Node> getAllowedNodes(BitSet compareWith, Grph grph, Node node, BitSet[] mat, ComplexL1 scorer, double[][] relations) {
+	private List<Node> getAllowedNodes(BitSet compareWith, Grph grph, Node node, BitSet[] mat, Distance scorer,
+			double[][] relations) {
 		List<Node> succNodes = new ArrayList<Node>();
 		int offset = relations.length;
-		
+
 		// check the outgoing edges
 		LucIntSet outEdges = grph.getOutOnlyEdges(node.getNodeID());
 		for (int i : outEdges) {
 			BitSet domain = mat[i];
 			if (compareWith.equals(domain)) {
-				double score = scorer.computeDistance(node, relations[i]);
-				for (int j : grph.getDirectedHyperEdgeTail(i)) {
-					succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, score));
-				}
+				Node temp = new Node(new BackPointer(node, i), grph.getDirectedSimpleEdgeTail(i), node.getPathLength() + 1);
+				temp.setScore(scorer.computeDistance(temp, relations[i]));
+				succNodes.add(temp);
 			}
 		}
 
-		// check the incoming edges (offset applies)
+		// check the incoming edges (offset applies, looks at head of directed edge instead)
 		LucIntSet inEdges = grph.getInOnlyEdges(node.getNodeID());
 		for (int i : inEdges) {
 			BitSet domain = mat[i + offset];
 			if (compareWith.equals(domain)) {
-				double score = scorer.computeDistance(node, relations[i]);
-				for (int j : grph.getDirectedHyperEdgeHead(i)) {
-					succNodes.add(new Node(new BackPointer(node, i), j, node.getPathLength() + 1, score));
-				}
+				Node temp = new Node(new BackPointer(node, i), grph.getDirectedSimpleEdgeHead(i), node.getPathLength() + 1);
+				temp.setScore(scorer.computeDistance(temp, relations[i]));
+				succNodes.add(temp);
 			}
 		}
 		return succNodes;

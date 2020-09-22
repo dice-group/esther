@@ -36,6 +36,12 @@ public class Node implements Comparable<Node> {
 	public Node(int startNode) {
 		this(null, startNode, 0, 0);
 	}
+	
+	public Node(BackPointer from, int curNode, int pathLength) {
+		this.from = from;
+		this.nodeID = curNode;
+		this.pathLength = pathLength;
+	}
 
 	public Node(BackPointer from, int curNode, int pathLength, double score) {
 		this.from = from;

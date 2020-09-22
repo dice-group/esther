@@ -17,11 +17,15 @@ public abstract class Matrix implements MatrixInterface {
 	public Matrix (Dictionary dictionary) {
 		this.dictionary = dictionary;
 		edgeAdjMatrix = new BitSet[dictionary.getId2Relations().size() * 2];
+		for(int i=0;i<edgeAdjMatrix.length;i++)
+			edgeAdjMatrix[i] = new BitSet();
 	}
 
 	public Matrix(OntModel ontModel, Dictionary dictionary) {
 		this.dictionary = dictionary;
 		edgeAdjMatrix = new BitSet[dictionary.getId2Relations().size() * 2];
+		for(int i=0;i<edgeAdjMatrix.length;i++)
+			edgeAdjMatrix[i] = new BitSet();
 		populateMatrix(ontModel);
 	}
 

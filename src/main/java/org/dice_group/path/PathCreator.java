@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Statement;
+import org.dice_group.graph_search.ComplexL1;
+import org.dice_group.graph_search.Distance;
 import org.dice_group.graph_search.algorithms.AStarSearch;
 import org.dice_group.graph_search.modes.Matrix;
 
@@ -46,12 +48,15 @@ public class PathCreator {
 		int edgeID = rel2ID.getOrDefault(edge, -1);
 
 		// if any isn't found, return. It's an error
-		if (sourceID < 0 || destID < 0 || edgeID < 0)
+		if (sourceID < 0 || destID < 0 || edgeID < 0) {
 			throw new IllegalArgumentException("Could not find the given resources' embeddings");
-		
+		}
+
 		// search for paths
 		AStarSearch search = new AStarSearch(matrix);
-		return search.findPaths(graph, sourceID, edgeID, destID, relations);
+		Distance scorer = new ComplexL1(relations[edgeID]);
+		return search.findPaths(graph, sourceID, edgeID, destID, relations, scorer);
+
 	}
 
 	public Graph getGraph() {
