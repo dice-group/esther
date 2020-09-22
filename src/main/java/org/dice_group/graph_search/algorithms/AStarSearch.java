@@ -30,7 +30,8 @@ public class AStarSearch implements SearchAlgorithm {
 	}
 
 	@Override
-	public Set<Node> findPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations, Distance scorer) {
+	public Set<Node> findPaths(Graph graph, int sourceID, int edgeID, int destID, double[][] relations,
+			Distance scorer) {
 		Set<Node> paths = new HashSet<Node>();
 
 		// start with the source node
@@ -67,7 +68,7 @@ public class AStarSearch implements SearchAlgorithm {
 	 *         last property of the path
 	 */
 	private boolean isRangeAllowing(Node node, int pID, int offset) {
-		int edgeID = node.getFrom().getEdge();
+		int edgeID = node.getLastEdge();
 		BitSet[] mat = matrix.getEdgeAdjMatrix();
 		if (mat[pID + offset].equals(mat[edgeID]) || mat[pID + offset].equals(mat[edgeID + offset])) {
 			return true;
@@ -77,15 +78,14 @@ public class AStarSearch implements SearchAlgorithm {
 
 	/**
 	 * 
-	 * @param node current node
+	 * @param node      current node
 	 * @param grph
 	 * @param scorer
 	 * @param relations relations embeddings
-	 * @param pID id of the given edge P
+	 * @param pID       id of the given edge P
 	 * @return a list of nodes filtered by the matrix
 	 */
 	public List<Node> getNextNodes(Node node, Grph grph, Distance scorer, double[][] relations, int pID) {
-		List<Node> succNodes = new ArrayList<Node>();
 		int offset = relations.length;
 
 		// keep only the allowed edges
@@ -95,15 +95,16 @@ public class AStarSearch implements SearchAlgorithm {
 		// compare r(x_i) with d(x_i+1)
 		if (back != null) {
 			BitSet range = mat[node.getFrom().getEdge() + offset];
-			getAllowedNodes(range, grph, node, mat, scorer, relations);
+			return getAllowedNodes(range, grph, node, mat, scorer, relations);
 		}
+		//TODO remove or penalize back tracking
+		
 		// no backpointer, means it's coming from the source node, so compare
 		// d(p) and d(x_i)
 		else {
 			BitSet domainP = mat[pID];
-			getAllowedNodes(domainP, grph, node, mat, scorer, relations);
+			return getAllowedNodes(domainP, grph, node, mat, scorer, relations);
 		}
-		return succNodes;
 	}
 
 	/**
@@ -126,18 +127,21 @@ public class AStarSearch implements SearchAlgorithm {
 		for (int i : outEdges) {
 			BitSet domain = mat[i];
 			if (compareWith.equals(domain)) {
-				Node temp = new Node(new BackPointer(node, i), grph.getDirectedSimpleEdgeTail(i), node.getPathLength() + 1);
-				temp.setScore(scorer.computeDistance(temp, relations[i]));
+				int j = grph.getDirectedSimpleEdgeHead(i);
+				Node temp = new Node(new BackPointer(node, i), j, node.getPathLength() + 1);
+				temp.setScore(scorer.computeDistance(temp, relations[i])+temp.getPathLength());
 				succNodes.add(temp);
 			}
 		}
 
-		// check the incoming edges (offset applies, looks at head of directed edge instead)
+		// check the incoming edges (offset applies, looks at tail of directed edge
+		// instead)
 		LucIntSet inEdges = grph.getInOnlyEdges(node.getNodeID());
 		for (int i : inEdges) {
 			BitSet domain = mat[i + offset];
 			if (compareWith.equals(domain)) {
-				Node temp = new Node(new BackPointer(node, i), grph.getDirectedSimpleEdgeHead(i), node.getPathLength() + 1);
+				int j = grph.getDirectedSimpleEdgeTail(i);
+				Node temp = new Node(new BackPointer(node, i), j, node.getPathLength() + 1);
 				temp.setScore(scorer.computeDistance(temp, relations[i]));
 				succNodes.add(temp);
 			}

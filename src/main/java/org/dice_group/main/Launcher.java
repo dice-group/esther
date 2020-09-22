@@ -68,6 +68,7 @@ public class Launcher {
 		} else {
 			matrix = new IrrelevantDR(ontModel, dict);
 		}
+		//matrix.populateMatrix(ontModel);
 
 		// find paths
 		Graph graph = new Graph(model, dict);

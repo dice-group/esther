@@ -90,6 +90,19 @@ public class Node implements Comparable<Node> {
 		this.tempInner = tempInner;
 	}
 	
+	public int getLastEdge() {
+		int id = -1;
+		if(from == null)
+			return id;
+		BackPointer temp = new BackPointer(from.getNode(), from.getEdge());
+		while(temp != null) {
+			id = temp.getEdge();
+			temp = temp.getNode().getFrom();
+			
+		}
+		return id;
+	}
+	
 	public double[] calculateThenGetConcat(double [] edge) {
 		if(tempInner == null) {
 			this.tempInner = edge.clone();

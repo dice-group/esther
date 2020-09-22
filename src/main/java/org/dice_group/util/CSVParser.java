@@ -20,6 +20,7 @@ public class CSVParser {
 	 */
 	public static double[][] readCSVFile(String filePath, int elementCount, int factor) {
 		int dim = 0;
+		// TODO find a better way to count lines in file
 		try (LineNumberReader reader = new LineNumberReader(new FileReader(filePath))) {
 			reader.skip(Integer.MAX_VALUE);
 			dim = factor * (reader.getLineNumber() + 1);
@@ -37,14 +38,16 @@ public class CSVParser {
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
 			String line = reader.readLine();
+			for (int i = 0; i < elementCount; i++) {
+				
 
-			for (int i = 0; i < elementCount && line != null; i++) {
 				embedding[i] = Arrays.stream(line.split("\\s*,\\s*")).mapToDouble(Double::parseDouble).toArray();
+				line = reader.readLine();
 			}
-
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
+
 		return embedding;
 	}
 
