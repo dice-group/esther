@@ -3,7 +3,7 @@ package org.dice_group.graph_search;
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
 
-import org.dice_group.path.Node;
+import org.dice_group.path.property.Property;
 import org.dice_group.util.ArrayUtils;
 
 /**
@@ -23,15 +23,16 @@ public class ComplexL1 implements Distance {
 	}
 
 	@Override
-	public double computeDistance(Node node, double[] newEdge) {
+	public double computeDistance(Property property, double[] newEdge) {
 		// (r_1 ° r_2 ° ... °r_n)
-		if(node.getTempInner() == null) {
-			node.setTempInner(newEdge);
+		if(property.getInnerProduct() == null) {
+			property.setInnerProduct(newEdge);
 		} else {
-			node.setTempInner(ArrayUtils.computeHadamardProduct(node.getTempInner(), newEdge));
+			property.setInnerProduct(ArrayUtils.computeHadamardProduct(property.getInnerProduct(), newEdge));
 		}
-		double [] concat = node.getTempInner();
-
+		
+		double [] concat = property.getInnerProduct();
+		
 		// (r_1 ° r_2 ° ... °r_n) - r_p
 		double[] res = ArrayUtils.computeVectorSubtraction(concat, targetEdge);
 

@@ -1,6 +1,6 @@
 package org.dice_group.graph_search;
 
-import org.dice_group.path.Node;
+import org.dice_group.path.property.Property;
 
 public interface Distance {
 	
@@ -10,6 +10,6 @@ public interface Distance {
 	 * @param newEdge
 	 * @return
 	 */
-	double computeDistance(Node node, double [] newEdge);
+	double computeDistance(Property edge, double [] newEdge);
 
 }

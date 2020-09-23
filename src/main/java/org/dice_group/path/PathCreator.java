@@ -5,12 +5,9 @@ import java.util.Set;
 
 import org.apache.jena.rdf.model.Statement;
 import org.dice_group.graph_search.ComplexL1;
-import org.dice_group.graph_search.Distance;
-import org.dice_group.graph_search.algorithms.AStarSearch;
+import org.dice_group.graph_search.algorithms.PropertySearch;
 import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
-import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertySearch;
 
 public class PathCreator {
 	// private static final Logger LOGGER =
@@ -56,13 +53,14 @@ public class PathCreator {
 		}
 
 		// search for property combos
-		SearchAlgorithm propertyCombos = new PropertySearch(matrix);
-		Set<?> propertyPaths = propertyCombos.findPaths(graph, sourceID, edgeID, destID, relations, null);
-		
+		SearchAlgorithm propertyCombos = new PropertySearch(matrix, new ComplexL1(relations[edgeID]));
+		// Set<?> propertyPaths =
+		propertyCombos.findPaths(edgeID, relations);
+
 		// search for paths based on the property combos
-		AStarSearch search = new AStarSearch(matrix);
-		Distance scorer = new ComplexL1(relations[edgeID]);
-		return search.findPaths(graph, sourceID, edgeID, destID, relations, scorer);
+		// TODO property paths
+
+		return null;
 
 	}
 

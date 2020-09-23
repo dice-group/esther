@@ -1,7 +1,5 @@
 package org.dice_group.path;
 
-import org.dice_group.util.ArrayUtils;
-
 /**
  * Node class with a Backpointer and comparison through score and path length
  * (heuristics + cost)
@@ -28,15 +26,10 @@ public class Node implements Comparable<Node> {
 	 */
 	private double score;
 
-	/**
-	 * (r_1 ° r_2 ° ... ) to aid the calculation
-	 */
-	private double[] tempInner;
-
 	public Node(int startNode) {
 		this(null, startNode, 0, 0);
 	}
-	
+
 	public Node(NodeBackPointer from, int curNode, int pathLength) {
 		this.from = from;
 		this.nodeID = curNode;
@@ -82,34 +75,17 @@ public class Node implements Comparable<Node> {
 		this.score = score;
 	}
 
-	public double[] getTempInner() {
-		return tempInner;
-	}
-
-	public void setTempInner(double[] tempInner) {
-		this.tempInner = tempInner;
-	}
-	
 	public int getLastEdge() {
 		int id = -1;
-		if(from == null)
+		if (from == null)
 			return id;
 		NodeBackPointer temp = new NodeBackPointer(from.getNode(), from.getEdge());
-		while(temp != null) {
+		while (temp != null) {
 			id = temp.getEdge();
 			temp = temp.getNode().getFrom();
-			
+
 		}
 		return id;
-	}
-	
-	public double[] calculateThenGetConcat(double [] edge) {
-		if(tempInner == null) {
-			this.tempInner = edge.clone();
-		} else {
-			this.tempInner = ArrayUtils.computeHadamardProduct(tempInner, edge);
-		}
-		return tempInner;
 	}
 
 	@Override
@@ -128,7 +104,8 @@ public class Node implements Comparable<Node> {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder("Score: "+ String.valueOf(this.score+this.pathLength)+" ID: " + this.nodeID);
+		StringBuilder builder = new StringBuilder(
+				"Score: " + String.valueOf(this.score + this.pathLength) + " ID: " + this.nodeID);
 		String del = " - ";
 		if (this.from != null) {
 			builder.append(del).append(this.from.getEdge()).append(del).append(this.from.getNode().toString());

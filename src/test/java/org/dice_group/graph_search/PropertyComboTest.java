@@ -2,7 +2,6 @@ package org.dice_group.graph_search;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -12,14 +11,11 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
+import org.dice_group.graph_search.algorithms.PropertySearch;
 import org.dice_group.graph_search.algorithms.SearchAlgorithm;
-import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
-import org.dice_group.graph_search.modes.NotDisjointDR;
 import org.dice_group.graph_search.modes.StrictDR;
-import org.dice_group.graph_search.modes.SubsumedDR;
 import org.dice_group.path.Graph;
-import org.dice_group.path.property.PropertySearch;
 import org.dice_group.util.CSVParser;
 import org.junit.Test;
 
@@ -36,6 +32,7 @@ public class PropertyComboTest {
 		DictionaryHelper help = new DictionaryHelper();
 		Dictionary dict = help.createDictionary(model);
 
+		// TODO don't need grph object at all, to be removed
 		Graph graph = new Graph(model, dict);
 		Matrix matrix = new StrictDR(ontModel, dict);
 
@@ -45,9 +42,9 @@ public class PropertyComboTest {
 
 		String predicate = PREFIX_NS + ":z";
 		int pID = dict.getRelations2ID().get(predicate);
-
-		SearchAlgorithm propertyCombos = new PropertySearch(matrix);
-		propertyCombos.findPaths(graph, -1, pID, -1, relations, null);
+		
+		SearchAlgorithm propertyCombos = new PropertySearch(matrix, new ComplexL1(relations[pID]));
+		propertyCombos.findPaths(pID, relations);
 
 	}
 
