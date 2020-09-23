@@ -11,7 +11,7 @@ public class Node implements Comparable<Node> {
 	/**
 	 * where did it come from
 	 */
-	private BackPointer from;
+	private NodeBackPointer from;
 
 	/**
 	 * current node id
@@ -37,24 +37,24 @@ public class Node implements Comparable<Node> {
 		this(null, startNode, 0, 0);
 	}
 	
-	public Node(BackPointer from, int curNode, int pathLength) {
+	public Node(NodeBackPointer from, int curNode, int pathLength) {
 		this.from = from;
 		this.nodeID = curNode;
 		this.pathLength = pathLength;
 	}
 
-	public Node(BackPointer from, int curNode, int pathLength, double score) {
+	public Node(NodeBackPointer from, int curNode, int pathLength, double score) {
 		this.from = from;
 		this.nodeID = curNode;
 		this.pathLength = pathLength;
 		this.score = score;
 	}
 
-	public BackPointer getFrom() {
+	public NodeBackPointer getFrom() {
 		return from;
 	}
 
-	public void setFrom(BackPointer from) {
+	public void setFrom(NodeBackPointer from) {
 		this.from = from;
 	}
 
@@ -94,7 +94,7 @@ public class Node implements Comparable<Node> {
 		int id = -1;
 		if(from == null)
 			return id;
-		BackPointer temp = new BackPointer(from.getNode(), from.getEdge());
+		NodeBackPointer temp = new NodeBackPointer(from.getNode(), from.getEdge());
 		while(temp != null) {
 			id = temp.getEdge();
 			temp = temp.getNode().getFrom();
@@ -114,8 +114,8 @@ public class Node implements Comparable<Node> {
 
 	@Override
 	public int compareTo(Node arg0) {
-		double f = this.score + this.pathLength;
-		double otherF = arg0.score + arg0.pathLength;
+		double f = (this.score + this.pathLength);
+		double otherF = (arg0.score + arg0.pathLength);
 
 		if (f > otherF) {
 			return 1;
@@ -128,7 +128,7 @@ public class Node implements Comparable<Node> {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder("Score: "+ this.score+" ID: " + this.nodeID);
+		StringBuilder builder = new StringBuilder("Score: "+ String.valueOf(this.score+this.pathLength)+" ID: " + this.nodeID);
 		String del = " - ";
 		if (this.from != null) {
 			builder.append(del).append(this.from.getEdge()).append(del).append(this.from.getNode().toString());

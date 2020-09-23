@@ -1,14 +1,14 @@
 package org.dice_group.path;
 
-public class BackPointer {
+public class NodeBackPointer {
 	private Node node;
 	private int edge;
 	
-	public BackPointer() {
+	public NodeBackPointer() {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public BackPointer(Node node,  int edge) {
+	public NodeBackPointer(Node node,  int edge) {
 		this.node = node;
 		this.edge = edge;
 	}

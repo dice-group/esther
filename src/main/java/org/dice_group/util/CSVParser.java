@@ -12,18 +12,18 @@ public class CSVParser {
 	/**
 	 * Reads a CSV file and returns the corresponding multi-dimensional array
 	 * [entities/relations count][dimensionsCount]
-	 * 
+	 *TODO change to standard library
 	 * @param filePath
-	 * @param elementCount
 	 * @param dim
+	 * @param factor
 	 * @return
 	 */
-	public static double[][] readCSVFile(String filePath, int elementCount, int factor) {
-		int dim = 0;
+	public static double[][] readCSVFile(String filePath, int dim, int factor) {
+		int noLines = 0;
 		// TODO find a better way to count lines in file
 		try (LineNumberReader reader = new LineNumberReader(new FileReader(filePath))) {
 			reader.skip(Integer.MAX_VALUE);
-			dim = factor * (reader.getLineNumber() + 1);
+			noLines =  reader.getLineNumber();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -31,16 +31,14 @@ public class CSVParser {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if (dim == 0)
+		if (noLines == 0)
 			throw new IllegalArgumentException("Number of dimensions cannot be 0.");
 
-		double[][] embedding = new double[elementCount][dim];
+		double[][] embedding = new double[noLines][factor *dim];
 
 		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
 			String line = reader.readLine();
-			for (int i = 0; i < elementCount; i++) {
-				
-
+			for (int i = 0; i < noLines; i++) {
 				embedding[i] = Arrays.stream(line.split("\\s*,\\s*")).mapToDouble(Double::parseDouble).toArray();
 				line = reader.readLine();
 			}

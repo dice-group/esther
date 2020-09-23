@@ -51,19 +51,21 @@ public class DictionaryHelper {
 	 * Reads a single model from path and creates the corresponding dictionary
 	 * 
 	 * @param filePath
+	 * @return 
 	 */
-	public void createDictionary(String filePath) {
+	public Dictionary createDictionary(String filePath) {
 		Model model = ModelFactory.createDefaultModel();
-		model.read(filePath, "TTL");
-		createDictionary(model);
+		model.read(filePath+ "/train.txt", "TTL");
+		return createDictionary(model);
 	}
 
 	/**
 	 * Creates the entities and relations dictionary for a given model
 	 * 
 	 * @param model
+	 * @return 
 	 */
-	public void createDictionary(Model model) {
+	public Dictionary createDictionary(Model model) {
 		StmtIterator stmtIterator = model.listStatements();
 		while (stmtIterator.hasNext()) {
 			Statement curStmt = stmtIterator.next();
@@ -78,6 +80,7 @@ public class DictionaryHelper {
 				dictionary.addEntity(object.asResource().toString());
 			} 				
 		}
+		return dictionary;
 	}
 
 	/**

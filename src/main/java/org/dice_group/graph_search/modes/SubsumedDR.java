@@ -14,11 +14,8 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  */
 public class SubsumedDR extends Matrix {
 	
-	private OntModel ontModel;
-
 	public SubsumedDR(OntModel ontModel, Dictionary dictionary) {
 		super(ontModel, dictionary);
-		this.ontModel = ontModel;
 	}
 
 	@Override
@@ -49,7 +46,10 @@ public class SubsumedDR extends Matrix {
 	 */
 	private boolean isSubSetOf(Set<? extends OntResource> a, Set<? extends OntResource> b) {
 		for(OntResource cur: b) {
-			OntClass curClass = ontModel.getOntClass(cur.toString());
+			OntClass curClass = ontology.getOntClass(cur.toString());
+			if(curClass == null) {
+				return false;
+			}
 			Set<OntClass> sub = curClass.listSubClasses(false).toSet();
 			
 			if(Collections.disjoint(a, sub)) {

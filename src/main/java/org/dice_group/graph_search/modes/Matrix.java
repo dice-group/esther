@@ -1,5 +1,6 @@
 package org.dice_group.graph_search.modes;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.Set;
@@ -7,6 +8,9 @@ import java.util.Set;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntResource;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.path.Graph;
+
+import grph.DefaultIntSet;
 
 public abstract class Matrix implements MatrixInterface {
 
@@ -14,29 +18,32 @@ public abstract class Matrix implements MatrixInterface {
 
 	protected Dictionary dictionary;
 	
-	public Matrix (Dictionary dictionary) {
+	protected OntModel ontology;
+
+	public Matrix(Dictionary dictionary) {
 		this.dictionary = dictionary;
 		edgeAdjMatrix = new BitSet[dictionary.getId2Relations().size() * 2];
-		for(int i=0;i<edgeAdjMatrix.length;i++)
+		for (int i = 0; i < edgeAdjMatrix.length; i++)
 			edgeAdjMatrix[i] = new BitSet();
 	}
 
 	public Matrix(OntModel ontModel, Dictionary dictionary) {
 		this.dictionary = dictionary;
 		edgeAdjMatrix = new BitSet[dictionary.getId2Relations().size() * 2];
-		for(int i=0;i<edgeAdjMatrix.length;i++)
+		for (int i = 0; i < edgeAdjMatrix.length; i++)
 			edgeAdjMatrix[i] = new BitSet();
+		this.ontology = ontModel;
 		populateMatrix(ontModel);
 	}
 
 	public void populateMatrix(OntModel ontology) {
-		if(this instanceof IrrelevantDR) {
+		if (this instanceof IrrelevantDR) {
 			for (int i = 0; i < edgeAdjMatrix.length; i++) {
 				edgeAdjMatrix[i].set(0, edgeAdjMatrix.length);
 			}
 			return;
 		}
-		
+
 		Map<Integer, String> id2relmap = dictionary.getId2Relations();
 
 		for (int i = 0; i < dictionary.getRelCount(); i++) {
@@ -44,7 +51,7 @@ public abstract class Matrix implements MatrixInterface {
 
 			Set<? extends OntResource> domainI = ontology.getOntProperty(curProperty).listDomain().toSet();
 			Set<? extends OntResource> rangeI = ontology.getOntProperty(curProperty).listRange().toSet();
-			
+
 			/**
 			 * Since the matrix is extended by a factor of 2, this variable is also the
 			 * offset between p_n and p-_n
@@ -81,6 +88,52 @@ public abstract class Matrix implements MatrixInterface {
 		}
 	}
 
+	/**
+	 * Compare d(x_i-) with d(x_i+1)
+	 * 
+	 * @param grph
+	 * @param edge
+	 * @return
+	 */
+	public DefaultIntSet getCandidateIntEdges(Graph graph, int edge) {
+		int temp = getInverseID(edge);
+		return findDuplicateIndices(graph, temp);
+	}
+	
+	/**
+	 * 
+	 * @param id
+	 * @return the inverse id 
+	 */
+	public int getInverseID(int id) {
+		int offset = edgeAdjMatrix.length / 2;
+		int temp;
+		if (id >= offset) {
+			temp = id - offset;
+		} else {
+			temp = id + offset;
+		}
+		return temp;
+	}
+
+	/**
+	 * 
+	 * @param grph
+	 * @param edge  actual edge id
+	 * @param oEdge inverse edge
+	 * @return the indices for which the matrix has duplicate rows of the given edge id
+	 */
+	public DefaultIntSet findDuplicateIndices(Graph graph, int edge) {
+		DefaultIntSet set = new DefaultIntSet(0);
+		int oEdge = graph.getGraphEdgeID(edge);
+		for (int i = 0; i < edgeAdjMatrix.length; i++) {
+			if (edgeAdjMatrix[i].equals(edgeAdjMatrix[oEdge])) {
+				set.add(i);
+			}
+		}
+		return set;
+	}
+
 	public BitSet[] getEdgeAdjMatrix() {
 		return edgeAdjMatrix;
 	}
@@ -96,4 +149,11 @@ public abstract class Matrix implements MatrixInterface {
 	public void setDictionary(Dictionary dictionary) {
 		this.dictionary = dictionary;
 	}
+
+	@Override
+	public String toString() {
+		return Arrays.toString(edgeAdjMatrix);
+	}
+	
+	
 }

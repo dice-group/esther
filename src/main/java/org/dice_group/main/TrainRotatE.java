@@ -32,7 +32,7 @@ public class TrainRotatE {
 		// create dictionary and write it
 		LOGGER.info("Indexing entities and relations...");
 		DictionaryHelper dictHelper = new DictionaryHelper();
-		dictHelper.createDictionary(dataFolderPath + "/train.txt");
+		dictHelper.createDictionary(dataFolderPath);
 		dictHelper.saveDict2File(dataFolderPath);
 		
 		//Dictionary dict = dictHelper.getDictionary();
@@ -89,7 +89,7 @@ public class TrainRotatE {
 			File file) {
 		try {
 			LOGGER.info("Training RotatE embeddings."); // TODO: there might be a better way of doing this
-			String cmd = "python3 -u " + rotateProjectPath + "codes/run.py --do_train --data_path " + dataFolderPath
+			String cmd = "python3.6 -u " + rotateProjectPath + "codes/run.py --do_train --data_path " + dataFolderPath
 					+ " --model RotatE -n " + negSampleSize + " -b " + batchSize + " -d " + dim + " -g " + gamma
 					+ " -a " + alpha + " -adv -lr " + lr + " --max_steps " + maxSteps + " -save "
 					+ file.getAbsolutePath() + " --test_batch_size " + testSize + " -de";

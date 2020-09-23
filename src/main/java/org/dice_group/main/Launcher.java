@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
+import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
@@ -18,6 +19,7 @@ import org.dice_group.graph_search.modes.StrictDR;
 import org.dice_group.graph_search.modes.SubsumedDR;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
+import org.dice_group.path.property.PropertySearch;
 import org.dice_group.util.CSVParser;
 
 public class Launcher {
@@ -68,8 +70,10 @@ public class Launcher {
 		} else {
 			matrix = new IrrelevantDR(ontModel, dict);
 		}
-		//matrix.populateMatrix(ontModel);
-
+		
+		// find property combinations
+		
+		
 		// find paths
 		Graph graph = new Graph(model, dict);
 		PathCreator creator = new PathCreator(graph, entities, relations);

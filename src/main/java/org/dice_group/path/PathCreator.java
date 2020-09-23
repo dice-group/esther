@@ -7,7 +7,10 @@ import org.apache.jena.rdf.model.Statement;
 import org.dice_group.graph_search.ComplexL1;
 import org.dice_group.graph_search.Distance;
 import org.dice_group.graph_search.algorithms.AStarSearch;
+import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
+import org.dice_group.path.property.Property;
+import org.dice_group.path.property.PropertySearch;
 
 public class PathCreator {
 	// private static final Logger LOGGER =
@@ -42,7 +45,7 @@ public class PathCreator {
 		String edge = stmt.getPredicate().toString();
 		String destination = stmt.getObject().toString();
 
-		// get corresponding ids
+		// get corresponding ids for embeddings, not graph
 		int sourceID = entities2ID.getOrDefault(source, -1);
 		int destID = entities2ID.getOrDefault(destination, -1);
 		int edgeID = rel2ID.getOrDefault(edge, -1);
@@ -52,7 +55,11 @@ public class PathCreator {
 			throw new IllegalArgumentException("Could not find the given resources' embeddings");
 		}
 
-		// search for paths
+		// search for property combos
+		SearchAlgorithm propertyCombos = new PropertySearch(matrix);
+		Set<?> propertyPaths = propertyCombos.findPaths(graph, sourceID, edgeID, destID, relations, null);
+		
+		// search for paths based on the property combos
 		AStarSearch search = new AStarSearch(matrix);
 		Distance scorer = new ComplexL1(relations[edgeID]);
 		return search.findPaths(graph, sourceID, edgeID, destID, relations, scorer);
