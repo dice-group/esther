@@ -18,8 +18,8 @@ public class PropertySearch implements SearchAlgorithm {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PropertySearch.class);
 
 	private Matrix matrix;
-	
-	private  Distance scorer;
+
+	private Distance scorer;
 
 	public PropertySearch(Matrix matrix, Distance scorer) {
 		this.matrix = matrix;
@@ -40,7 +40,7 @@ public class PropertySearch implements SearchAlgorithm {
 		for (int i = 0; i < mat.length; i++) {
 			boolean isInverse = i >= offset;
 			if (mat[edgeID].equals(mat[i])) {
-				Property curProp = new Property(i, isInverse);
+				Property curProp = new Property(i);
 				double score;
 				if (isInverse) {
 					score = scorer.computeDistance(curProp, relations[i - offset]);
@@ -52,8 +52,7 @@ public class PropertySearch implements SearchAlgorithm {
 			}
 		}
 
-		int iterations = 0;
-		while (!queue.isEmpty() && iterations < SearchAlgorithm.MAX_PATHS) {
+		while (!queue.isEmpty()) {
 			Property curProperty = queue.poll();
 
 			/**
@@ -64,8 +63,7 @@ public class PropertySearch implements SearchAlgorithm {
 			if (mat[pRange].equals(mat[curRange])) {
 				propertyPaths.add(curProperty);
 				LOGGER.info(propertyPaths.size() + " Property path(s) found!");
-				LOGGER.info(curProperty.toString());
-				iterations++;
+				LOGGER.info(curProperty.getScore()+" : "+curProperty.toString());
 				continue;
 			}
 
@@ -76,6 +74,7 @@ public class PropertySearch implements SearchAlgorithm {
 			for (int i = 0; i < mat.length; i++) {
 				boolean isInverse = i >= offset;
 
+				// TODO test this
 				int previousEdge = matrix.getInverseID(curProperty.getEdge());
 				if (previousEdge == i || i == edgeID || i == matrix.getInverseID(edgeID)
 						|| i == matrix.getInverseID(previousEdge)) {
@@ -89,12 +88,33 @@ public class PropertySearch implements SearchAlgorithm {
 					} else {
 						score = scorer.computeDistance(curProperty, relations[i]);
 					}
-					queue.add(new Property(i, new PropertyBackPointer(curProperty), score, isInverse));
+
+					// TODO test this !propertyHasAncestor(i, curProperty)
+					if (curProperty.getPathLength() < SearchAlgorithm.MAX_PATH_LENGTH)
+						queue.add(new Property(i, new PropertyBackPointer(curProperty), score));
 				}
 			}
 
 		}
 		return propertyPaths;
+	}
+
+	public boolean propertyHasAncestor(int edge, Property p) {
+		PropertyBackPointer temp = new PropertyBackPointer(p);
+		while (temp != null) {
+			Property curProp = temp.getProperty();
+
+			if (curProp.getEdge() == edge) {
+				return true;
+			}
+			if (curProp.getEdge() == matrix.getInverseID(edge)) {
+				return true;
+			}
+
+			temp = curProp.getBackPointer();
+		}
+
+		return false;
 	}
 
 }

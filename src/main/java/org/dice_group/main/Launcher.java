@@ -2,6 +2,7 @@ package org.dice_group.main;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -16,11 +17,19 @@ import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
 import org.dice_group.graph_search.modes.StrictDR;
 import org.dice_group.graph_search.modes.SubsumedDR;
+import org.dice_group.models.DensE;
+import org.dice_group.models.EmbeddingModel;
+import org.dice_group.models.RotatE;
+import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
+import org.dice_group.path.property.Property;
 import org.dice_group.util.CSVParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Launcher {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Launcher.class);
 
 	public static void main(String[] args) {
 		Map<String, String> mapArgs = parseArguments(args);
@@ -69,16 +78,21 @@ public class Launcher {
 			matrix = new IrrelevantDR(ontModel, dict);
 		}
 		
-		// find property combinations
+		String embModel = mapArgs.get("-model");
+		EmbeddingModel eModel;
+		if(embModel.equals("R")) {
+			eModel = new RotatE(entities, relations, dict.getRelations2ID().get(predicate));
+		} else if (embModel.equals("D")) {
+			eModel = new DensE(entities, relations, dict.getRelations2ID().get(predicate));
+		} else {
+			eModel = new TransE(entities, relations, dict.getRelations2ID().get(predicate));
+		}
 		
-		
-		// find paths
+		// find property combinations in graph
 		Graph graph = new Graph(model, dict);
-		PathCreator creator = new PathCreator(graph, entities, relations);
-		// Set<Node> paths =
-		creator.findOtherPaths(fact, matrix); 
-
-		// TODO
+		PathCreator creator = new PathCreator(graph, eModel);
+		Set<Property> p = creator.findPropertyPaths(fact, matrix, model); 
+		LOGGER.info(p.toString());
 	}
 
 	/**
@@ -87,6 +101,8 @@ public class Launcher {
 	 * -matrix: type of matrix generation
 	 * 
 	 * -data: data folder path
+	 * 
+	 * -model
 	 * 
 	 * @param args
 	 * @return
@@ -104,6 +120,8 @@ public class Launcher {
 						mapArgs.put("-matrix", value);
 					} else if (param.equalsIgnoreCase("-data")) {
 						mapArgs.put("-data", value);
+					} else if (param.equalsIgnoreCase("-model")) {
+						mapArgs.put("-model", value);
 					}
 				}
 			}

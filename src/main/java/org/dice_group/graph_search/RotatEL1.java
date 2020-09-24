@@ -11,14 +11,15 @@ import org.dice_group.util.ArrayUtils;
  * || = sum [sqrt(real² + im²)]
  *
  */
-public class ComplexL1 implements Distance {
+public class RotatEL1 implements Distance {
+	
 	/**
 	 * r_p ( the predicate we are trying to approximate - given )
 	 */
 	private double[] targetEdge;
 
 
-	public ComplexL1(double[] targetEdge) {
+	public RotatEL1(double[] targetEdge) {
 		this.targetEdge = targetEdge;
 	}
 

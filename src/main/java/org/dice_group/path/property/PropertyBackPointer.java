@@ -15,6 +15,5 @@ public class PropertyBackPointer {
 		this.property = property;
 	}
 	
-	
 
 }

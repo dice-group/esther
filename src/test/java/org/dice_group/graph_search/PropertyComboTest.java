@@ -2,6 +2,7 @@ package org.dice_group.graph_search;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -9,17 +10,23 @@ import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
-import org.dice_group.graph_search.algorithms.PropertySearch;
-import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.StrictDR;
+import org.dice_group.models.EmbeddingModel;
+import org.dice_group.models.RotatE;
 import org.dice_group.path.Graph;
+import org.dice_group.path.PathCreator;
+import org.dice_group.path.property.Property;
 import org.dice_group.util.CSVParser;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PropertyComboTest {
+	private static final Logger LOGGER = LoggerFactory.getLogger(PropertyComboTest.class);
 
 	private final String PREFIX_NS = "www.example.com";
 
@@ -31,21 +38,28 @@ public class PropertyComboTest {
 
 		DictionaryHelper help = new DictionaryHelper();
 		Dictionary dict = help.createDictionary(model);
+		
+		Statement fact = ResourceFactory.createStatement(ResourceFactory.createResource(PREFIX_NS+":a"),
+				ResourceFactory.createProperty(PREFIX_NS+":z"), 
+				ResourceFactory.createResource(PREFIX_NS+":o"));
 
-		// TODO don't need grph object at all, to be removed
-		Graph graph = new Graph(model, dict);
 		Matrix matrix = new StrictDR(ontModel, dict);
 
 		Path resourceDirectory = Paths.get("src", "test", "resources");
 		String absolutePath = resourceDirectory.toFile().getAbsolutePath();
+		
 		double[][] relations = CSVParser.readCSVFile(absolutePath + "/rotate/relation_embedding.csv", 10, 2);
+		double[][] entities = CSVParser.readCSVFile(absolutePath + "/rotate/entity_embedding.csv", 10, 1);
 
 		String predicate = PREFIX_NS + ":z";
 		int pID = dict.getRelations2ID().get(predicate);
 		
-		SearchAlgorithm propertyCombos = new PropertySearch(matrix, new ComplexL1(relations[pID]));
-		propertyCombos.findPaths(pID, relations);
+		EmbeddingModel eModel = new RotatE(entities, relations, dict.getRelations2ID().get(predicate));
 
+		Graph graph = new Graph(model, dict);
+		PathCreator creator = new PathCreator(graph, eModel);
+		Set<Property> p = creator.findPropertyPaths(fact, matrix, model); 
+		LOGGER.info(p.toString());
 	}
 
 	private OntModel buildTestOntology() {

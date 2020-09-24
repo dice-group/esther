@@ -1,7 +1,6 @@
 package org.dice_group.graph_search;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 

@@ -3,28 +3,25 @@ package org.dice_group.path;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
-import org.dice_group.graph_search.ComplexL1;
 import org.dice_group.graph_search.algorithms.PropertySearch;
 import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
+import org.dice_group.models.EmbeddingModel;
+import org.dice_group.path.property.Property;
+import org.dice_group.util.SparqlHelper;
 
 public class PathCreator {
 	// private static final Logger LOGGER =
 	// LoggerFactory.getLogger(PathCreator.class);
 
 	private Graph graph;
-	private double[][] entities;
-	private double[][] relations;
+	private EmbeddingModel emodel;
 
-	public PathCreator() {
-		graph = new Graph();
-	}
-
-	public PathCreator(Graph graph, double[][] entities, double[][] relations) {
+	public PathCreator(Graph graph, EmbeddingModel emodel) {
 		this.graph = graph;
-		this.entities = entities;
-		this.relations = relations;
+		this.emodel = emodel;
 	}
 
 	/**
@@ -34,34 +31,29 @@ public class PathCreator {
 	 * @param destination goal node
 	 * @return
 	 */
-	public Set<Node> findOtherPaths(Statement stmt, Matrix matrix) {
-		Map<String, Integer> entities2ID = graph.getDictionary().getEntities2ID();
+	public Set<Property> findPropertyPaths(Statement stmt, Matrix matrix, Model model) {
 		Map<String, Integer> rel2ID = graph.getDictionary().getRelations2ID();
 
 		String source = stmt.getSubject().toString();
 		String edge = stmt.getPredicate().toString();
 		String destination = stmt.getObject().toString();
 
-		// get corresponding ids for embeddings, not graph
-		int sourceID = entities2ID.getOrDefault(source, -1);
-		int destID = entities2ID.getOrDefault(destination, -1);
+		// get corresponding ids for embeddings
 		int edgeID = rel2ID.getOrDefault(edge, -1);
 
 		// if any isn't found, return. It's an error
-		if (sourceID < 0 || destID < 0 || edgeID < 0) {
+		if (edgeID < 0) {
 			throw new IllegalArgumentException("Could not find the given resources' embeddings");
 		}
 
 		// search for property combos
-		SearchAlgorithm propertyCombos = new PropertySearch(matrix, new ComplexL1(relations[edgeID]));
-		// Set<?> propertyPaths =
-		propertyCombos.findPaths(edgeID, relations);
+		SearchAlgorithm propertyCombos = new PropertySearch(matrix, emodel.getScorer());
+		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, emodel.getRelations());
 
-		// search for paths based on the property combos
-		// TODO property paths
+		// remove if not present in model
+		//propertyPaths.removeIf(k -> SparqlHelper.askModel(model, SparqlHelper.getAskQuery(k.toString(), source, destination)));
 
-		return null;
-
+		return propertyPaths;
 	}
 
 	public Graph getGraph() {
@@ -71,21 +63,4 @@ public class PathCreator {
 	public void setGraph(Graph graph) {
 		this.graph = graph;
 	}
-
-	public double[][] getEntities() {
-		return entities;
-	}
-
-	public void setEntities(double[][] entities) {
-		this.entities = entities;
-	}
-
-	public double[][] getRelations() {
-		return relations;
-	}
-
-	public void setRelations(double[][] relations) {
-		this.relations = relations;
-	}
-
 }

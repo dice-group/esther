@@ -8,9 +8,6 @@ import java.util.Set;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntResource;
 import org.dice_group.embeddings.dictionary.Dictionary;
-import org.dice_group.path.Graph;
-
-import grph.DefaultIntSet;
 
 public abstract class Matrix implements MatrixInterface {
 
@@ -89,18 +86,6 @@ public abstract class Matrix implements MatrixInterface {
 	}
 
 	/**
-	 * Compare d(x_i-) with d(x_i+1)
-	 * 
-	 * @param grph
-	 * @param edge
-	 * @return
-	 */
-	public DefaultIntSet getCandidateIntEdges(Graph graph, int edge) {
-		int temp = getInverseID(edge);
-		return findDuplicateIndices(graph, temp);
-	}
-	
-	/**
 	 * 
 	 * @param id
 	 * @return the inverse id 
@@ -114,24 +99,6 @@ public abstract class Matrix implements MatrixInterface {
 			temp = id + offset;
 		}
 		return temp;
-	}
-
-	/**
-	 * 
-	 * @param grph
-	 * @param edge  actual edge id
-	 * @param oEdge inverse edge
-	 * @return the indices for which the matrix has duplicate rows of the given edge id
-	 */
-	public DefaultIntSet findDuplicateIndices(Graph graph, int edge) {
-		DefaultIntSet set = new DefaultIntSet(0);
-		int oEdge = graph.getGraphEdgeID(edge);
-		for (int i = 0; i < edgeAdjMatrix.length; i++) {
-			if (edgeAdjMatrix[i].equals(edgeAdjMatrix[oEdge])) {
-				set.add(i);
-			}
-		}
-		return set;
 	}
 
 	public BitSet[] getEdgeAdjMatrix() {

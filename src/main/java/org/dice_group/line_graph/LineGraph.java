@@ -11,7 +11,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.util.Constants;
-import org.dice_group.util.GraphUtils;
+import org.dice_group.util.SparqlHelper;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.WeightedPseudograph;
 
@@ -36,7 +36,7 @@ public class LineGraph {
 		edgeTypes.put(Constants.OS_TYPE, Constants.OS_QUERY);
 
 		edgeTypes.forEach((id, query) -> {
-			List<QuerySolution> solutions = GraphUtils.selectModel(model, query);
+			List<QuerySolution> solutions = SparqlHelper.selectModel(model, query);
 			addResultsToGraph(solutions, id);
 		});
 

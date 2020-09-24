@@ -26,6 +26,17 @@ public class ArrayUtils {
 	public static double[] computeVectorSubtraction(double[] a, double[] b) {
 		return computeArrayOperation(a, b, i -> a[i] - b[i]);
 	}
+	
+	/**
+	 * Computes the element-wise subtraction of 2 vectors
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static double[] computeVectorSummation(double[] a, double[] b) {
+		return computeArrayOperation(a, b, i -> a[i] + b[i]);
+	}
 
 	/**
 	 * Computes the absolute value of a complex vector v with real part a and

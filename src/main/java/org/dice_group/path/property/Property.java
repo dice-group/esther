@@ -1,6 +1,8 @@
 package org.dice_group.path.property;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Property implements Comparable<Property> {
 	private int edge;
@@ -9,24 +11,16 @@ public class Property implements Comparable<Property> {
 	private double score;
 	private double[] innerProduct;
 
-	public Property(int edge, boolean isInverse) {
+	public Property(int edge) {
 		this.edge = edge;
 		backPointer = null;
-		if (isInverse) {
-			this.pathLength = 2;
-		} else {
-			this.pathLength = 1;
-		}
+		this.pathLength = 1;
 	}
 
-	public Property(int edge, PropertyBackPointer backPointer, double score ,boolean isInverse) {
+	public Property(int edge, PropertyBackPointer backPointer, double score) {
 		this.edge = edge;
 		this.backPointer = backPointer;
-		if (isInverse) {
-			this.pathLength = backPointer.getProperty().getPathLength() + 2;
-		} else {
-			this.pathLength = backPointer.getProperty().getPathLength() + 1;
-		}
+		this.pathLength = backPointer.getProperty().getPathLength() + 1;
 		this.score = score + pathLength;
 	}
 
@@ -86,13 +80,17 @@ public class Property implements Comparable<Property> {
 
 	@Override
 	public String toString() {
-		String del = " <- ";
-		StringBuilder builder = new StringBuilder(
-				"Score: " + this.score + del + this.edge);
+		List<String> ordered = new ArrayList<String>();
+		ordered.add("<"+String.valueOf(this.edge)+">");
 		if (this.backPointer != null) {
-			builder.append(del).append(this.backPointer.getProperty().toString());
+			PropertyBackPointer temp = this.backPointer;
+			while(temp != null) {
+				ordered.add(0,String.valueOf("<"+temp.getProperty().getEdge())+">");
+				temp = temp.getProperty().getBackPointer();
+			}
 		}
-		return builder.toString();
+		String string = String.join("/", ordered);
+		return string;
 	}
 
 }
