@@ -259,10 +259,10 @@ class KGEModel(nn.Module):
 
         positive_sample, negative_sample, subsampling_weight, mode = next(train_iterator)
 
-        if args.cuda:
-            positive_sample = positive_sample.cuda()
-            negative_sample = negative_sample.cuda()
-            subsampling_weight = subsampling_weight.cuda()
+        # if args.cuda:
+            # positive_sample = positive_sample.cuda()
+            # negative_sample = negative_sample.cuda()
+            # subsampling_weight = subsampling_weight.cuda()
 
         negative_score = model((positive_sample, negative_sample), mode=mode)
 
