@@ -165,6 +165,7 @@ def log_metrics(mode, step, metrics):
         
         
 def main(args):
+    args.cuda = torch.cuda.is_available()
     if (not args.do_train) and (not args.do_valid) and (not args.do_test):
         raise ValueError('one of train/val/test mode must be choosed.')
     
@@ -237,6 +238,7 @@ def main(args):
     logging.info('Model Parameter Configuration:')
     for name, param in kge_model.named_parameters():
         logging.info('Parameter %s: %s, require_grad = %s' % (name, str(param.size()), str(param.requires_grad)))
+
 
     if args.cuda:
         kge_model = kge_model.cuda()
