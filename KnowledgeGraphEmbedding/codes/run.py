@@ -240,8 +240,8 @@ def main(args):
         logging.info('Parameter %s: %s, require_grad = %s' % (name, str(param.size()), str(param.requires_grad)))
 
 
-    if args.cuda:
-        kge_model = kge_model.cuda()
+    # if args.cuda:
+        # kge_model = kge_model.cuda()
     
     if args.do_train:
         # Set training dataloader iterator
