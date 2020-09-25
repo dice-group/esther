@@ -129,10 +129,10 @@ def save_model(model, optimizer, save_variable_list, args):
     np.save(os.path.join(args.save_path, 'relation_y'), relation_y_embedding)
     np.save(os.path.join(args.save_path, 'relation_z'), relation_z_embedding)
     
-     np.savetxt(os.path.join(args.save_path, 'relation_w.csv'), relation_w_embedding, delimiter=",")
+    np.savetxt(os.path.join(args.save_path, 'relation_w.csv'), relation_w_embedding, delimiter=",")
     np.savetxt(os.path.join(args.save_path, 'relation_x.csv'), relation_x_embedding, delimiter=",")
     np.savetxt(os.path.join(args.save_path, 'relation_y.csv'), relation_y_embedding, delimiter=",")
-     np.savetxt(os.path.join(args.save_path, 'relation_z.csv'), relation_z_embedding, delimiter=",")
+    np.savetxt(os.path.join(args.save_path, 'relation_z.csv'), relation_z_embedding, delimiter=",")
     
 def read_triple(file_path, entity2id, relation2id):
     '''
