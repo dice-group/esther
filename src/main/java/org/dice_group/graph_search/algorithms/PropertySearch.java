@@ -13,6 +13,10 @@ import org.dice_group.path.property.PropertyBackPointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Follows a slightly modified A* search algorithm
+ *
+ */
 public class PropertySearch implements SearchAlgorithm {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PropertySearch.class);
@@ -40,11 +44,13 @@ public class PropertySearch implements SearchAlgorithm {
 		for (int i = 0; i < mat.length; i++) {
 			boolean isInverse = i >= offset;
 			if (mat[edgeID].equals(mat[i])) {
-				Property curProp = new Property(i);
+				Property curProp;
 				double score;
 				if (isInverse) {
+					curProp = new Property(i, isInverse);
 					score = scorer.computeDistance(curProp, relations[i - offset]);
 				} else {
+					curProp = new Property(i);
 					score = scorer.computeDistance(curProp, relations[i]);
 				}
 				curProp.addToScore(score);
@@ -63,7 +69,7 @@ public class PropertySearch implements SearchAlgorithm {
 			if (mat[pRange].equals(mat[curRange])) {
 				propertyPaths.add(curProperty);
 				LOGGER.info(propertyPaths.size() + " Property path(s) found!");
-				LOGGER.info(curProperty.getScore()+" : "+curProperty.toString());
+				LOGGER.info(curProperty.getScore() + " : " + curProperty.toString());
 				continue;
 			}
 
@@ -82,6 +88,8 @@ public class PropertySearch implements SearchAlgorithm {
 				}
 
 				if (mat[previousEdge].equals(mat[i])) {
+					if (curProperty.getPathLength() >= SearchAlgorithm.MAX_PATH_LENGTH)
+						continue;
 					double score;
 					if (isInverse) {
 						score = scorer.computeDistance(curProperty, relations[i - offset]);
@@ -89,9 +97,8 @@ public class PropertySearch implements SearchAlgorithm {
 						score = scorer.computeDistance(curProperty, relations[i]);
 					}
 
-					// TODO test this !propertyHasAncestor(i, curProperty)
-					if (curProperty.getPathLength() < SearchAlgorithm.MAX_PATH_LENGTH)
-						queue.add(new Property(i, new PropertyBackPointer(curProperty), score));
+					// TODO check if this is necessary:  !propertyHasAncestor(i, curProperty)
+					queue.add(new Property(i, new PropertyBackPointer(curProperty), score, isInverse));
 				}
 			}
 

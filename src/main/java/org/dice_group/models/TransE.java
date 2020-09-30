@@ -13,4 +13,8 @@ public class TransE extends EmbeddingModel {
 		scorer = new RotatEL1(relations[i]);
 	}
 
+	@Override
+	public String toString() {
+		return "TransE";
+	}
 }

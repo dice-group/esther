@@ -21,4 +21,9 @@ public class NotDisjointDR extends Matrix {
 	public boolean compareSets(Set<? extends OntResource> a, Set<? extends OntResource> b) {
 		return !Collections.disjoint(a, b);
 	}
+	
+	@Override
+	public String toString() {
+		return "Non-disjoint";
+	}
 }

@@ -58,5 +58,10 @@ public class SubsumedDR extends Matrix {
 		}
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		return "Subsumed";
+	}
 
 }

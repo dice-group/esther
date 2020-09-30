@@ -20,4 +20,9 @@ public class IrrelevantDR extends Matrix {
 	public boolean compareSets(Set<? extends OntResource> a, Set<? extends OntResource> b) {
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		return "Irrelevant";
+	}
 }

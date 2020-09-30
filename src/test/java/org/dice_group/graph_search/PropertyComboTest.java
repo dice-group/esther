@@ -52,7 +52,7 @@ public class PropertyComboTest {
 		double[][] entities = CSVParser.readCSVFile(absolutePath + "/rotate/entity_embedding.csv", 10, 1);
 
 		String predicate = PREFIX_NS + ":z";
-		int pID = dict.getRelations2ID().get(predicate);
+		//int pID = dict.getRelations2ID().get(predicate);
 		
 		EmbeddingModel eModel = new RotatE(entities, relations, dict.getRelations2ID().get(predicate));
 

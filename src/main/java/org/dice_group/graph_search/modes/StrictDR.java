@@ -22,5 +22,9 @@ public class StrictDR extends Matrix {
 		return a.equals(b);
 	}
 	
+	@Override
+	public String toString() {
+		return "Strict";
+	}
 	
 }

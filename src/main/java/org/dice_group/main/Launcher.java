@@ -1,6 +1,7 @@
 package org.dice_group.main;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,8 +11,11 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
+import org.dice_group.fact_check.path.scorer.NPMICalculator;
+import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
@@ -77,6 +81,7 @@ public class Launcher {
 		} else {
 			matrix = new IrrelevantDR(ontModel, dict);
 		}
+		LOGGER.info("Matrix type: "+matrix.toString());
 		
 		String embModel = mapArgs.get("-model");
 		EmbeddingModel eModel;
@@ -87,12 +92,31 @@ public class Launcher {
 		} else {
 			eModel = new TransE(entities, relations, dict.getRelations2ID().get(predicate));
 		}
+		LOGGER.info("Embedding model: " + eModel.toString());
 		
 		// find property combinations in graph
 		Graph graph = new Graph(model, dict);
 		PathCreator creator = new PathCreator(graph, eModel);
 		Set<Property> p = creator.findPropertyPaths(fact, matrix, model); 
-		LOGGER.info(p.toString());
+		
+		// remove if property path not present
+		// p.removeIf(k -> SparqlHelper.askModel(model, SparqlHelper.getAskQuery(k.toString(), subject, object)));
+		
+		Set<NPMICalculator> calcSet = new HashSet<NPMICalculator>();
+		String serviceRequestURL = "";
+		for(Property path: p) {
+			NPMICalculator c = new NPMICalculator(path, dict.getId2Relations(), new OccurrencesCounter(fact, serviceRequestURL), false);
+			try {
+				c.calculatePMIScore();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			calcSet.add(c);
+		}
+		
+		
+		
 	}
 
 	/**
@@ -102,7 +126,7 @@ public class Launcher {
 	 * 
 	 * -data: data folder path
 	 * 
-	 * -model
+	 * -model embedding model used
 	 * 
 	 * @param args
 	 * @return

@@ -12,4 +12,9 @@ public class DensE extends EmbeddingModel {
 		super(entities, relations);
 		scorer = new RotatEL1(relations[i]);
 	}
+	
+	@Override
+	public String toString() {
+		return "DensE";
+	}
 }
