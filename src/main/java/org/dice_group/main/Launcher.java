@@ -9,8 +9,8 @@ import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
@@ -29,6 +29,7 @@ import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.CSVParser;
+import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,89 +39,106 @@ public class Launcher {
 	public static void main(String[] args) {
 		Map<String, String> mapArgs = parseArguments(args);
 
-		// embeddings file path
-		String modelFilePath = mapArgs.get("-emb");
-
-		// folder where the model and dictionary are saved
+		// folder where the dictionary is saved
 		String folderPath = mapArgs.get("-data");
 
+		String serviceRequestURL = "localhost:8890/sparql";
+		
+		// get matrix type from user
+		String type = mapArgs.get("-matrix");
+
 		// testing data
-		String subject = "www.example.com:a";
-		String predicate = "www.example.com:h";
-		String object = "www.example.com:e";
-
-		Statement fact = ResourceFactory.createStatement(ResourceFactory.createResource(subject),
-				ResourceFactory.createProperty(predicate), ResourceFactory.createResource(object));
-
-		// read model - TODO change this to a sparql endpoint instead
-		Model model = ModelFactory.createDefaultModel();
-		model.read(folderPath + "/train.txt", "TTL");
-
+		Model testData = ModelFactory.createDefaultModel();
+		testData.read("/home/ana-silva/Work/esther/freebase/test.txt");
+		
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		dictHelper.readDictionary(folderPath);
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		double[][] entities = CSVParser.readCSVFile(modelFilePath + "/entity_embedding.csv", dict.getEntCount(), 2);
-		double[][] relations = CSVParser.readCSVFile(modelFilePath + "/relation_embedding.csv", dict.getRelCount(), 1);
+		double[][] entities = CSVParser.readCSVFile(folderPath + "/entity_embedding.csv", dict.getEntCount(), 2);
+		double[][] relations = CSVParser.readCSVFile(folderPath + "/relation_embedding.csv", dict.getRelCount(), 1);
 
-		// read and create ontology with OWL inference
+		// read and create ontology with OWL inference //TODO move this to endpoint?
 		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
-		ontModel.read(folderPath+"/ontology.owl");
-
-		// get matrix type from user
-		String type = mapArgs.get("-matrix");
-		Matrix matrix;
-		if (type.equals("ND")) {
-			matrix = new NotDisjointDR(ontModel, dict);
-		} else if (type.equals("S")) {
-			matrix = new StrictDR(ontModel, dict);
-		} else if (type.equals("SS")) {
-			matrix = new SubsumedDR(ontModel, dict);
-		} else {
-			matrix = new IrrelevantDR(ontModel, dict);
-		}
-		LOGGER.info("Matrix type: "+matrix.toString());
+		ontModel.read(folderPath + "/fb_ontology.nt");
 		
-		String embModel = mapArgs.get("-model");
-		EmbeddingModel eModel;
-		if(embModel.equals("R")) {
-			eModel = new RotatE(entities, relations, dict.getRelations2ID().get(predicate));
-		} else if (embModel.equals("D")) {
-			eModel = new DensE(entities, relations, dict.getRelations2ID().get(predicate));
-		} else {
-			eModel = new TransE(entities, relations, dict.getRelations2ID().get(predicate));
-		}
-		LOGGER.info("Embedding model: " + eModel.toString());
+		Set<Graph> graphs = new HashSet<Graph>();
 		
-		// find property combinations in graph
-		Graph graph = new Graph(model, dict);
-		PathCreator creator = new PathCreator(graph, eModel);
-		Set<Property> p = creator.findPropertyPaths(fact, matrix, model); 
-		
-		// remove if property path not present
-		// p.removeIf(k -> SparqlHelper.askModel(model, SparqlHelper.getAskQuery(k.toString(), subject, object)));
-		
-		Set<NPMICalculator> calcSet = new HashSet<NPMICalculator>();
-		String serviceRequestURL = "";
-		for(Property path: p) {
-			NPMICalculator c = new NPMICalculator(path, dict.getId2Relations(), new OccurrencesCounter(fact, serviceRequestURL), false);
-			try {
-				c.calculatePMIScore();
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		// check each statement
+		StmtIterator checkStmts = testData.listStatements();
+		while(checkStmts.hasNext()) {
+			Statement curStmt = checkStmts.next();
+			
+			Matrix matrix;
+			if (type.equals("ND")) {
+				matrix = new NotDisjointDR(ontModel, dict);
+			} else if (type.equals("S")) {
+				matrix = new StrictDR(ontModel, dict);
+			} else if (type.equals("SS")) {
+				matrix = new SubsumedDR(ontModel, dict);
+			} else {
+				matrix = new IrrelevantDR(ontModel, dict);
 			}
-			calcSet.add(c);
+			LOGGER.info("Matrix type: " + matrix.toString());
+
+			String embModel = mapArgs.get("-model");
+			EmbeddingModel eModel;
+			if (embModel.equals("R")) {
+				eModel = new RotatE(entities, relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+			} else if (embModel.equals("D")) {
+				eModel = new DensE(entities, relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+			} else {
+				eModel = new TransE(entities, relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+			}
+			LOGGER.info("Embedding model: " + eModel.toString());
+
+			// find property combinations in graph
+			PathCreator creator = new PathCreator(dict, eModel);
+			Set<Property> p = creator.findPropertyPaths(curStmt, matrix);
+
+			// remove if property path not present in graph
+			p.removeIf(curProp -> SparqlHelper.askModel(serviceRequestURL,
+					SparqlHelper.getAskQuery(curProp.toString(), curStmt.getSubject().toString(), curStmt.getObject().toString())));
+
+			// calculate npmi for each path
+			for (Property path : p) {
+				OccurrencesCounter c = new OccurrencesCounter(curStmt, serviceRequestURL, false);
+				c.count();
+				if(c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
+					graphs.add(new Graph(p, 0, curStmt));
+					continue;
+				}
+				NPMICalculator cal = new NPMICalculator(path, dict.getId2Relations(),
+						new OccurrencesCounter(curStmt, serviceRequestURL, false));
+				try {
+					cal.calculatePMIScore();
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			double[] scores = new double[p.size()];
+			scores = p.stream().mapToDouble(k -> k.getFinalScore()).toArray();
+			
+			// aggregate the path's scores into one triple veracity score
+			// TODO 
+			double score = 1.0;
+	        for (int s = scores.length - 1; s >= 0; s--) {
+	            if (scores[s] > 1) continue;
+	            score = score * (1 - scores[s]);
+	        }
+	        
+			graphs.add(new Graph(p, 1 - score, curStmt));
 		}
-		
+
 		
 		
 	}
 
 	/**
-	 * -emb: embeddings full file path
 	 * 
 	 * -matrix: type of matrix generation
 	 * 

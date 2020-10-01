@@ -1,38 +1,46 @@
 package org.dice_group.path;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.dice_group.embeddings.dictionary.Dictionary;
+import java.util.Set;
+
+import org.apache.jena.rdf.model.Statement;
+import org.dice_group.path.property.Property;
 
 public class Graph {
 
-	private Model model;
-	private Dictionary dictionary;
-
-	public Graph() {
-		model = ModelFactory.createDefaultModel();
-		dictionary = new Dictionary();
+	private Set<Property> paths;
+	private double score;
+	private Statement triple;
+	
+	public Graph(Set<Property> paths, double score, Statement triple) {
+		this.paths = paths;
+		this.score = score;
+		this.triple = triple;
 	}
 
-	public Graph(Model model, Dictionary dictionary) {
-		this.model = model;
-		this.dictionary = dictionary;
+	public Set<Property> getPaths() {
+		return paths;
 	}
 
-	public Model getModel() {
-		return model;
+	public void setPaths(Set<Property> paths) {
+		this.paths = paths;
 	}
 
-	public void setModel(Model model) {
-		this.model = model;
+	public double getScore() {
+		return score;
 	}
 
-	public Dictionary getDictionary() {
-		return dictionary;
+	public void setScore(double score) {
+		this.score = score;
 	}
 
-	public void setDictionary(Dictionary dictionary) {
-		this.dictionary = dictionary;
+	public Statement getTriple() {
+		return triple;
 	}
+
+	public void setTriple(Statement triple) {
+		this.triple = triple;
+	}
+
+	
 
 }

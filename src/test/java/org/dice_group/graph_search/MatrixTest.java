@@ -63,6 +63,17 @@ public class MatrixTest {
 				Assert.fail();
 		}
 	}	
+	
+	@Test
+	public void testMatrixTypesUniqueMethod() {
+		Matrix ndMat = new NotDisjointDR(ontology, new Dictionary());
+		
+		
+		
+		Matrix stricMat = new StrictDR(ontology, new Dictionary());
+		Matrix subsMat = new SubsumedDR(ontology, new Dictionary());
+		Matrix irrMat = new IrrelevantDR(ontology, new Dictionary());
+	}
 
 	private static OntModel buildTestOntology2() {
 		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);

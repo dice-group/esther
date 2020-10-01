@@ -17,7 +17,6 @@ import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.StrictDR;
 import org.dice_group.models.EmbeddingModel;
 import org.dice_group.models.RotatE;
-import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.CSVParser;
@@ -56,9 +55,8 @@ public class PropertyComboTest {
 		
 		EmbeddingModel eModel = new RotatE(entities, relations, dict.getRelations2ID().get(predicate));
 
-		Graph graph = new Graph(model, dict);
-		PathCreator creator = new PathCreator(graph, eModel);
-		Set<Property> p = creator.findPropertyPaths(fact, matrix, model); 
+		PathCreator creator = new PathCreator(dict, eModel);
+		Set<Property> p = creator.findPropertyPaths(fact, matrix); 
 		LOGGER.info(p.toString());
 	}
 

@@ -10,8 +10,53 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 
 public class SparqlHelper {
+	
+	public static List<Resource> getDomain(String requestURL, String property) {
+		String sparqlQuery = "select ?o where { <"+property+"> <http://www.w3.org/2000/01/rdf-schema#domain> ?o  filter isIri(?o) }";
+		return selectEndpoint(requestURL,sparqlQuery);
+	}
+	
+	public static List<Resource> getRange(String requestURL, String property) {
+		String sparqlQuery = "select ?o where { <"+property+"> <http://www.w3.org/2000/01/rdf-schema#range> ?o  filter isIri(?o) }";
+		return selectEndpoint(requestURL,sparqlQuery);
+	}
+	
+	public static List<Resource> selectEndpoint(String requestURL, String sparqlQuery){
+		Query query = QueryFactory.create(sparqlQuery);
+		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(requestURL, query);
+		List<Resource> objects = new ArrayList<Resource>();
+		try {
+			ResultSet resultSet = queryExecution.execSelect();
+			while (resultSet.hasNext()) {
+				objects.add(resultSet.next().get("?o").asResource());
+			}
+		} finally {
+			queryExecution.close();
+		}
+
+		return objects;
+	}
+	
+	/**
+	 * 
+	 * @param graph
+	 * @param sparqlQuery
+	 * @return
+	 */
+	public static boolean askModel(String requestURL, String sparqlQuery) {
+		Query query = QueryFactory.create(sparqlQuery);
+		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(requestURL, query);
+		boolean result = false;
+		try {
+			result = queryExecution.execAsk() ;
+		} finally {
+			queryExecution.close();
+		}
+		return result;
+	}
 	
 	/**
 	 * 

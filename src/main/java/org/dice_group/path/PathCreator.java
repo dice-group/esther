@@ -3,8 +3,8 @@ package org.dice_group.path;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
+import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.graph_search.algorithms.PropertySearch;
 import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
@@ -15,11 +15,12 @@ public class PathCreator {
 	// private static final Logger LOGGER =
 	// LoggerFactory.getLogger(PathCreator.class);
 
-	private Graph graph;
 	private EmbeddingModel emodel;
 
-	public PathCreator(Graph graph, EmbeddingModel emodel) {
-		this.graph = graph;
+	private Dictionary dictionary;
+
+	public PathCreator(Dictionary dictionary, EmbeddingModel emodel) {
+		this.dictionary = dictionary;
 		this.emodel = emodel;
 	}
 
@@ -30,8 +31,8 @@ public class PathCreator {
 	 * @param destination goal node
 	 * @return
 	 */
-	public Set<Property> findPropertyPaths(Statement stmt, Matrix matrix, Model model) {
-		Map<String, Integer> rel2ID = graph.getDictionary().getRelations2ID();
+	public Set<Property> findPropertyPaths(Statement stmt, Matrix matrix) {
+		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
 
 		String edge = stmt.getPredicate().toString();
 
@@ -50,11 +51,20 @@ public class PathCreator {
 		return propertyPaths;
 	}
 
-	public Graph getGraph() {
-		return graph;
+	public EmbeddingModel getEmodel() {
+		return emodel;
 	}
 
-	public void setGraph(Graph graph) {
-		this.graph = graph;
+	public void setEmodel(EmbeddingModel emodel) {
+		this.emodel = emodel;
 	}
+
+	public Dictionary getDictionary() {
+		return dictionary;
+	}
+
+	public void setDictionary(Dictionary dictionary) {
+		this.dictionary = dictionary;
+	}
+
 }

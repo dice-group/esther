@@ -49,13 +49,15 @@ public class OccurrencesCounter {
 
 	private String serviceRequestURL;
 
-	public OccurrencesCounter(Statement stmt, String serviceRequestURL) {
+	private boolean vTy;
+
+	public OccurrencesCounter(Statement stmt, String serviceRequestURL, boolean vTy) {
 		this.stmt = stmt;
 		this.serviceRequestURL = serviceRequestURL;
 		this.subjectTypes = new HashSet<Node>();
 		this.objectTypes = new HashSet<Node>();
+		this.vTy = vTy;
 		getDomainRangeInfo();
-		count();
 	}
 
 	private void getDomainRangeInfo() {
@@ -71,11 +73,28 @@ public class OccurrencesCounter {
 		}
 	}
 
-	private void count() {
+	public void count() {
 		this.predicateTriplesCount = countPredicateOccurrences(NodeFactory.createVariable("s"), stmt.getPredicate(),
 				NodeFactory.createVariable("o"));
-		this.subjectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, subjectTypes);
-		this.objectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, objectTypes);
+		if (!vTy) {
+			this.subjectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, subjectTypes);
+			this.objectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, objectTypes);
+		} else {
+			this.subjectTriplesCount = countSOOccurrances("count(distinct ?s)", stmt.getPredicate());
+			this.objectTriplesCount = countSOOccurrances("count(distinct ?o)", stmt.getPredicate());
+		}
+	}
+
+	public int countSOOccurrances(String var, Property property) {
+		SelectBuilder occurrenceBuilder = new SelectBuilder();
+		try {
+			occurrenceBuilder.addVar(var, "?c");
+			occurrenceBuilder.addWhere(NodeFactory.createVariable("s"), property, NodeFactory.createVariable("o"));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+
+		return returnCount(occurrenceBuilder);
 	}
 
 	public Set<Node> getTypeInformation(Resource subject, Property property) {
@@ -130,6 +149,14 @@ public class OccurrencesCounter {
 			count_Occurrence = resultSet.next().get("?c").asLiteral().getInt();
 		queryExecution.close();
 		return count_Occurrence;
+	}
+
+	public boolean isvTy() {
+		return vTy;
+	}
+
+	public void setvTy(boolean vTy) {
+		this.vTy = vTy;
 	}
 
 	public Set<Node> getSubjectTypes() {

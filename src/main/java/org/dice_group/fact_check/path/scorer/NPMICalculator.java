@@ -22,15 +22,13 @@ public class NPMICalculator {
 
 	private Property path;
 	private OccurrencesCounter counter;
-	private boolean vTy;
 	private String builder;
 	private String sPath;
 	private List<Property> pathProperties;
 
-	public NPMICalculator(Property path, Map<Integer, String> id2rel, OccurrencesCounter counter, boolean vTy) {
+	public NPMICalculator(Property path, Map<Integer, String> id2rel, OccurrencesCounter counter) {
 		this.path = path;
 		this.counter = counter;
-		this.vTy = vTy;
 		builder = "?s ?p1 ?x1; ?x1 ?p2 ?x2; ?x2 ?p3 ?o";
 		sPath = PropertyHelper.translate2IRI(path, id2rel);
 		pathProperties = path.getPaths();
@@ -118,7 +116,7 @@ public class NPMICalculator {
 
 	public double calculatePMIScore() throws ParseException {
 
-		if (this.vTy)
+		if (counter.isvTy())
 			return calculatePMIScore_vTy();
 
 		String sPath = path.toString();
@@ -310,6 +308,7 @@ public class NPMICalculator {
 //                count_Path_Occurrence, count_predicate_Occurrence))) {
 //            throw new NPMIFilterException("The NPMI filter rejected the calculated NPMI.");
 //        }
+		path.setFinalScore(npmi);
 		return npmi;
 	}
 
@@ -326,5 +325,10 @@ public class NPMICalculator {
 		} else {
 			return (logProbAB - logProbA - logProbB) / -logProbAB;
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return path.getFinalScore()+""+path.toString();
 	}
 }
