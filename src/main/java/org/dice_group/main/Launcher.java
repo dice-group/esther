@@ -100,7 +100,7 @@ public class Launcher {
 			Set<Property> p = creator.findPropertyPaths(curStmt, matrix);
 
 			// remove if property path not present in graph
-			p.removeIf(curProp -> SparqlHelper.askModel(serviceRequestURL,
+			p.removeIf(curProp -> !SparqlHelper.askModel(serviceRequestURL,
 					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), curStmt.getSubject().toString(), curStmt.getObject().toString())));
 
 			// calculate npmi for each path

@@ -58,6 +58,18 @@ public class SparqlHelper {
 		return result;
 	}
 	
+	public static boolean askGraph(Model model, String sparqlQuery) {
+		Query query = QueryFactory.create(sparqlQuery);
+		QueryExecution queryExecution = QueryExecutionFactory.create(query, model);
+		boolean result = false;
+		try {
+			result = queryExecution.execAsk() ;
+		} finally {
+			queryExecution.close();
+		}
+		return result;
+	}
+	
 	/**
 	 * 
 	 * @param graph

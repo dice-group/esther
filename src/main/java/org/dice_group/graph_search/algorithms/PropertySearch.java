@@ -82,10 +82,10 @@ public class PropertySearch implements SearchAlgorithm {
 
 				// TODO test this
 				int previousEdge = matrix.getInverseID(curProperty.getEdge());
-				if (previousEdge == i || i == edgeID || i == matrix.getInverseID(edgeID)
-						|| i == matrix.getInverseID(previousEdge)) {
-					continue;
-				}
+//				if (previousEdge == i || i == edgeID || i == matrix.getInverseID(edgeID)
+//						|| i == matrix.getInverseID(previousEdge)) {
+//					continue;
+//				}
 
 				if (mat[previousEdge].equals(mat[i])) {
 					if (curProperty.getPathLength() >= SearchAlgorithm.MAX_PATH_LENGTH)
