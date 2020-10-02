@@ -1,4 +1,4 @@
-package org.dice_group.datasets;
+package org.dice_group.datasets.preprocessing;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,7 +48,7 @@ public class FreebaseDataset {
 		}
 		
 		OntModel ont = ModelFactory.createOntologyModel();
-		ont.read("/home/ana-silva/Work/esther/freebase/fb_ontology.nt");
+		ont.read(args[1]);
 		ExtendedIterator<OntProperty> props = ont.listOntProperties();
 		List<Statement> stmts = new ArrayList<Statement>();
 		while(props.hasNext()) {
@@ -73,7 +73,7 @@ public class FreebaseDataset {
 		}
 		model.add(stmts);
 		
-		String fileName = "typed_freebase.nt";
+		String fileName = "model_typed.nt";
 		try(FileWriter out = new FileWriter( fileName )){
 			model.write( out, "NT" );
 		} catch (IOException e) {

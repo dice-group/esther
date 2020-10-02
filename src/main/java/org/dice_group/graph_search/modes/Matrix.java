@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.dice_group.embeddings.dictionary.Dictionary;
 
@@ -46,8 +47,13 @@ public abstract class Matrix implements MatrixInterface {
 		for (int i = 0; i < dictionary.getRelCount(); i++) {
 			String curProperty = id2relmap.get(i);
 
-			Set<? extends OntResource> domainI = ontology.getOntProperty(curProperty).listDomain().toSet();
-			Set<? extends OntResource> rangeI = ontology.getOntProperty(curProperty).listRange().toSet();
+			OntProperty cProp = ontology.getOntProperty(curProperty);
+			
+			if(cProp == null)
+				continue;
+			
+			Set<? extends OntResource> domainI = cProp.listDomain().toSet();
+			Set<? extends OntResource> rangeI = cProp.listRange().toSet();
 
 			/**
 			 * Since the matrix is extended by a factor of 2, this variable is also the

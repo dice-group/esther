@@ -28,6 +28,7 @@ import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
+import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.CSVParser;
 import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
@@ -42,14 +43,14 @@ public class Launcher {
 		// folder where the dictionary is saved
 		String folderPath = mapArgs.get("-data");
 
-		String serviceRequestURL = "localhost:8890/sparql";
+		String serviceRequestURL = "http://localhost:8890/sparql";
 		
 		// get matrix type from user
 		String type = mapArgs.get("-matrix");
 
 		// testing data
 		Model testData = ModelFactory.createDefaultModel();
-		testData.read("/home/ana-silva/Work/esther/freebase/test.txt");
+		testData.read(folderPath+"/ns_test.nt");
 		
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
@@ -57,7 +58,7 @@ public class Launcher {
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		double[][] entities = CSVParser.readCSVFile(folderPath + "/entity_embedding.csv", dict.getEntCount(), 2);
+		//double[][] entities = CSVParser.readCSVFile(folderPath + "/entity_embedding.csv", dict.getEntCount(), 2);
 		double[][] relations = CSVParser.readCSVFile(folderPath + "/relation_embedding.csv", dict.getRelCount(), 1);
 
 		// read and create ontology with OWL inference //TODO move this to endpoint?
@@ -86,11 +87,11 @@ public class Launcher {
 			String embModel = mapArgs.get("-model");
 			EmbeddingModel eModel;
 			if (embModel.equals("R")) {
-				eModel = new RotatE(entities, relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+				eModel = new RotatE(new double[1][1], relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 			} else if (embModel.equals("D")) {
-				eModel = new DensE(entities, relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+				eModel = new DensE(new double[1][1], relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 			} else {
-				eModel = new TransE(entities, relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+				eModel = new TransE(new double[1][1], relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 			}
 			LOGGER.info("Embedding model: " + eModel.toString());
 
@@ -100,7 +101,7 @@ public class Launcher {
 
 			// remove if property path not present in graph
 			p.removeIf(curProp -> SparqlHelper.askModel(serviceRequestURL,
-					SparqlHelper.getAskQuery(curProp.toString(), curStmt.getSubject().toString(), curStmt.getObject().toString())));
+					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), curStmt.getSubject().toString(), curStmt.getObject().toString())));
 
 			// calculate npmi for each path
 			for (Property path : p) {
@@ -135,7 +136,7 @@ public class Launcher {
 		}
 
 		
-		
+		System.out.println();
 	}
 
 	/**

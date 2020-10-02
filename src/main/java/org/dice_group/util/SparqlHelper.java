@@ -106,7 +106,7 @@ public class SparqlHelper {
 	 */
 	public static String getAskQuery(String p, String s, String o) {
 		StringBuilder builder = new StringBuilder("ASK  { ");
-		builder.append(s).append(p).append(o).append(". }");
+		builder.append("<").append(s).append("> ").append(p).append(" <").append(o).append("> ").append(". }");
 		return builder.toString();
 		
 	}

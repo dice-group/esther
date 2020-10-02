@@ -119,8 +119,6 @@ public class NPMICalculator {
 		if (counter.isvTy())
 			return calculatePMIScore_vTy();
 
-		String sPath = path.toString();
-
 		// Find all subject and object types, we need them in query
 
 		Iterator<Node> subTypeIterator = counter.getSubjectTypes().iterator();
