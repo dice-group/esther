@@ -1,6 +1,6 @@
 package org.dice_group.models;
 
-import org.dice_group.graph_search.RotatEL1;
+import org.dice_group.graph_search.distance.RotatEL1;
 
 public class RotatE extends EmbeddingModel {
 

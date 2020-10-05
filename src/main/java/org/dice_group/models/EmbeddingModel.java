@@ -1,6 +1,6 @@
 package org.dice_group.models;
 
-import org.dice_group.graph_search.Distance;
+import org.dice_group.graph_search.distance.Distance;
 
 public class EmbeddingModel {
 	

@@ -1,10 +1,9 @@
 package org.dice_group.graph_search.modes;
 
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntResource;
+import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
 
 /**
@@ -13,12 +12,12 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  */
 public class NotDisjointDR extends Matrix {
 	
-	public NotDisjointDR(OntModel ontology, Dictionary dictionary) {
-		super(ontology, dictionary);
+	public NotDisjointDR(String requestURL, Dictionary dictionary) {
+		super(requestURL, dictionary);
 	}
 	
 	@Override
-	public boolean compareSets(Set<? extends OntResource> a, Set<? extends OntResource> b) {
+	public boolean compareSets(List<Resource> a, List<Resource> b) {
 		return !Collections.disjoint(a, b);
 	}
 	

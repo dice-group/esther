@@ -29,7 +29,7 @@ public class NPMICalculator {
 	public NPMICalculator(Property path, Map<Integer, String> id2rel, OccurrencesCounter counter) {
 		this.path = path;
 		this.counter = counter;
-		builder = "?s ?p1 ?x1; ?x1 ?p2 ?x2; ?x2 ?p3 ?o";
+		builder = "?s ?p1 ?x1;?x1 ?p2 ?x2;?x2 ?p3 ?o";
 		sPath = PropertyHelper.translate2IRI(path, id2rel);
 		pathProperties = path.getPaths();
 	}
@@ -139,33 +139,30 @@ public class NPMICalculator {
 			String[] querySequence = builder.split(";");
 
 			String firstPath;
+			String[] firstSequence = querySequence[0].split(" ");
 			if (pathProperties.get(0).isInverse()) {
-				firstPath = querySequence[0].split(" ")[0].trim() + " <" + sPath.split(";")[0] + "> "
-						+ querySequence[0].split(" ")[2].trim();
+				firstPath = firstSequence[2].trim() + " <" + sPath.split(";")[0] + "> " + firstSequence[0].trim();
 			} else {
-				firstPath = querySequence[0].split(" ")[2].trim() + " <" + sPath.split(";")[0] + "> "
-						+ querySequence[0].split(" ")[0].trim();
+				firstPath = firstSequence[0].trim() + " <" + sPath.split(";")[0] + "> " + firstSequence[2].trim();
 			}
 
 			String secondPath;
+			String[] secSequence = querySequence[1].split(" ");
 			if (pathProperties.get(1).isInverse()) {
-				secondPath = querySequence[1].split(" ")[2].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[0].trim();
+				secondPath = secSequence[2].trim() + " <" + sPath.split(";")[1] + "> " + secSequence[0].trim();
 			} else {
-				secondPath = querySequence[1].split(" ")[0].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[2].trim();
+				secondPath = secSequence[0].trim() + " <" + sPath.split(";")[1] + "> " + secSequence[2].trim();
 			}
 
 			String thirdPath;
+			String[] thirdSequence = querySequence[2].split(" ");
 			if (pathProperties.get(1).isInverse()) {
-				thirdPath = querySequence[2].split(" ")[2].trim() + " <" + sPath.split(";")[2] + "> "
-						+ querySequence[2].split(" ")[0].trim();
+				thirdPath = thirdSequence[2].trim() + " <" + sPath.split(";")[2] + "> " + thirdSequence[0].trim();
 			} else {
-				thirdPath = querySequence[2].split(" ")[0].trim() + " <" + sPath.split(";")[2] + "> "
-						+ querySequence[2].split(" ")[2].trim();
+				thirdPath = thirdSequence[0].trim() + " <" + sPath.split(";")[2] + "> " + thirdSequence[2].trim();
 			}
 
-			String pathQueryString = "select (sum(?b3*?k) as ?sum) where { \n"
+			String pathQueryString = "select (coalesce(sum(?b3*?k),0) as ?sum) where { \n"
 					+ "select (count(*) as ?b3) (?b2*?b1 as ?k) ?x1 where { \n" + firstPath + " .\n" + subTypeTriples
 					+ "{ \n" + "Select (count(*) as ?b2) ?x1 ?b1 where { \n" + secondPath + "{ \n"
 					+ "select (count(*) as ?b1) ?x2 where { \n" + thirdPath + ". \n" + objTypeTriples
@@ -187,6 +184,9 @@ public class NPMICalculator {
 			double count_path_Predicate_Occurrence = predicatePathQueryExecution.execSelect().next().get("?c")
 					.asLiteral().getDouble();
 			predicatePathQueryExecution.close();
+
+			if (count_Path_Occurrence == 0)
+				System.out.println();
 
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		} else if (path.getPathLength() == 2) {
@@ -232,16 +232,21 @@ public class NPMICalculator {
 					.asLiteral().getDouble();
 			pathPredicateQueryExecution.close();
 
+			if (count_Path_Occurrence == 0)
+				System.out.println();
+
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 
 		} else {
+
+			String[] querySequence = builder.split(";");
 			String firstPath;
 			if (pathProperties.get(0).isInverse()) {
-				firstPath = builder.split(" ")[2].trim() + " <" + sPath.split(";")[0] + "> "
-						+ builder.split(" ")[0].trim();
+				firstPath = querySequence[0].split(" ")[2].trim() + " <" + sPath.split(";")[0] + "> "
+						+ querySequence[0].split(" ")[0].trim();
 			} else {
-				firstPath = builder.split(" ")[0].trim() + " <" + sPath.split(";")[0] + "> "
-						+ builder.split(" ")[2].trim();
+				firstPath = querySequence[0].split(" ")[0].trim() + " <" + sPath.split(";")[0] + "> "
+						+ querySequence[0].split(" ")[2].trim();
 			}
 
 			String pathQueryString = "Select (count(*) as ?sum) where {\n" + firstPath + " .\n" + subTypeTriples
@@ -264,6 +269,9 @@ public class NPMICalculator {
 					.asLiteral().getDouble();
 			pathPredicateQueryExecution.close();
 
+			if (count_Path_Occurrence == 0)
+				System.out.println();
+
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		}
 
@@ -277,27 +285,27 @@ public class NPMICalculator {
 					"The given predicate does never occur. The NPMI is not defined for this case.");
 		}
 		// If the path never occurs
-		if (count_Path_Occurrence == 0) {
-			throw new IllegalArgumentException(
-					"The given path does never occur. The NPMI is not defined for this case.");
-		}
+//		if (count_Path_Occurrence == 0) {
+//			throw new IllegalArgumentException(
+//					"The given path does never occur. The NPMI is not defined for this case.");
+//		}
 		// If subject or object types never occur
 		if ((counter.getSubjectTriplesCount() == 0) || (counter.getObjectTriplesCount() == 0)) {
 			throw new IllegalArgumentException(
 					"The given number of triples for the subject or object type is 0. The NPMI is not defined for this case. Given occurrences is subject="
 							+ counter.getSubjectTriplesCount() + " and object=" + counter.getObjectTriplesCount());
 		}
-		double logSubObjTriples = Math.log(counter.getSubjectTriplesCount())
-				+ Math.log(counter.getObjectTriplesCount());
-		double npmi;
 
+		double npmi;
 		// Path and predicate never occur together
-		if (count_path_Predicate_Occurrence == 0) {
+		if (count_path_Predicate_Occurrence == 0 || count_Path_Occurrence == 0) {
 			// Since we know that A and B exist, there is a chance that they should occur
 			// together. Since it never happens, we have to return -1
 			// npmi = -1;
 			npmi = 0;
 		} else {
+			double logSubObjTriples = Math.log(counter.getSubjectTriplesCount())
+					+ Math.log(counter.getObjectTriplesCount());
 			npmi = calculateNPMI(Math.log(count_path_Predicate_Occurrence), logSubObjTriples,
 					Math.log(count_Path_Occurrence), logSubObjTriples, Math.log(counter.getPredicateTriplesCount()),
 					logSubObjTriples);
@@ -324,9 +332,9 @@ public class NPMICalculator {
 			return (logProbAB - logProbA - logProbB) / -logProbAB;
 		}
 	}
-	
+
 	@Override
 	public String toString() {
-		return path.getFinalScore()+""+path.toString();
+		return path.getFinalScore() + "" + path.toString();
 	}
 }

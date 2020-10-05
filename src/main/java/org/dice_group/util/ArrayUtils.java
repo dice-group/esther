@@ -26,7 +26,7 @@ public class ArrayUtils {
 	public static double[] computeVectorSubtraction(double[] a, double[] b) {
 		return computeArrayOperation(a, b, i -> a[i] - b[i]);
 	}
-	
+
 	/**
 	 * Computes the element-wise subtraction of 2 vectors
 	 * 
@@ -48,6 +48,20 @@ public class ArrayUtils {
 	 */
 	public static double[] computeAbsoluteValue(double[] a, double[] b) {
 		return computeArrayOperation(a, b, i -> Math.sqrt(Math.pow(a[i], 2) + Math.pow(b[i], 2)));
+	}
+
+	/**
+	 * Computes the absolute value of a vector : |v| = sqrt ( sum(x²+y²+...) )
+	 * 
+	 * @param a
+	 * @return
+	 */
+	public static double computeVectorsAbsoluteValue(double[] a) {
+		double re = 0;
+		for (int i = 0; i < a.length; i++) {
+			re += Math.pow(a[i], 2);
+		}
+		return Math.sqrt(re);
 	}
 
 	/**

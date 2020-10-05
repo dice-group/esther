@@ -1,8 +1,8 @@
 package org.dice_group.graph_search.modes;
 
-import java.util.Set;
+import java.util.List;
 
-import org.apache.jena.ontology.OntResource;
+import org.apache.jena.rdf.model.Resource;
 
 /**
  * Refers to the different possible ways of building the matrix for the A*
@@ -18,7 +18,7 @@ public interface MatrixInterface {
 	 * @param b
 	 * @return
 	 */
-	default boolean compareSets(Set<? extends OntResource> a, Set<? extends OntResource> b) {
+	default boolean compareSets(List<Resource> a, List<Resource> b) {
 		return false;
 	}
 

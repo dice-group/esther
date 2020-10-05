@@ -1,9 +1,10 @@
-package org.dice_group.graph_search;
+package org.dice_group.graph_search.distance;
 
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
 
 import org.dice_group.path.property.Property;
+import org.dice_group.path.property.PropertyBackPointer;
 import org.dice_group.util.ArrayUtils;
 
 /**
@@ -25,17 +26,16 @@ public class RotatEL1 implements Distance {
 
 	@Override
 	public double computeDistance(Property property, double[] newEdge) {
-		// (r_1 ° r_2 ° ... °r_n)
-		if(property.getInnerProduct() == null) {
-			property.setInnerProduct(newEdge);
+		double[] inner;
+		PropertyBackPointer previous = property.getBackPointer();
+		if (previous == null) {
+			inner = setIntermediateCalcs(property, newEdge);
 		} else {
-			property.setInnerProduct(ArrayUtils.computeHadamardProduct(property.getInnerProduct(), newEdge));
+			inner = setIntermediateCalcs(previous.getProperty(), newEdge);
 		}
 		
-		double [] concat = property.getInnerProduct();
-		
 		// (r_1 ° r_2 ° ... °r_n) - r_p
-		double[] res = ArrayUtils.computeVectorSubtraction(concat, targetEdge);
+		double[] res = ArrayUtils.computeVectorSubtraction(inner, targetEdge);
 
 		// separate the real and imaginary part of the vector
 		int offset = (int) Math.floor(res.length / 2);
@@ -46,6 +46,22 @@ public class RotatEL1 implements Distance {
 		double[] temp = ArrayUtils.computeAbsoluteValue(realPart, imPart);
 
 		return DoubleStream.of(temp).sum();
+	}
+	
+	/**
+	 * (r_1 ° r_2 ° ... ° r_n)
+	 * 
+	 * @param property
+	 * @param newEdge
+	 * @return
+	 */
+	private double[] setIntermediateCalcs(Property property, double[] newEdge) {
+		if (property.getInnerProduct() == null) {
+			property.setInnerProduct(newEdge);
+		} else {
+			property.setInnerProduct(ArrayUtils.computeHadamardProduct(property.getInnerProduct(), newEdge));
+		}
+		return property.getInnerProduct();
 	}
 
 	public double[] getTargetEdge() {

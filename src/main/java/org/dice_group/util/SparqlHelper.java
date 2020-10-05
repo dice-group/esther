@@ -24,6 +24,11 @@ public class SparqlHelper {
 		return selectEndpoint(requestURL,sparqlQuery);
 	}
 	
+	public static List<Resource> getSubclasses(String requestURL, String property) {
+		String sparqlQuery = "select ?o where { <"+property+"> <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?o  filter isIri(?o) }";
+		return selectEndpoint(requestURL,sparqlQuery);
+	}
+	
 	public static List<Resource> selectEndpoint(String requestURL, String sparqlQuery){
 		Query query = QueryFactory.create(sparqlQuery);
 		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(requestURL, query);

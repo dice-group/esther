@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
@@ -28,9 +26,7 @@ import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.CSVParser;
-import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +58,8 @@ public class Launcher {
 		double[][] relations = CSVParser.readCSVFile(folderPath + "/relation_embedding.csv", dict.getRelCount(), 1);
 
 		// read and create ontology with OWL inference //TODO move this to endpoint?
-		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
-		ontModel.read(folderPath + "/fb_ontology.nt");
+//		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
+//		ontModel.read(folderPath + "/fb_ontology.nt");
 		
 		Set<Graph> graphs = new HashSet<Graph>();
 		
@@ -74,13 +70,13 @@ public class Launcher {
 			
 			Matrix matrix;
 			if (type.equals("ND")) {
-				matrix = new NotDisjointDR(ontModel, dict);
+				matrix = new NotDisjointDR(serviceRequestURL, dict);
 			} else if (type.equals("S")) {
-				matrix = new StrictDR(ontModel, dict);
+				matrix = new StrictDR(serviceRequestURL, dict);
 			} else if (type.equals("SS")) {
-				matrix = new SubsumedDR(ontModel, dict);
+				matrix = new SubsumedDR(serviceRequestURL, dict);
 			} else {
-				matrix = new IrrelevantDR(ontModel, dict);
+				matrix = new IrrelevantDR(serviceRequestURL, dict);
 			}
 			LOGGER.info("Matrix type: " + matrix.toString());
 
@@ -99,20 +95,20 @@ public class Launcher {
 			PathCreator creator = new PathCreator(dict, eModel);
 			Set<Property> p = creator.findPropertyPaths(curStmt, matrix);
 
-			// remove if property path not present in graph
-			p.removeIf(curProp -> !SparqlHelper.askModel(serviceRequestURL,
-					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), curStmt.getSubject().toString(), curStmt.getObject().toString())));
-
+//			// remove if property path not present in graph
+//			p.removeIf(curProp -> !SparqlHelper.askModel(serviceRequestURL,
+//					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), curStmt.getSubject().toString(), curStmt.getObject().toString())));
+			
+			OccurrencesCounter c = new OccurrencesCounter(curStmt, serviceRequestURL, false);
+			c.count();
+			
 			// calculate npmi for each path
 			for (Property path : p) {
-				OccurrencesCounter c = new OccurrencesCounter(curStmt, serviceRequestURL, false);
-				c.count();
 				if(c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
 					continue;
 				}
-				NPMICalculator cal = new NPMICalculator(path, dict.getId2Relations(),
-						new OccurrencesCounter(curStmt, serviceRequestURL, false));
+				NPMICalculator cal = new NPMICalculator(path, dict.getId2Relations(), c);
 				try {
 					cal.calculatePMIScore();
 				} catch (ParseException e) {
@@ -121,22 +117,23 @@ public class Launcher {
 				}
 			}
 			
+			// no paths found
+			if(p.isEmpty()) {
+				graphs.add(new Graph(p, 0, curStmt));
+				continue;
+			}
 			double[] scores = new double[p.size()];
 			scores = p.stream().mapToDouble(k -> k.getFinalScore()).toArray();
 			
 			// aggregate the path's scores into one triple veracity score
-			// TODO 
+			// TODO move to another class like in copaal
 			double score = 1.0;
 	        for (int s = scores.length - 1; s >= 0; s--) {
 	            if (scores[s] > 1) continue;
 	            score = score * (1 - scores[s]);
 	        }
-	        
 			graphs.add(new Graph(p, 1 - score, curStmt));
 		}
-
-		
-		System.out.println();
 	}
 
 	/**

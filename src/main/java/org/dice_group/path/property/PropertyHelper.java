@@ -13,7 +13,7 @@ public class PropertyHelper {
 	 */
 	public static String translate2IRI(Property property, Map<Integer, String> id2rel) {
 		StringBuilder builder = new StringBuilder();
-		int offset = id2rel.size()/2;
+		int offset = id2rel.size();
 		List<Integer> path = property.getIDPath();
 		for(int i = 0; i<path.size();i++) {
 		//for(int p : path) {

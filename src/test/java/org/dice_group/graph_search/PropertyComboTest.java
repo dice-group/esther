@@ -19,9 +19,7 @@ import org.dice_group.models.EmbeddingModel;
 import org.dice_group.models.RotatE;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.CSVParser;
-import org.dice_group.util.SparqlHelper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +42,8 @@ public class PropertyComboTest {
 				ResourceFactory.createProperty(PREFIX_NS+":z"), 
 				ResourceFactory.createResource(PREFIX_NS+":o"));
 
-		Matrix matrix = new StrictDR(ontModel, dict);
+		String requestURL = "";
+		Matrix matrix = new StrictDR(requestURL, dict);
 
 		Path resourceDirectory = Paths.get("src", "test", "resources");
 		String absolutePath = resourceDirectory.toFile().getAbsolutePath();
@@ -60,10 +59,6 @@ public class PropertyComboTest {
 		PathCreator creator = new PathCreator(dict, eModel);
 		Set<Property> p = creator.findPropertyPaths(fact, matrix); 
 		
-		System.out.println(p.size());
-		p.removeIf(curProp -> !SparqlHelper.askModel(model,
-				SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), fact.getSubject().toString(), fact.getObject().toString())));
-		System.out.println(p.size());
 		LOGGER.info(p.toString());
 	}
 

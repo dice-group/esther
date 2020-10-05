@@ -2,13 +2,13 @@ package org.dice_group.graph_search.modes;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.regex.Pattern;
 
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntProperty;
-import org.apache.jena.ontology.OntResource;
+import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.util.SparqlHelper;
 
 public abstract class Matrix implements MatrixInterface {
 
@@ -16,7 +16,7 @@ public abstract class Matrix implements MatrixInterface {
 
 	protected Dictionary dictionary;
 	
-	protected OntModel ontology;
+	protected String requestURL;
 
 	public Matrix(Dictionary dictionary) {
 		this.dictionary = dictionary;
@@ -25,16 +25,16 @@ public abstract class Matrix implements MatrixInterface {
 			edgeAdjMatrix[i] = new BitSet();
 	}
 
-	public Matrix(OntModel ontModel, Dictionary dictionary) {
+	public Matrix(String requestURL, Dictionary dictionary) {
 		this.dictionary = dictionary;
 		edgeAdjMatrix = new BitSet[dictionary.getId2Relations().size() * 2];
 		for (int i = 0; i < edgeAdjMatrix.length; i++)
 			edgeAdjMatrix[i] = new BitSet();
-		this.ontology = ontModel;
-		populateMatrix(ontModel);
+		this.requestURL = requestURL;
+		populateMatrix();
 	}
 
-	public void populateMatrix(OntModel ontology) {
+	public void populateMatrix() {
 		if (this instanceof IrrelevantDR) {
 			for (int i = 0; i < edgeAdjMatrix.length; i++) {
 				edgeAdjMatrix[i].set(0, edgeAdjMatrix.length);
@@ -44,16 +44,22 @@ public abstract class Matrix implements MatrixInterface {
 
 		Map<Integer, String> id2relmap = dictionary.getId2Relations();
 
-		for (int i = 0; i < dictionary.getRelCount(); i++) {
+		for(int i = 0; i<dictionary.getRelCount();i++) {
 			String curProperty = id2relmap.get(i);
 
-			OntProperty cProp = ontology.getOntProperty(curProperty);
+			//OntProperty cProp = ontology.getOntProperty(curProperty);
 			
-			if(cProp == null)
+			// TODO substitute with a filter that defaults to none, this is specific to freebase at the moment
+			Pattern pattern = Pattern.compile("\\.\\.");
+			if(curProperty == null || pattern.matcher(curProperty).find())
 				continue;
 			
-			Set<? extends OntResource> domainI = cProp.listDomain().toSet();
-			Set<? extends OntResource> rangeI = cProp.listRange().toSet();
+			
+			//Set<? extends OntResource> domainI = cProp.listDomain().toSet();
+			//Set<? extends OntResource> rangeI = cProp.listRange().toSet();
+			
+			List<Resource> domainI = SparqlHelper.getDomain(requestURL, curProperty);
+			List<Resource> rangeI = SparqlHelper.getRange(requestURL, curProperty);
 
 			/**
 			 * Since the matrix is extended by a factor of 2, this variable is also the
@@ -63,10 +69,14 @@ public abstract class Matrix implements MatrixInterface {
 
 			for (int j = 0; j < relCount; j++) {
 				String curJ = id2relmap.get(j);
-
-				Set<? extends OntResource> domainJ = ontology.getOntProperty(curJ).listDomain().toSet();
-				Set<? extends OntResource> rangeJ = ontology.getOntProperty(curJ).listRange().toSet();
-
+				
+				Pattern pattern2 = Pattern.compile("\\.\\.");
+				if(curProperty == null || pattern2.matcher(curJ).find())
+					continue;
+				
+				List<Resource> domainJ = SparqlHelper.getDomain(requestURL, curJ);
+				List<Resource> rangeJ = SparqlHelper.getRange(requestURL, curJ);
+				
 				// check domain - range : d_i(p) = r_j(p)
 				if (compareSets(domainI, rangeJ)) {
 					edgeAdjMatrix[i].set(j);

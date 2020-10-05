@@ -1,4 +1,4 @@
-package org.dice_group.graph_search;
+package org.dice_group.graph_search.distance;
 
 import org.dice_group.path.property.Property;
 

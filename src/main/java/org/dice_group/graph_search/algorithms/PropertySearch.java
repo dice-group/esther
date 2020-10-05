@@ -6,7 +6,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
-import org.dice_group.graph_search.Distance;
+import org.dice_group.graph_search.distance.Distance;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyBackPointer;
@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Follows a slightly modified A* search algorithm
+ * Follows a slightly modified A* search algorithm that returns n-paths
  *
  */
 public class PropertySearch implements SearchAlgorithm {
@@ -80,13 +80,7 @@ public class PropertySearch implements SearchAlgorithm {
 			for (int i = 0; i < mat.length; i++) {
 				boolean isInverse = i >= offset;
 
-				// TODO test this
 				int previousEdge = matrix.getInverseID(curProperty.getEdge());
-//				if (previousEdge == i || i == edgeID || i == matrix.getInverseID(edgeID)
-//						|| i == matrix.getInverseID(previousEdge)) {
-//					continue;
-//				}
-
 				if (mat[previousEdge].equals(mat[i])) {
 					if (curProperty.getPathLength() >= SearchAlgorithm.MAX_PATH_LENGTH)
 						continue;
@@ -96,9 +90,10 @@ public class PropertySearch implements SearchAlgorithm {
 					} else {
 						score = scorer.computeDistance(curProperty, relations[i]);
 					}
-
+					
 					// TODO check if this is necessary:  !propertyHasAncestor(i, curProperty)
-					queue.add(new Property(i, new PropertyBackPointer(curProperty), score, isInverse));
+					Property temp = new Property(i, new PropertyBackPointer(curProperty), score, isInverse);
+					queue.add(temp);
 				}
 			}
 

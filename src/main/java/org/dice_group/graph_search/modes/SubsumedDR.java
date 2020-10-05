@@ -1,12 +1,11 @@
 package org.dice_group.graph_search.modes;
 
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
-import org.apache.jena.ontology.OntClass;
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntResource;
+import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.util.SparqlHelper;
 
 /**
  * Check for subsumption relation (d = r) OR (r rdfs:subClassOf d)
@@ -14,12 +13,12 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  */
 public class SubsumedDR extends Matrix {
 	
-	public SubsumedDR(OntModel ontModel, Dictionary dictionary) {
-		super(ontModel, dictionary);
+	public SubsumedDR(String requestURL, Dictionary dictionary) {
+		super(requestURL, dictionary);
 	}
 
 	@Override
-	public boolean compareSets(Set<? extends OntResource> a, Set<? extends OntResource> b) {
+	public boolean compareSets(List<Resource> a, List<Resource> b) {
 		return isSubsumedBy(a, b);
 	}
 
@@ -30,7 +29,7 @@ public class SubsumedDR extends Matrix {
 	 * @param b
 	 * @return true if set a subsumes b
 	 */
-	private boolean isSubsumedBy(Set<? extends OntResource> a, Set<? extends OntResource> b) {
+	private boolean isSubsumedBy(List<Resource> a, List<Resource> b) {
 		if (a.equals(b) || isSubSetOf(a, b)) {
 			return true;
 		}
@@ -44,17 +43,19 @@ public class SubsumedDR extends Matrix {
 	 * @param b
 	 * @return true if a is subset of b
 	 */
-	private boolean isSubSetOf(Set<? extends OntResource> a, Set<? extends OntResource> b) {
-		for(OntResource cur: b) {
-			OntClass curClass = ontology.getOntClass(cur.toString());
-			if(curClass == null) {
-				return false;
-			}
-			Set<OntClass> sub = curClass.listSubClasses(false).toSet();
+	private boolean isSubSetOf(List<Resource> a, List<Resource> b) {
+		for(Resource cur: b) {
+//			OntClass curClass = ontology.getOntClass(cur.toString());
+//			if(curClass == null) {
+//				return false;
+//			}
+//			Set<OntClass> sub = curClass.listSubClasses(false).toSet();
+			List<Resource> sub = SparqlHelper.getSubclasses(requestURL, cur.toString());
 			
-			if(Collections.disjoint(a, sub)) {
+			if(sub.isEmpty() || Collections.disjoint(a, sub)) {
 				return false;
 			} 
+			
 		}
 		return true;
 	}
