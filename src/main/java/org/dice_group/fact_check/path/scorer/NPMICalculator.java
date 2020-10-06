@@ -185,9 +185,6 @@ public class NPMICalculator {
 					.asLiteral().getDouble();
 			predicatePathQueryExecution.close();
 
-			if (count_Path_Occurrence == 0)
-				System.out.println();
-
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		} else if (path.getPathLength() == 2) {
 			String[] querySequence = builder.split(";");
@@ -232,9 +229,6 @@ public class NPMICalculator {
 					.asLiteral().getDouble();
 			pathPredicateQueryExecution.close();
 
-			if (count_Path_Occurrence == 0)
-				System.out.println();
-
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 
 		} else {
@@ -268,9 +262,6 @@ public class NPMICalculator {
 			double count_path_Predicate_Occurrence = pathPredicateQueryExecution.execSelect().next().get("?c")
 					.asLiteral().getDouble();
 			pathPredicateQueryExecution.close();
-
-			if (count_Path_Occurrence == 0)
-				System.out.println();
 
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		}
@@ -314,6 +305,7 @@ public class NPMICalculator {
 //                count_Path_Occurrence, count_predicate_Occurrence))) {
 //            throw new NPMIFilterException("The NPMI filter rejected the calculated NPMI.");
 //        }
+		
 		path.setFinalScore(npmi);
 		return npmi;
 	}
@@ -329,7 +321,10 @@ public class NPMICalculator {
 		if (logProbAB == 0) {
 			return 1.0;
 		} else {
-			return (logProbAB - logProbA - logProbB) / -logProbAB;
+			double r = (logProbAB - logProbA - logProbB) / -logProbAB;
+//			if(r < 0 || r > 1)
+//				System.out.println();
+			return r;
 		}
 	}
 

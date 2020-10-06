@@ -68,8 +68,6 @@ public class PropertySearch implements SearchAlgorithm {
 			int pRange = matrix.getInverseID(edgeID);
 			if (mat[pRange].equals(mat[curRange])) {
 				propertyPaths.add(curProperty);
-				LOGGER.info(propertyPaths.size() + " Property path(s) found!");
-				LOGGER.info(curProperty.getScore() + " : " + curProperty.toString());
 				continue;
 			}
 

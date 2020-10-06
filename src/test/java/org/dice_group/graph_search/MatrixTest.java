@@ -1,154 +1,100 @@
 package org.dice_group.graph_search;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import org.apache.jena.ontology.OntModel;
-import org.apache.jena.ontology.OntModelSpec;
-import org.apache.jena.ontology.OntProperty;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.dice_group.embeddings.dictionary.Dictionary;
-import org.dice_group.embeddings.dictionary.DictionaryHelper;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
 import org.dice_group.graph_search.modes.StrictDR;
-import org.dice_group.graph_search.modes.SubsumedDR;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
-@RunWith(Parameterized.class)
 public class MatrixTest {
-	private final static String PREFIX_NS = "www.example.com";
-	
-	@Parameters
-    public static Collection<Object[]> data() {
-        List<Object[]> testConfigs = new ArrayList<Object[]>();
-        testConfigs.add(new Object[] { "graph2.n3", buildTestOntology() });
-        testConfigs.add(new Object[] { "graph2.n3", buildTestOntology2() });
-
-        return testConfigs;
-    }
-
-    private String graphFile;
-    private OntModel ontology;
-    
-    public MatrixTest(String graphFile, OntModel ontology) {
-        this.graphFile = graphFile;
-        this.ontology = ontology;
-    }
+	private final static String PREFIX_NS = "www.example.com:";
 
 	@Test
-	public void testPropAdjMatrix() {
-		Model model = ModelFactory.createDefaultModel();
-		model.read(graphFile);
+	public void testStrict() {
+		Matrix strictMatrix = new StrictDR();
 
-		DictionaryHelper help = new DictionaryHelper();
-		Dictionary dict = help.createDictionary(model);
-//
-//		Matrix ndMat = new NotDisjointDR(ontology, dict);
-//		Matrix stricMat = new StrictDR(ontology, dict);
-//		Matrix subsMat = new SubsumedDR(ontology, dict);
-//		Matrix irrMat = new IrrelevantDR(ontology, dict);
-//
-//		// full matrix should be set for IrrelevantDR
-//		for (int i = 0; i < irrMat.getEdgeAdjMatrix().length; i++) {
-//			if(irrMat.getEdgeAdjMatrix()[i].nextClearBit(0) < irrMat.getEdgeAdjMatrix().length)
-//				Assert.fail();
-//		}
-	}	
+		List<Resource> a = new ArrayList<Resource>();
+		a.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		a.add(ResourceFactory.createResource(PREFIX_NS + "c3"));
+
+		List<Resource> b = new ArrayList<Resource>();
+		b.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		b.add(ResourceFactory.createResource(PREFIX_NS + "c3"));
+
+		List<Resource> c = new ArrayList<Resource>();
+		c.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		c.add(ResourceFactory.createResource(PREFIX_NS + "c4"));
+
+		List<Resource> d = new ArrayList<Resource>();
+		d.add(ResourceFactory.createResource(PREFIX_NS + "c5"));
+		d.add(ResourceFactory.createResource(PREFIX_NS + "c4"));
+
+		Assert.assertTrue(strictMatrix.compareSets(a, a));
+		Assert.assertTrue(strictMatrix.compareSets(a, b));
+		Assert.assertFalse(strictMatrix.compareSets(a, c));
+		Assert.assertFalse(strictMatrix.compareSets(a, d));
+	}
+
+	@Test
+	public void testNonDisjoint() {
+
+		Matrix notDisjoint = new NotDisjointDR();
+
+		List<Resource> a = new ArrayList<Resource>();
+		a.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		a.add(ResourceFactory.createResource(PREFIX_NS + "c3"));
+
+		List<Resource> b = new ArrayList<Resource>();
+		b.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		b.add(ResourceFactory.createResource(PREFIX_NS + "c3"));
+
+		List<Resource> c = new ArrayList<Resource>();
+		c.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		c.add(ResourceFactory.createResource(PREFIX_NS + "c4"));
+
+		List<Resource> d = new ArrayList<Resource>();
+		d.add(ResourceFactory.createResource(PREFIX_NS + "c5"));
+		d.add(ResourceFactory.createResource(PREFIX_NS + "c4"));
+
+		Assert.assertTrue(notDisjoint.compareSets(a, a));
+		Assert.assertTrue(notDisjoint.compareSets(a, b));
+		Assert.assertTrue(notDisjoint.compareSets(a, c));
+		Assert.assertFalse(notDisjoint.compareSets(a, d));
+		Assert.assertTrue(notDisjoint.compareSets(c, d));
+
+	}
 	
 	@Test
-	public void testMatrixTypesUniqueMethod() {
-//		Matrix ndMat = new NotDisjointDR(ontology, new Dictionary());
-//		
-//		
-//		
-//		Matrix stricMat = new StrictDR(ontology, new Dictionary());
-//		Matrix subsMat = new SubsumedDR(ontology, new Dictionary());
-//		Matrix irrMat = new IrrelevantDR(ontology, new Dictionary());
+	public void testIrrelevant() {
+		Matrix irrelevant = new IrrelevantDR();
+		
+		List<Resource> a = new ArrayList<Resource>();
+		a.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		a.add(ResourceFactory.createResource(PREFIX_NS + "c3"));
+
+		List<Resource> b = new ArrayList<Resource>();
+		b.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		b.add(ResourceFactory.createResource(PREFIX_NS + "c3"));
+
+		List<Resource> c = new ArrayList<Resource>();
+		c.add(ResourceFactory.createResource(PREFIX_NS + "c1"));
+		c.add(ResourceFactory.createResource(PREFIX_NS + "c4"));
+
+		List<Resource> d = new ArrayList<Resource>();
+		d.add(ResourceFactory.createResource(PREFIX_NS + "c5"));
+		d.add(ResourceFactory.createResource(PREFIX_NS + "c4"));
+		
+		Assert.assertTrue(irrelevant.compareSets(a, a));
+		Assert.assertTrue(irrelevant.compareSets(a, b));
+		Assert.assertTrue(irrelevant.compareSets(a, c));
+		Assert.assertTrue(irrelevant.compareSets(a, d));
+		Assert.assertTrue(irrelevant.compareSets(c, d));
 	}
 
-	private static OntModel buildTestOntology2() {
-		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
-		OntProperty b = ontModel.createOntProperty(PREFIX_NS + ":b");
-		b.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		b.addRange(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-
-		OntProperty d = ontModel.createOntProperty(PREFIX_NS + ":d");
-		d.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-		d.addRange(ResourceFactory.createResource(PREFIX_NS + ":c4"));
-
-		OntProperty m = ontModel.createOntProperty(PREFIX_NS + ":m");
-		m.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c4"));
-		m.addRange(ResourceFactory.createResource(PREFIX_NS + ":c5"));
-
-		OntProperty g = ontModel.createOntProperty(PREFIX_NS + ":g");
-		g.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		g.addRange(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-		g.addRange(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-
-		OntProperty h = ontModel.createOntProperty(PREFIX_NS + ":h");
-		h.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-		h.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		h.addRange(ResourceFactory.createResource(PREFIX_NS + ":c6"));
-
-		OntProperty l = ontModel.createOntProperty(PREFIX_NS + ":l");
-		l.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c4"));
-		l.addRange(ResourceFactory.createResource(PREFIX_NS + ":c6"));
-
-		OntProperty t = ontModel.createOntProperty(PREFIX_NS + ":t");
-		t.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		t.addRange(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		t.addRange(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-
-		OntProperty z = ontModel.createOntProperty(PREFIX_NS + ":z");
-		z.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		z.addRange(ResourceFactory.createResource(PREFIX_NS + ":c5"));
-
-		return ontModel;
-	}
-
-	private static OntModel buildTestOntology() {
-		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
-		OntProperty b = ontModel.createOntProperty(PREFIX_NS + ":b");
-		b.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		b.addRange(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-
-		OntProperty d = ontModel.createOntProperty(PREFIX_NS + ":d");
-		d.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-		d.addRange(ResourceFactory.createResource(PREFIX_NS + ":c4"));
-
-		OntProperty m = ontModel.createOntProperty(PREFIX_NS + ":m");
-		m.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c4"));
-		m.addRange(ResourceFactory.createResource(PREFIX_NS + ":c5"));
-
-		OntProperty g = ontModel.createOntProperty(PREFIX_NS + ":g");
-		g.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		g.addRange(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-
-		OntProperty h = ontModel.createOntProperty(PREFIX_NS + ":h");
-		h.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c3"));
-		h.addRange(ResourceFactory.createResource(PREFIX_NS + ":c6"));
-
-		OntProperty l = ontModel.createOntProperty(PREFIX_NS + ":l");
-		l.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c4"));
-		l.addRange(ResourceFactory.createResource(PREFIX_NS + ":c6"));
-
-		OntProperty t = ontModel.createOntProperty(PREFIX_NS + ":t");
-		t.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		t.addRange(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-
-		OntProperty z = ontModel.createOntProperty(PREFIX_NS + ":z");
-		z.addDomain(ResourceFactory.createResource(PREFIX_NS + ":c1"));
-		z.addRange(ResourceFactory.createResource(PREFIX_NS + ":c5"));
-
-		return ontModel;
-	}
 }

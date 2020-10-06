@@ -13,6 +13,9 @@ import org.dice_group.util.SparqlHelper;
  */
 public class SubsumedDR extends Matrix {
 	
+	public SubsumedDR() {
+	}
+	
 	public SubsumedDR(String requestURL, Dictionary dictionary) {
 		super(requestURL, dictionary);
 	}

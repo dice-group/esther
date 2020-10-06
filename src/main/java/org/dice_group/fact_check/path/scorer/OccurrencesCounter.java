@@ -84,9 +84,6 @@ public class OccurrencesCounter {
 			this.subjectTriplesCount = countSOOccurrances("count(distinct ?s)", stmt.getPredicate());
 			this.objectTriplesCount = countSOOccurrances("count(distinct ?o)", stmt.getPredicate());
 		}
-		
-		if(predicateTriplesCount == 0)
-			System.out.println();
 	}
 
 	public int countSOOccurrances(String var, Property property) {

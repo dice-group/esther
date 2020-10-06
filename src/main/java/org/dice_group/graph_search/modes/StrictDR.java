@@ -11,6 +11,9 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  *
  */
 public class StrictDR extends Matrix {
+	
+	public StrictDR() {
+	}
 
 	public StrictDR(String requestURL, Dictionary dictionary) {
 		super(requestURL, dictionary);

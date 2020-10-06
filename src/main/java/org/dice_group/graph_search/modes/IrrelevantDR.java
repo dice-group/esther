@@ -10,6 +10,9 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  *
  */
 public class IrrelevantDR extends Matrix {
+	
+	public IrrelevantDR() {
+	}
 
 	public IrrelevantDR(String requestURL, Dictionary dictionary) {
 		super(requestURL, dictionary);

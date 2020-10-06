@@ -41,29 +41,31 @@ public class Launcher {
 		String folderPath = mapArgs.get("-data");
 
 		String serviceRequestURL = "http://localhost:8890/sparql";
-		
+
 		// get matrix type from user
 		String type = mapArgs.get("-matrix");
 
 		// testing data
+		LOGGER.info("Reading data from file: " + folderPath);
 		Model testData = ModelFactory.createDefaultModel();
-		testData.read(folderPath+"/ns_test.nt");
-		
+		testData.read(folderPath + "/ns_test.nt");
+
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		dictHelper.readDictionary(folderPath);
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		//double[][] entities = CSVParser.readCSVFile(folderPath + "/entity_embedding.csv", dict.getEntCount(), 2);
+		// double[][] entities = CSVParser.readCSVFile(folderPath +
+		// "/entity_embedding.csv", dict.getEntCount(), 2);
 		double[][] relations = CSVParser.readCSVFile(folderPath + "/relation_embedding.csv", dict.getRelCount(), 1);
 
 		// read and create ontology with OWL inference //TODO move this to endpoint?
 //		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
 //		ontModel.read(folderPath + "/fb_ontology.nt");
-		
+
 		Set<Graph> graphs = new HashSet<Graph>();
-		
+
 		// create edge adjacency matrix
 		Matrix matrix;
 		if (type.equals("ND")) {
@@ -76,42 +78,45 @@ public class Launcher {
 			matrix = new IrrelevantDR(serviceRequestURL, dict);
 		}
 		LOGGER.info("Matrix type: " + matrix.toString());
+		matrix.populateMatrix();
 
-		
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
-		while(checkStmts.hasNext()) {
+		int i = 1;
+		while (checkStmts.hasNext()) {
 			Statement curStmt = checkStmts.next();
-			
+
 			// TODO this can be moved outside the loop
 			String embModel = mapArgs.get("-model");
 			EmbeddingModel eModel;
 			if (embModel.equals("R")) {
-				eModel = new RotatE(new double[1][1], relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+				eModel = new RotatE(new double[1][1], relations,
+						dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 			} else if (embModel.equals("D")) {
-				eModel = new DensE(new double[1][1], relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+				eModel = new DensE(new double[1][1], relations,
+						dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 			} else {
-				eModel = new TransE(new double[1][1], relations, dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+				eModel = new TransE(new double[1][1], relations,
+						dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 			}
-			LOGGER.info("Embedding model: " + eModel.toString());
+			// LOGGER.info("Embedding model: " + eModel.toString());
 
 			// find property combinations in graph
 			PathCreator creator = new PathCreator(dict, eModel);
 			Set<Property> p = creator.findPropertyPaths(curStmt, matrix);
 
-//			// remove if property path not present in graph
-//			p.removeIf(curProp -> !SparqlHelper.askModel(serviceRequestURL,
-//					SparqlHelper.getAskQuery(
-//							PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), 
-//							curStmt.getSubject().toString(), 
-//							curStmt.getObject().toString())));
-			
+			/*
+			 * remove if property path not present in graph p.removeIf(curProp ->
+			 * !SparqlHelper.askModel(serviceRequestURL, SparqlHelper.getAskQuery(
+			 * PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
+			 * curStmt.getSubject().toString(), curStmt.getObject().toString())));
+			 */
 			OccurrencesCounter c = new OccurrencesCounter(curStmt, serviceRequestURL, false);
 			c.count();
-			
+
 			// calculate npmi for each path found
 			for (Property path : p) {
-				if(c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
+				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
 					continue;
 				}
@@ -122,29 +127,33 @@ public class Launcher {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				
 			}
-			
+
 			// no paths found
-			if(p.isEmpty()) {
+			if (p.isEmpty()) {
 				graphs.add(new Graph(p, 0, curStmt));
 				continue;
 			}
 			double[] scores = new double[p.size()];
 			scores = p.stream().mapToDouble(k -> k.getFinalScore()).toArray();
-			
+
 			// aggregate the path's scores into one triple veracity score
 			// TODO move to another class like in copaal
 			double score = 1.0;
-	        for (int s = scores.length - 1; s >= 0; s--) {
-	            if (scores[s] > 1) continue;
-	            score = score * (1 - scores[s]);
-	        }
-			graphs.add(new Graph(p, 1 - score, curStmt));
+			for (int s = scores.length - 1; s >= 0; s--) {
+				if (scores[s] > 1)
+					continue;
+				score = score * (1 - scores[s]);
+			}
+			double f = 1 - score;
+			LOGGER.info(++i + "/" + testData.size() + " : " + f + " - " + curStmt.toString());
+			graphs.add(new Graph(p, f, curStmt));
 		}
-		
+
 		ResultWriter results = new ResultWriter();
 		results.addResults(graphs);
-		results.printToFile(matrix.toString()+"_results.nt");
+		results.printToFile(matrix.toString() + "_results.nt");
 	}
 
 	/**

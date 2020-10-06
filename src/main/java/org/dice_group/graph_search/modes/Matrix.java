@@ -17,6 +17,9 @@ public abstract class Matrix implements MatrixInterface {
 	protected Dictionary dictionary;
 	
 	protected String requestURL;
+	
+	public Matrix() {
+	}
 
 	public Matrix(Dictionary dictionary) {
 		this.dictionary = dictionary;
@@ -31,7 +34,6 @@ public abstract class Matrix implements MatrixInterface {
 		for (int i = 0; i < edgeAdjMatrix.length; i++)
 			edgeAdjMatrix[i] = new BitSet();
 		this.requestURL = requestURL;
-		populateMatrix();
 	}
 
 	public void populateMatrix() {

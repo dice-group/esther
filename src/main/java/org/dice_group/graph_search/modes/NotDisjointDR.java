@@ -12,6 +12,9 @@ import org.dice_group.embeddings.dictionary.Dictionary;
  */
 public class NotDisjointDR extends Matrix {
 	
+	public NotDisjointDR() {
+	}
+	
 	public NotDisjointDR(String requestURL, Dictionary dictionary) {
 		super(requestURL, dictionary);
 	}
