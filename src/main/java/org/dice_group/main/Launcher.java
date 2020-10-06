@@ -14,6 +14,7 @@ import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
 import org.dice_group.fact_check.path.scorer.NPMICalculator;
 import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
+import org.dice_group.fact_check.path.scorer.ResultWriter;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
@@ -63,23 +64,26 @@ public class Launcher {
 		
 		Set<Graph> graphs = new HashSet<Graph>();
 		
+		// create edge adjacency matrix
+		Matrix matrix;
+		if (type.equals("ND")) {
+			matrix = new NotDisjointDR(serviceRequestURL, dict);
+		} else if (type.equals("S")) {
+			matrix = new StrictDR(serviceRequestURL, dict);
+		} else if (type.equals("SS")) {
+			matrix = new SubsumedDR(serviceRequestURL, dict);
+		} else {
+			matrix = new IrrelevantDR(serviceRequestURL, dict);
+		}
+		LOGGER.info("Matrix type: " + matrix.toString());
+
+		
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
 		while(checkStmts.hasNext()) {
 			Statement curStmt = checkStmts.next();
 			
-			Matrix matrix;
-			if (type.equals("ND")) {
-				matrix = new NotDisjointDR(serviceRequestURL, dict);
-			} else if (type.equals("S")) {
-				matrix = new StrictDR(serviceRequestURL, dict);
-			} else if (type.equals("SS")) {
-				matrix = new SubsumedDR(serviceRequestURL, dict);
-			} else {
-				matrix = new IrrelevantDR(serviceRequestURL, dict);
-			}
-			LOGGER.info("Matrix type: " + matrix.toString());
-
+			// TODO this can be moved outside the loop
 			String embModel = mapArgs.get("-model");
 			EmbeddingModel eModel;
 			if (embModel.equals("R")) {
@@ -97,12 +101,15 @@ public class Launcher {
 
 //			// remove if property path not present in graph
 //			p.removeIf(curProp -> !SparqlHelper.askModel(serviceRequestURL,
-//					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), curStmt.getSubject().toString(), curStmt.getObject().toString())));
+//					SparqlHelper.getAskQuery(
+//							PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()), 
+//							curStmt.getSubject().toString(), 
+//							curStmt.getObject().toString())));
 			
 			OccurrencesCounter c = new OccurrencesCounter(curStmt, serviceRequestURL, false);
 			c.count();
 			
-			// calculate npmi for each path
+			// calculate npmi for each path found
 			for (Property path : p) {
 				if(c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
@@ -134,6 +141,10 @@ public class Launcher {
 	        }
 			graphs.add(new Graph(p, 1 - score, curStmt));
 		}
+		
+		ResultWriter results = new ResultWriter();
+		results.addResults(graphs);
+		results.printToFile(matrix.toString()+"_results.nt");
 	}
 
 	/**
