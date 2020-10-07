@@ -321,10 +321,7 @@ public class NPMICalculator {
 		if (logProbAB == 0) {
 			return 1.0;
 		} else {
-			double r = (logProbAB - logProbA - logProbB) / -logProbAB;
-//			if(r < 0 || r > 1)
-//				System.out.println();
-			return r;
+			return (logProbAB - logProbA - logProbB) / -logProbAB;
 		}
 	}
 
