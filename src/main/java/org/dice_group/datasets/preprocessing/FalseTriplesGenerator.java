@@ -3,7 +3,6 @@ package org.dice_group.datasets.preprocessing;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -26,8 +25,6 @@ import org.apache.jena.vocabulary.RDFS;
  *
  */
 public class FalseTriplesGenerator {
-	
-	private static String FILENAME ;
 
 	public static void main(String[] args) {
 		Model trueFacts = ModelFactory.createDefaultModel();
@@ -35,26 +32,25 @@ public class FalseTriplesGenerator {
 
 		Model trainingData = ModelFactory.createDefaultModel();
 		trainingData.read(args[1]);
-		
-		FILENAME = args[3];
 
 		Set<Statement> falsetriples;
-		switch (args[2]) {
+		String type = args[2];
+		switch (type) {
 		case "S":
-			falsetriples = corruptSubjects(trueFacts, trainingData, FILENAME);
+			falsetriples = corruptStmt(trueFacts, trainingData, type);
 			break;
 		case "O":
-			falsetriples = corruptObjects(trueFacts, trainingData, FILENAME);
+			falsetriples = corruptStmt(trueFacts, trainingData, type);
 			break;
 		default:
-			falsetriples = corruptSubjNObjects(trueFacts, trainingData, FILENAME);
+			falsetriples = corruptStmt(trueFacts, trainingData, type);
 			break;
 		}
 
 		Model falseFacts = ModelFactory.createDefaultModel();
 		falseFacts.add(new ArrayList<Statement>(falsetriples));
 
-		String fileName = "false_triples_" + args[2] + ".nt";
+		String fileName = "false_triples_" + type + ".nt";
 		try (FileWriter out = new FileWriter(fileName)) {
 			falseFacts.write(out, "NT");
 		} catch (IOException e) {
@@ -63,96 +59,12 @@ public class FalseTriplesGenerator {
 
 	}
 
-	public static Set<Statement> corruptSubjects(Model trueFacts, Model trainingData, String filename2) {
+	public static Set<Statement> corruptStmt(Model trueFacts, Model trainingData, String type) {
 		List<Resource> nodes = trainingData.listResourcesWithProperty(null).toList();
 		Set<Statement> falseTriples = new HashSet<Statement>();
 		StmtIterator stmtIterator = trueFacts.listStatements();
+		Random random = new Random();
 		int count = 0;
-		Random random = new Random();
-		while (stmtIterator.hasNext()) {
-			Statement curStmt = stmtIterator.next();
-
-			// get a random possible subject
-			Resource newSubject = null;
-			Statement newStmt = null;
-
-			boolean isValidSubject = false;
-			while (!isValidSubject) {
-				newSubject = nodes.get(random.nextInt(nodes.size()));
-
-				// get a random subject until the domain matches
-				Set<RDFNode> domain = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.domain).toSet();
-				while (!Collections.disjoint(domain,
-						trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet())) {
-					newSubject = nodes.get(random.nextInt(nodes.size()));
-				}
-
-				// check if this is present in the dump
-				StringBuilder builder = new StringBuilder();
-				builder.append(" \"<").append(newSubject).append(">\\s*<").append(curStmt.getPredicate()).append(">\\s*<")
-						.append(curStmt.getObject()).append(">\\s*.\" ");
-				if (runShell(grep(builder.toString(), FILENAME)) != 0) {
-					newStmt = ResourceFactory.createStatement(newSubject, curStmt.getPredicate(), curStmt.getObject());
-					if (newStmt.equals(curStmt) || falseTriples.contains(newStmt))
-						continue;
-					isValidSubject = true;
-				}
-			}
-
-			// add to false triples
-			falseTriples.add(newStmt);
-			System.out.println(++count);
-		}
-		return falseTriples;
-	}
-
-	public static Set<Statement> corruptObjects(Model trueFacts, Model trainingData, String filename2) {
-		List<Resource> nodes = trainingData.listResourcesWithProperty(null).toList();
-		Set<Statement> falseTriples = new HashSet<Statement>();
-		StmtIterator stmtIterator = trueFacts.listStatements();
-		Random random = new Random();
-		while (stmtIterator.hasNext()) {
-			Statement curStmt = stmtIterator.next();
-
-			// get a random possible subject
-			Resource newObject = null;
-			Statement newStmt = null;
-
-			boolean isValidSubject = false;
-			while (!isValidSubject) {
-				newObject = nodes.get(random.nextInt(nodes.size()));
-
-				// get a random subject until the range matches
-				Set<RDFNode> range = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.range).toSet();
-				while (!Collections.disjoint(range, trainingData.listObjectsOfProperty(newObject, RDF.type).toSet())) {
-					newObject = nodes.get(random.nextInt(nodes.size()));
-				}
-
-				// check if this is present in the dump
-				StringBuilder builder = new StringBuilder();
-				builder.append(" \"<").append(curStmt.getSubject()).append(">\\s*<").append(curStmt.getPredicate())
-						.append(">\\s*<").append(newObject).append(">\\s*.\" ");
-				if (runShell(grep(builder.toString(), FILENAME)) != 0) {
-					newStmt = ResourceFactory.createStatement(curStmt.getSubject(), curStmt.getPredicate(), newObject);
-					if (newStmt.equals(curStmt) || falseTriples.contains(newStmt))
-						continue;
-					isValidSubject = true;
-				}
-			}
-
-			// add to false triples
-			if (newObject != null)
-				falseTriples.add(newStmt);
-
-		}
-		return falseTriples;
-	}
-
-	public static Set<Statement> corruptSubjNObjects(Model trueFacts, Model trainingData, String filename2) {
-		List<Resource> nodes = trainingData.listResourcesWithProperty(null).toList();
-		Set<Statement> falseTriples = new HashSet<Statement>();
-		StmtIterator stmtIterator = trueFacts.listStatements();
-		Random random = new Random();
 		while (stmtIterator.hasNext()) {
 			Statement curStmt = stmtIterator.next();
 
@@ -161,63 +73,54 @@ public class FalseTriplesGenerator {
 			Resource newObject = null;
 			Statement newStmt = null;
 
-			boolean isValidSubject = false;
-			boolean isValidObject = false;
-			while (!isValidSubject || !isValidObject) {
+			boolean isValidStmt = false;
+			while (!isValidStmt) {
 				newSubject = nodes.get(random.nextInt(nodes.size()));
 				newObject = nodes.get(random.nextInt(nodes.size()));
 
-				// get a random subject until the domain matches
-				Set<RDFNode> domain = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.domain).toSet();
-				while (!Collections.disjoint(domain,
-						trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet())) {
-					newSubject = nodes.get(random.nextInt(nodes.size()));
+				if (type.equals("S") || type.equals("SO")) {
+					// get a random subject until the domain matches
+					Set<RDFNode> domain = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.domain)
+							.toSet();
+					Set<RDFNode> types = trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet();
+					if(domain.isEmpty())
+						continue;
+					while (!types.containsAll(domain)) {
+						newSubject = nodes.get(random.nextInt(nodes.size()));
+						types = trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet();
+					}
+				}
+				if (type.equals("O") || type.equals("SO")) {
+					// get a random object until the range matches
+					Set<RDFNode> range = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.range).toSet();
+					Set<RDFNode> types = trainingData.listObjectsOfProperty(newObject, RDF.type).toSet();
+					if(range.isEmpty())
+						continue;
+					while (!types.containsAll(range)) {
+						newObject = nodes.get(random.nextInt(nodes.size()));
+						types = trainingData.listObjectsOfProperty(newObject, RDF.type).toSet();
+					}
 				}
 
-				// get a random object until the range matches
-				Set<RDFNode> range = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.domain).toSet();
-				while (!Collections.disjoint(range, trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet())) {
-					newObject = nodes.get(random.nextInt(nodes.size()));
-				}
-
-				// check if this is present in the dump
-				StringBuilder builder = new StringBuilder();
-				builder.append(" \"<").append(newSubject).append(">\\s*<").append(curStmt.getPredicate()).append(">\\s*<")
-						.append(newObject).append(">\\s*.\" ");
-				if (runShell(grep(builder.toString(), FILENAME)) != 0) {
+				if (type.equals("S")) {
 					newStmt = ResourceFactory.createStatement(newSubject, curStmt.getPredicate(), newObject);
-					if (newStmt.equals(curStmt) || falseTriples.contains(newStmt))
-						continue;
-					isValidSubject = true;
-					isValidObject = true;
+				} else if (type.equals("O")) {
+					newStmt = ResourceFactory.createStatement(curStmt.getSubject(), curStmt.getPredicate(), newObject);
+				} else if (type.equals("SO")) {
+					newStmt = ResourceFactory.createStatement(newSubject, curStmt.getPredicate(), newObject);
 				}
+
+				if (newStmt.equals(curStmt) || falseTriples.contains(newStmt) || trueFacts.contains(newStmt)) {
+					continue;
+				}
+				isValidStmt = true;
 			}
 
 			// add to false triples
 			falseTriples.add(newStmt);
-
+			System.out.println(++count + "/" + trueFacts.size());
 		}
 		return falseTriples;
-	}
-
-	private static String grep(String a, String fileName) {
-		StringBuilder builder = new StringBuilder("grep ");
-		builder.append(a).append(fileName);
-		return builder.toString();
-	}
-
-	private static int runShell(String cmd) {
-		try {
-			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd).inheritIO();
-			Process p = pb.start();
-			int exitVal = p.waitFor();
-			return exitVal;
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return 0;
 	}
 
 }
