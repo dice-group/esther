@@ -67,6 +67,7 @@ public class FalseTriplesGenerator {
 		List<Resource> nodes = trainingData.listResourcesWithProperty(null).toList();
 		Set<Statement> falseTriples = new HashSet<Statement>();
 		StmtIterator stmtIterator = trueFacts.listStatements();
+		int count = 0;
 		Random random = new Random();
 		while (stmtIterator.hasNext()) {
 			Statement curStmt = stmtIterator.next();
@@ -88,8 +89,8 @@ public class FalseTriplesGenerator {
 
 				// check if this is present in the dump
 				StringBuilder builder = new StringBuilder();
-				builder.append(" \"<").append(newSubject).append("> <").append(curStmt.getPredicate()).append("> <")
-						.append(curStmt.getObject()).append("> .\" ");
+				builder.append(" \"<").append(newSubject).append(">\\s*<").append(curStmt.getPredicate()).append(">\\s*<")
+						.append(curStmt.getObject()).append(">\\s*.\" ");
 				if (runShell(grep(builder.toString(), FILENAME)) != 0) {
 					newStmt = ResourceFactory.createStatement(newSubject, curStmt.getPredicate(), curStmt.getObject());
 					if (newStmt.equals(curStmt) || falseTriples.contains(newStmt))
@@ -100,7 +101,7 @@ public class FalseTriplesGenerator {
 
 			// add to false triples
 			falseTriples.add(newStmt);
-
+			System.out.println(++count);
 		}
 		return falseTriples;
 	}
@@ -129,8 +130,8 @@ public class FalseTriplesGenerator {
 
 				// check if this is present in the dump
 				StringBuilder builder = new StringBuilder();
-				builder.append(" \"<").append(curStmt.getSubject()).append("> <").append(curStmt.getPredicate())
-						.append("> <").append(newObject).append("> .\" ");
+				builder.append(" \"<").append(curStmt.getSubject()).append(">\\s*<").append(curStmt.getPredicate())
+						.append(">\\s*<").append(newObject).append(">\\s*.\" ");
 				if (runShell(grep(builder.toString(), FILENAME)) != 0) {
 					newStmt = ResourceFactory.createStatement(curStmt.getSubject(), curStmt.getPredicate(), newObject);
 					if (newStmt.equals(curStmt) || falseTriples.contains(newStmt))
@@ -181,8 +182,8 @@ public class FalseTriplesGenerator {
 
 				// check if this is present in the dump
 				StringBuilder builder = new StringBuilder();
-				builder.append(" \"<").append(newSubject).append("> <").append(curStmt.getPredicate()).append("> <")
-						.append(newObject).append("> .\" ");
+				builder.append(" \"<").append(newSubject).append(">\\s*<").append(curStmt.getPredicate()).append(">\\s*<")
+						.append(newObject).append(">\\s*.\" ");
 				if (runShell(grep(builder.toString(), FILENAME)) != 0) {
 					newStmt = ResourceFactory.createStatement(newSubject, curStmt.getPredicate(), newObject);
 					if (newStmt.equals(curStmt) || falseTriples.contains(newStmt))
