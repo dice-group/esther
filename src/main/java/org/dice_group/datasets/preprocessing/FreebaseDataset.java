@@ -27,7 +27,7 @@ public class FreebaseDataset {
 	public static void main(String[] args) {
 		Model model = ModelFactory.createDefaultModel();
 		
-		String filename = "/home/ana-silva/Work/esther/freebase/train.txt";
+		String filename = args[0];
 		try (BufferedReader br = new BufferedReader(new FileReader(new File(filename)))) {
 			for (String line; (line = br.readLine()) != null;) {
 				line = line.replace("/", ".");
@@ -48,7 +48,7 @@ public class FreebaseDataset {
 		}
 		
 		OntModel ont = ModelFactory.createOntologyModel();
-		ont.read("/home/ana-silva/Work/esther/freebase/domain_range.nt");
+		ont.read(args[1]);
 		ExtendedIterator<OntProperty> props = ont.listOntProperties();
 		List<Statement> stmts = new ArrayList<Statement>();
 		while(props.hasNext()) {
@@ -73,7 +73,7 @@ public class FreebaseDataset {
 		}
 		model.add(stmts);
 		
-		String fileName = "/home/ana-silva/Work/esther/freebase/model_typed.nt";
+		String fileName = "model_typed.nt";
 		try(FileWriter out = new FileWriter( fileName )){
 			model.write( out, "NT" );
 		} catch (IOException e) {

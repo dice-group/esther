@@ -22,8 +22,9 @@ public class ResultWriter {
 	private static final String STMT = "http://swc2019.dice-research.org/task/dataset/s-";
 	private static final String TRUTH_VALUE_STR = "http://swc2017.aksw.org/hasTruthValue";
 
-	public ResultWriter() {
+	public ResultWriter(int id) {
 		resultsModel = ModelFactory.createDefaultModel();
+		curID = id;
 	}
 
 	public void printToFile(String fileName) {

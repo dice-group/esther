@@ -25,6 +25,7 @@ import org.apache.jena.vocabulary.RDFS;
  *
  */
 public class FalseTriplesGenerator {
+	private static final int MAX_ITER = 50_000;
 
 	public static void main(String[] args) {
 		Model trueFacts = ModelFactory.createDefaultModel();
@@ -50,21 +51,37 @@ public class FalseTriplesGenerator {
 		Model falseFacts = ModelFactory.createDefaultModel();
 		falseFacts.add(new ArrayList<Statement>(falsetriples));
 
-		String fileName = "false_triples_" + type + ".nt";
+		String fileName = "all_false_triples_" + type + ".nt";
 		try (FileWriter out = new FileWriter(fileName)) {
 			falseFacts.write(out, "NT");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public static Set<Statement> corruptStmt(Model trueFacts, Model trainingData, String type) {
-		List<Resource> nodes = trainingData.listResourcesWithProperty(null).toList();
+		Set<Resource> nodesSet = new HashSet<Resource>();
+		StmtIterator iter = trainingData.listStatements();
+		while (iter.hasNext()) {
+			Statement curStmt = iter.next();
+
+			// to ensure we get the same  it was trained on (could also, just read it from the dictionary)
+			if (curStmt.getPredicate().equals(RDF.type) 
+					|| curStmt.getPredicate().equals(RDFS.range)
+					|| curStmt.getPredicate().equals(RDFS.domain))
+				continue;
+
+			nodesSet.add(curStmt.getSubject());
+			if (curStmt.getObject().isResource())
+				nodesSet.add(curStmt.getObject().asResource());
+		}
+
+		List<Resource> nodes = new ArrayList<Resource>(nodesSet);
 		Set<Statement> falseTriples = new HashSet<Statement>();
 		StmtIterator stmtIterator = trueFacts.listStatements();
 		Random random = new Random();
 		int count = 0;
+		
 		while (stmtIterator.hasNext()) {
 			Statement curStmt = stmtIterator.next();
 
@@ -72,9 +89,13 @@ public class FalseTriplesGenerator {
 			Resource newSubject = null;
 			Resource newObject = null;
 			Statement newStmt = null;
-
+			int iterations = 0;
+			
 			boolean isValidStmt = false;
-			while (!isValidStmt) {
+			in : while (!isValidStmt) {
+				if (++iterations >= MAX_ITER)
+					break in;
+
 				newSubject = nodes.get(random.nextInt(nodes.size()));
 				newObject = nodes.get(random.nextInt(nodes.size()));
 
@@ -83,22 +104,27 @@ public class FalseTriplesGenerator {
 					Set<RDFNode> domain = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.domain)
 							.toSet();
 					Set<RDFNode> types = trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet();
-					if(domain.isEmpty())
+					if (domain.isEmpty())
 						continue;
 					while (!types.containsAll(domain)) {
 						newSubject = nodes.get(random.nextInt(nodes.size()));
 						types = trainingData.listObjectsOfProperty(newSubject, RDF.type).toSet();
+						if (++iterations >= MAX_ITER)
+							break in;
 					}
 				}
 				if (type.equals("O") || type.equals("SO")) {
 					// get a random object until the range matches
 					Set<RDFNode> range = trainingData.listObjectsOfProperty(curStmt.getPredicate(), RDFS.range).toSet();
 					Set<RDFNode> types = trainingData.listObjectsOfProperty(newObject, RDF.type).toSet();
-					if(range.isEmpty())
+					if (range.isEmpty())
 						continue;
 					while (!types.containsAll(range)) {
 						newObject = nodes.get(random.nextInt(nodes.size()));
 						types = trainingData.listObjectsOfProperty(newObject, RDF.type).toSet();
+						if (++iterations >= MAX_ITER) {
+							break in;
+						}
 					}
 				}
 
@@ -110,15 +136,19 @@ public class FalseTriplesGenerator {
 					newStmt = ResourceFactory.createStatement(newSubject, curStmt.getPredicate(), newObject);
 				}
 
-				if (newStmt.equals(curStmt) || falseTriples.contains(newStmt) || trueFacts.contains(newStmt)) {
+				if (newStmt.equals(curStmt) || falseTriples.contains(newStmt) || trueFacts.contains(newStmt) || trainingData.contains(newStmt)) {
 					continue;
 				}
 				isValidStmt = true;
+				iterations = 0;
 			}
 
 			// add to false triples
-			falseTriples.add(newStmt);
-			System.out.println(++count + "/" + trueFacts.size());
+			if(isValidStmt) {
+				falseTriples.add(newStmt);
+				System.out.println(++count + "/" + trueFacts.size());
+			}
+			
 		}
 		return falseTriples;
 	}

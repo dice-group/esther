@@ -1,5 +1,8 @@
 package org.dice_group.util;
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -13,21 +16,31 @@ public class ReferenceDatasetCreator {
 	private static final String TRUTH_VALUE_STR = "http://swc2017.aksw.org/hasTruthValue";
 
 	public static void main(String[] args) {
-		boolean isTrue = true;
 		String fileName = args[0];
+		String fileName2 = args[1];
 		
-		RDFNode truthValue;
-		double t = 0.0;
-		if (isTrue) {
-			t = 1.0;
-		}
-		truthValue = ResourceFactory.createTypedLiteral(String.valueOf(t), XSDDatatype.XSDdouble);
+		RDFNode truthValue = ResourceFactory.createTypedLiteral(String.valueOf(1.0), XSDDatatype.XSDdouble);
+		RDFNode truthValueFalse = ResourceFactory.createTypedLiteral(String.valueOf(0.0), XSDDatatype.XSDdouble);
 
 		Model model = ModelFactory.createDefaultModel();
 		model.read(fileName);
-		ResIterator subjects = model.listSubjects();
+		
+		Model falseFacts = ModelFactory.createDefaultModel();
+		falseFacts.read(fileName2);
 		
 		Model reference = ModelFactory.createDefaultModel();
+		addFacts(reference, model.listSubjects(), truthValue);
+		addFacts(reference, falseFacts.listSubjects(), truthValueFalse);
+		
+		try (FileWriter out = new FileWriter("reference_dataset.nt")) {
+			reference.write(out, "NT");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	private static void addFacts(Model reference, ResIterator subjects, RDFNode truthValue) {
 		while (subjects.hasNext()) {
 			Resource cur = subjects.next();
 			reference.add(

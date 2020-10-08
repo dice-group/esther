@@ -31,10 +31,11 @@ public class PropertySearch implements SearchAlgorithm {
 	}
 
 	@Override
-	public Set<Property> findPaths(int edgeID, double[][] relations) {
+	public Set<Property> findPaths(int edgeID, double[][] relations, int k) {
 		BitSet[] mat = matrix.getEdgeAdjMatrix();
 		Set<Property> propertyPaths = new HashSet<Property>();
 		int offset = mat.length / 2;
+		int pathCount = 0;
 
 		/**
 		 * d(P) = d(x_i) -> starting condition get all properties that share the same
@@ -58,7 +59,7 @@ public class PropertySearch implements SearchAlgorithm {
 			}
 		}
 
-		while (!queue.isEmpty()) {
+		while (!queue.isEmpty() && pathCount < k) {
 			Property curProperty = queue.poll();
 
 			/**
@@ -68,6 +69,7 @@ public class PropertySearch implements SearchAlgorithm {
 			int pRange = matrix.getInverseID(edgeID);
 			if (mat[pRange].equals(mat[curRange])) {
 				propertyPaths.add(curProperty);
+				pathCount++;
 				continue;
 			}
 

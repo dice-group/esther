@@ -10,6 +10,9 @@ public class TransE extends EmbeddingModel {
 
 	public TransE(double[][] entities, double[][] relations, int i) {
 		super(entities, relations);
+	}
+	
+	public void updateScorer(int i) {
 		scorer = new TransEL1(relations[i]);
 	}
 

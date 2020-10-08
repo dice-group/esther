@@ -8,5 +8,5 @@ public interface SearchAlgorithm {
 	// TODO for now it's a constant, should be given value
 	int MAX_PATH_LENGTH = 3;
 
-	Set<Property> findPaths(int edgeID, double[][] relations);
+	Set<Property> findPaths(int edgeID, double[][] relations, int k);
 }

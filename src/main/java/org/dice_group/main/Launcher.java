@@ -1,8 +1,6 @@
 package org.dice_group.main;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
@@ -27,58 +25,62 @@ import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
-import org.dice_group.util.CSVParser;
+import org.dice_group.util.CSVUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 
 public class Launcher {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Launcher.class);
 
 	public static void main(String[] args) {
-		Map<String, String> mapArgs = parseArguments(args);
+		Args pArgs = new Args();
+		JCommander.newBuilder().addObject(pArgs).build().parse(args);
 
-		// folder where the dictionary is saved
-		String folderPath = mapArgs.get("-data");
+		LOGGER.info("Reading data from file: " + pArgs.folderPath);
+		LOGGER.info("Embeddings Model: " + pArgs.eModel);
+		LOGGER.info("k: " + pArgs.k);
 
-		String serviceRequestURL = "http://localhost:8890/sparql";
-
-		// get matrix type from user
-		String type = mapArgs.get("-matrix");
-
-		// testing data
-		LOGGER.info("Reading data from file: " + folderPath);
+		// read testing data - facts to check
 		Model testData = ModelFactory.createDefaultModel();
-		testData.read(folderPath + "/ns_test.nt");
+		testData.read(pArgs.folderPath + "/ns_test.nt");
 
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
-		dictHelper.readDictionary(folderPath);
+		dictHelper.readDictionary(pArgs.folderPath);
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		// double[][] entities = CSVParser.readCSVFile(folderPath +
-		// "/entity_embedding.csv", dict.getEntCount(), 2);
-		double[][] relations = CSVParser.readCSVFile(folderPath + "/relation_embedding.csv", dict.getRelCount(), 1);
-
-		// read and create ontology with OWL inference //TODO move this to endpoint?
-//		OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_TRANS_INF);
-//		ontModel.read(folderPath + "/fb_ontology.nt");
+		// double[][] entities = CSVUtils.readCSVFile(folderPath+"/entity_embedding.csv");
+		double[][] relations = CSVUtils.readCSVFile(pArgs.folderPath + "/relation_embedding.csv");
 
 		Set<Graph> graphs = new HashSet<Graph>();
 
-		// create edge adjacency matrix
+		// create d/r edge adjacency matrix
 		Matrix matrix;
-		if (type.equals("ND")) {
-			matrix = new NotDisjointDR(serviceRequestURL, dict);
-		} else if (type.equals("S")) {
-			matrix = new StrictDR(serviceRequestURL, dict);
-		} else if (type.equals("SS")) {
-			matrix = new SubsumedDR(serviceRequestURL, dict);
+		if (pArgs.type.equals("ND")) {
+			matrix = new NotDisjointDR(pArgs.serviceRequestURL, dict);
+		} else if (pArgs.type.equals("S")) {
+			matrix = new StrictDR(pArgs.serviceRequestURL, dict);
+		} else if (pArgs.type.equals("SS")) {
+			matrix = new SubsumedDR(pArgs.serviceRequestURL, dict);
 		} else {
-			matrix = new IrrelevantDR(serviceRequestURL, dict);
+			matrix = new IrrelevantDR(pArgs.serviceRequestURL, dict);
 		}
 		LOGGER.info("Matrix type: " + matrix.toString());
 		matrix.populateMatrix();
+
+		// get embedding model
+		EmbeddingModel eModel;
+		if (pArgs.eModel.equals("R")) {
+			eModel = new RotatE(null, relations);
+		} else if (pArgs.eModel.equals("D")) {
+			eModel = new DensE(null, relations);
+		} else {
+			eModel = new TransE(null, relations);
+		}
 
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
@@ -86,24 +88,18 @@ public class Launcher {
 		while (checkStmts.hasNext()) {
 			Statement curStmt = checkStmts.next();
 
-			// TODO this can be moved outside the loop
-			String embModel = mapArgs.get("-model");
-			EmbeddingModel eModel;
-			if (embModel.equals("R")) {
-				eModel = new RotatE(new double[1][1], relations,
-						dict.getRelations2ID().get(curStmt.getPredicate().toString()));
-			} else if (embModel.equals("D")) {
-				eModel = new DensE(new double[1][1], relations,
-						dict.getRelations2ID().get(curStmt.getPredicate().toString()));
-			} else {
-				eModel = new TransE(new double[1][1], relations,
-						dict.getRelations2ID().get(curStmt.getPredicate().toString()));
-			}
-			// LOGGER.info("Embedding model: " + eModel.toString());
+			// set score function's target edge as current
+			eModel.updateScorer(dict.getRelations2ID().get(curStmt.getPredicate().toString()));
 
 			// find property combinations in graph
 			PathCreator creator = new PathCreator(dict, eModel);
-			Set<Property> p = creator.findPropertyPaths(curStmt, matrix);
+			Set<Property> p = creator.findPropertyPaths(curStmt, matrix, pArgs.k);
+
+			// no paths found
+			if (p.isEmpty()) {
+				graphs.add(new Graph(p, 0, curStmt));
+				continue;
+			}
 
 			/*
 			 * remove if property path not present in graph p.removeIf(curProp ->
@@ -111,7 +107,8 @@ public class Launcher {
 			 * PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
 			 * curStmt.getSubject().toString(), curStmt.getObject().toString())));
 			 */
-			OccurrencesCounter c = new OccurrencesCounter(curStmt, serviceRequestURL, false);
+
+			OccurrencesCounter c = new OccurrencesCounter(curStmt, pArgs.serviceRequestURL, false);
 			c.count();
 
 			// calculate npmi for each path found
@@ -127,16 +124,11 @@ public class Launcher {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 			}
 
-			// no paths found
-			if (p.isEmpty()) {
-				graphs.add(new Graph(p, 0, curStmt));
-				continue;
-			}
 			double[] scores = new double[p.size()];
-			scores = p.stream().mapToDouble(k -> k.getFinalScore()).toArray();
+			scores = p.stream().mapToDouble(s -> s.getFinalScore()).toArray();
 
 			// aggregate the path's scores into one triple veracity score
 			// TODO move to another class like in copaal
@@ -151,42 +143,27 @@ public class Launcher {
 			graphs.add(new Graph(p, f, curStmt));
 		}
 
-		ResultWriter results = new ResultWriter();
+		// write results in gerbil's format
+		ResultWriter results = new ResultWriter(0);
 		results.addResults(graphs);
-		results.printToFile(matrix.toString() + "_results.nt");
+		results.printToFile(pArgs.folderPath + "/Results/" + matrix.toString() + "_pos_results.nt");
 	}
+}
 
-	/**
-	 * 
-	 * -matrix: type of matrix generation
-	 * 
-	 * -data: data folder path
-	 * 
-	 * -model embedding model used
-	 * 
-	 * @param args
-	 * @return
-	 */
-	private static Map<String, String> parseArguments(String[] args) {
-		Map<String, String> mapArgs = new HashMap<String, String>();
-		if (args.length != 0) {
-			for (int i = 0; i < args.length; i++) {
-				String param = args[i];
-				if ((i + 1) < args.length) {
-					String value = args[i + 1];
-					if (param.equalsIgnoreCase("-emb")) {
-						mapArgs.put("-emb", value);
-					} else if (param.equalsIgnoreCase("-matrix")) {
-						mapArgs.put("-matrix", value);
-					} else if (param.equalsIgnoreCase("-data")) {
-						mapArgs.put("-data", value);
-					} else if (param.equalsIgnoreCase("-model")) {
-						mapArgs.put("-model", value);
-					}
-				}
-			}
-		}
-		return mapArgs;
-	}
+class Args {
+	@Parameter(names = { "--data", "-d" }, description = "Folder path")
+	String folderPath;
 
+	@Parameter(names = { "--topk", "-k" }, description = "The number of optimal paths we want to find.")
+	int k;
+
+	@Parameter(names = { "--matrix",
+			"-m" }, description = "The matrix type: S (Strict), SS (Subsumed), ND (Intersecting), or Irrelevant (Default).")
+	String type;
+
+	@Parameter(names = { "--emb-model", "-e" }, description = "The embedding model used: RotatE, TransE or DensE")
+	String eModel;
+
+	@Parameter(names = { "--sparql-endpoint", "-se" }, description = "The sparql endpoint ")
+	String serviceRequestURL;
 }

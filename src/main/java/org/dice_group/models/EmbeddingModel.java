@@ -36,6 +36,8 @@ public class EmbeddingModel {
 	public void setRelations(double[][] relations) {
 		this.relations = relations;
 	}
-
 	
+	public void updateScorer(int i) {
+		
+	}
 }

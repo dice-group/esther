@@ -26,12 +26,13 @@ public class PathCreator {
 
 	/**
 	 * 
+	 * @param k 
 	 * @param source      source node
 	 * @param edge
 	 * @param destination goal node
 	 * @return
 	 */
-	public Set<Property> findPropertyPaths(Statement stmt, Matrix matrix) {
+	public Set<Property> findPropertyPaths(Statement stmt, Matrix matrix, int k) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
 
 		String edge = stmt.getPredicate().toString();
@@ -46,7 +47,7 @@ public class PathCreator {
 
 		// search for property combos
 		SearchAlgorithm propertyCombos = new PropertySearch(matrix, emodel.getScorer());
-		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, emodel.getRelations());
+		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, emodel.getRelations(),k);
 
 		return propertyPaths;
 	}

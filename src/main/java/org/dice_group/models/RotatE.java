@@ -10,6 +10,9 @@ public class RotatE extends EmbeddingModel {
 
 	public RotatE(double[][] entities, double[][] relations, int i) {
 		super(entities, relations);
+	}
+	
+	public void updateScorer(int i) {
 		scorer = new RotatEL1(relations[i]);
 	}
 	
