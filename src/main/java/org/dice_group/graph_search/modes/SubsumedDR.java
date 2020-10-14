@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.util.QueryExecutioner;
 import org.dice_group.util.SparqlHelper;
 
 /**
@@ -16,8 +17,8 @@ public class SubsumedDR extends Matrix {
 	public SubsumedDR() {
 	}
 	
-	public SubsumedDR(String requestURL, Dictionary dictionary) {
-		super(requestURL, dictionary);
+	public SubsumedDR(QueryExecutioner sparqlExec, Dictionary dictionary) {
+		super(sparqlExec, dictionary);
 	}
 
 	@Override
@@ -53,7 +54,7 @@ public class SubsumedDR extends Matrix {
 //				return false;
 //			}
 //			Set<OntClass> sub = curClass.listSubClasses(false).toSet();
-			List<Resource> sub = SparqlHelper.getSubclasses(requestURL, cur.toString());
+			List<Resource> sub = SparqlHelper.getSubclasses(sparqlExec, cur.toString());
 			
 			if(sub.isEmpty() || Collections.disjoint(a, sub)) {
 				return false;

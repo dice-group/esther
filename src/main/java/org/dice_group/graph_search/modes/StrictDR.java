@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.util.QueryExecutioner;
 
 /**
  * The domain and range of other paths have to match exactly the one of the
@@ -15,8 +16,8 @@ public class StrictDR extends Matrix {
 	public StrictDR() {
 	}
 
-	public StrictDR(String requestURL, Dictionary dictionary) {
-		super(requestURL, dictionary);
+	public StrictDR(QueryExecutioner sparqlExec, Dictionary dictionary) {
+		super(sparqlExec, dictionary);
 	}
 
 	@Override

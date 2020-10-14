@@ -13,38 +13,37 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
 public class SparqlHelper {
-	
-	public static List<Resource> getDomain(String requestURL, String property) {
-		String sparqlQuery = "select ?o where { <"+property+"> <http://www.w3.org/2000/01/rdf-schema#domain> ?o  filter isIri(?o) }";
-		return selectEndpoint(requestURL,sparqlQuery);
+
+	public static List<Resource> getDomain(QueryExecutioner sparqlExec, String property) {
+		String sparqlQuery = "select ?o where { <" + property
+				+ "> <http://www.w3.org/2000/01/rdf-schema#domain> ?o  filter isIri(?o) }";
+		return selectEndpoint(sparqlExec, sparqlQuery);
 	}
-	
-	public static List<Resource> getRange(String requestURL, String property) {
-		String sparqlQuery = "select ?o where { <"+property+"> <http://www.w3.org/2000/01/rdf-schema#range> ?o  filter isIri(?o) }";
-		return selectEndpoint(requestURL,sparqlQuery);
+
+	public static List<Resource> getRange(QueryExecutioner sparqlExec, String property) {
+		String sparqlQuery = "select ?o where { <" + property
+				+ "> <http://www.w3.org/2000/01/rdf-schema#range> ?o  filter isIri(?o) }";
+		return selectEndpoint(sparqlExec, sparqlQuery);
 	}
-	
-	public static List<Resource> getSubclasses(String requestURL, String property) {
-		String sparqlQuery = "select ?o where { <"+property+"> <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?o  filter isIri(?o) }";
-		return selectEndpoint(requestURL,sparqlQuery);
+
+	public static List<Resource> getSubclasses(QueryExecutioner sparqlExec, String property) {
+		String sparqlQuery = "select ?o where { <" + property
+				+ "> <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?o  filter isIri(?o) }";
+		return selectEndpoint(sparqlExec, sparqlQuery);
 	}
-	
-	public static List<Resource> selectEndpoint(String requestURL, String sparqlQuery){
+
+	public static List<Resource> selectEndpoint(QueryExecutioner sparqlExec, String sparqlQuery) {
 		Query query = QueryFactory.create(sparqlQuery);
-		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(requestURL, query);
 		List<Resource> objects = new ArrayList<Resource>();
-		try {
+		try (QueryExecution queryExecution = sparqlExec.createExecutioner(query);) {
 			ResultSet resultSet = queryExecution.execSelect();
 			while (resultSet.hasNext()) {
 				objects.add(resultSet.next().get("?o").asResource());
 			}
-		} finally {
-			queryExecution.close();
 		}
-
 		return objects;
 	}
-	
+
 	/**
 	 * 
 	 * @param graph
@@ -56,25 +55,25 @@ public class SparqlHelper {
 		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(requestURL, query);
 		boolean result = false;
 		try {
-			result = queryExecution.execAsk() ;
+			result = queryExecution.execAsk();
 		} finally {
 			queryExecution.close();
 		}
 		return result;
 	}
-	
+
 	public static boolean askGraph(Model model, String sparqlQuery) {
 		Query query = QueryFactory.create(sparqlQuery);
 		QueryExecution queryExecution = QueryExecutionFactory.create(query, model);
 		boolean result = false;
 		try {
-			result = queryExecution.execAsk() ;
+			result = queryExecution.execAsk();
 		} finally {
 			queryExecution.close();
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 
 	 * @param graph
@@ -95,7 +94,7 @@ public class SparqlHelper {
 		}
 		return querySolutionList;
 	}
-	
+
 	/**
 	 * 
 	 * @param graph
@@ -107,13 +106,13 @@ public class SparqlHelper {
 		QueryExecution queryExecution = QueryExecutionFactory.create(query, graph);
 		boolean result = false;
 		try {
-			result = queryExecution.execAsk() ;
+			result = queryExecution.execAsk();
 		} finally {
 			queryExecution.close();
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 
 	 * @param p
@@ -125,7 +124,7 @@ public class SparqlHelper {
 		StringBuilder builder = new StringBuilder("ASK  { ");
 		builder.append("<").append(s).append("> ").append(p).append(" <").append(o).append("> ").append(". }");
 		return builder.toString();
-		
+
 	}
 
 }

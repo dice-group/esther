@@ -9,7 +9,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -17,6 +16,7 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.dice_group.util.QueryExecutioner;
 
 /**
  *
@@ -47,13 +47,13 @@ public class OccurrencesCounter {
 
 	private Statement stmt;
 
-	private String serviceRequestURL;
+	private QueryExecutioner sparqlExec;
 
 	private boolean vTy;
 
-	public OccurrencesCounter(Statement stmt, String serviceRequestURL, boolean vTy) {
+	public OccurrencesCounter(Statement stmt, QueryExecutioner sparqlExec, boolean vTy) {
 		this.stmt = stmt;
-		this.serviceRequestURL = serviceRequestURL;
+		this.sparqlExec = sparqlExec;
 		this.subjectTypes = new HashSet<Node>();
 		this.objectTypes = new HashSet<Node>();
 		this.vTy = vTy;
@@ -105,7 +105,7 @@ public class OccurrencesCounter {
 		typeBuilder.addWhere(subject, property, NodeFactory.createVariable("x"));
 
 		Query typeQuery = typeBuilder.build();
-		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(serviceRequestURL, typeQuery);
+		QueryExecution queryExecution = sparqlExec.createExecutioner(typeQuery);
 
 		ResultSet resultSet = queryExecution.execSelect();
 
@@ -143,7 +143,7 @@ public class OccurrencesCounter {
 
 	public int returnCount(SelectBuilder builder) {
 		Query queryOccurrence = builder.build();
-		QueryExecution queryExecution = QueryExecutionFactory.createServiceRequest(serviceRequestURL, queryOccurrence);
+		QueryExecution queryExecution = sparqlExec.createExecutioner(queryOccurrence);
 		int count_Occurrence = 0;
 		ResultSet resultSet = queryExecution.execSelect();
 		if (resultSet.hasNext())
@@ -208,12 +208,13 @@ public class OccurrencesCounter {
 		this.stmt = stmt;
 	}
 
-	public String getServiceRequestURL() {
-		return serviceRequestURL;
+	public QueryExecutioner getSparqlExec() {
+		return sparqlExec;
 	}
 
-	public void setServiceRequestURL(String serviceRequestURL) {
-		this.serviceRequestURL = serviceRequestURL;
+	public void setSparqlExec(QueryExecutioner sparqlExec) {
+		this.sparqlExec = sparqlExec;
 	}
+
 
 }

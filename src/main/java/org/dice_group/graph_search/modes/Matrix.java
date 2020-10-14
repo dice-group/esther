@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
+import org.dice_group.util.QueryExecutioner;
 import org.dice_group.util.SparqlHelper;
 
 public abstract class Matrix implements MatrixInterface {
@@ -16,7 +17,7 @@ public abstract class Matrix implements MatrixInterface {
 
 	protected Dictionary dictionary;
 	
-	protected String requestURL;
+	protected QueryExecutioner sparqlExec;
 	
 	public Matrix() {
 	}
@@ -28,12 +29,12 @@ public abstract class Matrix implements MatrixInterface {
 			edgeAdjMatrix[i] = new BitSet();
 	}
 
-	public Matrix(String requestURL, Dictionary dictionary) {
+	public Matrix(QueryExecutioner sparqlExec, Dictionary dictionary) {
 		this.dictionary = dictionary;
 		edgeAdjMatrix = new BitSet[dictionary.getId2Relations().size() * 2];
 		for (int i = 0; i < edgeAdjMatrix.length; i++)
 			edgeAdjMatrix[i] = new BitSet();
-		this.requestURL = requestURL;
+		this.sparqlExec = sparqlExec;
 	}
 
 	public void populateMatrix() {
@@ -60,8 +61,8 @@ public abstract class Matrix implements MatrixInterface {
 			//Set<? extends OntResource> domainI = cProp.listDomain().toSet();
 			//Set<? extends OntResource> rangeI = cProp.listRange().toSet();
 			
-			List<Resource> domainI = SparqlHelper.getDomain(requestURL, curProperty);
-			List<Resource> rangeI = SparqlHelper.getRange(requestURL, curProperty);
+			List<Resource> domainI = SparqlHelper.getDomain(sparqlExec, curProperty);
+			List<Resource> rangeI = SparqlHelper.getRange(sparqlExec, curProperty);
 
 			/**
 			 * Since the matrix is extended by a factor of 2, this variable is also the
@@ -76,8 +77,8 @@ public abstract class Matrix implements MatrixInterface {
 				if(curProperty == null || pattern2.matcher(curJ).find())
 					continue;
 				
-				List<Resource> domainJ = SparqlHelper.getDomain(requestURL, curJ);
-				List<Resource> rangeJ = SparqlHelper.getRange(requestURL, curJ);
+				List<Resource> domainJ = SparqlHelper.getDomain(sparqlExec, curJ);
+				List<Resource> rangeJ = SparqlHelper.getRange(sparqlExec, curJ);
 				
 				// check domain - range : d_i(p) = r_j(p)
 				if (compareSets(domainI, rangeJ)) {

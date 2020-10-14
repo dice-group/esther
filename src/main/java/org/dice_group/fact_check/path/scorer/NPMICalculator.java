@@ -1,14 +1,12 @@
 package org.dice_group.fact_check.path.scorer;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.jena.graph.Node;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
 import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyHelper;
@@ -37,51 +35,24 @@ public class NPMICalculator {
 	public double calculatePMIScore_vTy() {
 		String predicateTriple = "?s <" + counter.getStmt().getPredicate() + "> ?o .";
 		String pathQueryString, pathPredicateQueryString;
-		String[] querySequence = builder.split(";");
 		String subjType = " filter(exists {?s <" + counter.getStmt().getPredicate() + ">  []}).";
 		String objType = " filter(exists {[] <" + counter.getStmt().getPredicate() + ">  ?o}).";
 
-		String firstPath;
-		if (pathProperties.get(0).isInverse()) {
-			firstPath = querySequence[0].split(" ")[2].trim() + " <" + sPath.split(";")[0] + "> "
-					+ querySequence[0].split(" ")[0].trim();
-		} else {
-			firstPath = querySequence[0].split(" ")[0].trim() + " <" + sPath.split(";")[0] + "> "
-					+ querySequence[0].split(" ")[2].trim();
-		}
+		String firstPath = getPath(pathProperties.get(0).isInverse(), 0);
 
 		if (path.getPathLength() == 3) {
-			String secondPath;
-			if (pathProperties.get(2).isInverse()) {
-				secondPath = querySequence[1].split(" ")[2].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[0].trim();
-			} else {
-				secondPath = querySequence[1].split(" ")[0].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[2].trim();
-			}
 
-			String thirdPath;
-			if (pathProperties.get(3).isInverse()) {
-				thirdPath = querySequence[2].split(" ")[2].trim() + " <" + sPath.split(";")[2] + "> "
-						+ querySequence[2].split(" ")[0].trim();
-			} else {
-				thirdPath = querySequence[2].split(" ")[0].trim() + " <" + sPath.split(";")[2] + "> "
-						+ querySequence[2].split(" ")[2].trim();
-			}
+			String secondPath = getPath(pathProperties.get(1).isInverse(), 1);
+
+			String thirdPath = getPath(pathProperties.get(2).isInverse(), 2);
 
 			pathQueryString = "Select (count(*) as ?cnt) where {select distinct ?s ?o { " + firstPath + " . " + subjType
-					+ "{select distinct ?o1 ?o{" + secondPath + " . " + thirdPath + " . " + objType + " } }" + "}} ";
+					+ "{select distinct ?x1 ?o{" + secondPath + " . " + thirdPath + " . " + objType + " } }" + "}} ";
 			pathPredicateQueryString = "Select (count(*) as ?c) where {select distinct ?s ?o {\n" + firstPath + " .\n"
 					+ secondPath + " .\n" + thirdPath + " .\n" + predicateTriple + "\n" + "}}\n";
 		} else if (path.getPathLength() == 2) {
-			String secondPath;
-			if (pathProperties.get(2).isInverse()) {
-				secondPath = querySequence[1].split(" ")[2].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[0].trim();
-			} else {
-				secondPath = querySequence[1].split(" ")[0].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[2].trim();
-			}
+
+			String secondPath = getPath(pathProperties.get(1).isInverse(), 1);
 
 			pathQueryString = "Select (count(*) as ?cnt) where {select distinct ?s ?o { " + firstPath + " . " + subjType
 					+ secondPath + " . " + objType + "}} ";
@@ -89,26 +60,16 @@ public class NPMICalculator {
 			pathPredicateQueryString = "Select (count(*) as ?c) where {select distinct ?s ?o {\n" + firstPath + " .\n"
 					+ secondPath + " .\n" + predicateTriple + "\n" + "}}\n";
 		} else {
-			pathQueryString = "Select (count(*) as ?sum) where {\n" + firstPath + " .\n" + subjType + objType + "}\n";
+			pathQueryString = "Select (count(*) as ?cnt) where {\n" + firstPath + " .\n" + subjType + objType + "}\n";
 
 			pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + predicateTriple + "\n"
 					+ "}\n";
 
 		}
 
-		Query pathQuery = QueryFactory.create(pathQueryString);
-		QueryExecution pathQueryExecution = QueryExecutionFactory.createServiceRequest(counter.getServiceRequestURL(),
-				pathQuery);
-		double count_Path_Occurrence = pathQueryExecution.execSelect().next().get("?cnt").asLiteral().getDouble();
-		pathQueryExecution.close();
-
-		Query pathPredicateQuery = QueryFactory.create(pathPredicateQueryString);
-		QueryExecution predicatePathQueryExecution = QueryExecutionFactory
-				.createServiceRequest(counter.getServiceRequestURL(), pathPredicateQuery);
-
-		double count_path_Predicate_Occurrence = predicatePathQueryExecution.execSelect().next().get("?c").asLiteral()
-				.getDouble();
-		predicatePathQueryExecution.close();
+		double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?cnt");
+		double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
+				"?c");
 
 		return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 
@@ -136,31 +97,11 @@ public class NPMICalculator {
 		String predicateTriple = "?s <" + counter.getStmt().getPredicate() + "> ?o .";
 
 		if (path.getPathLength() == 3) {
-			String[] querySequence = builder.split(";");
+			String firstPath = getPath(pathProperties.get(0).isInverse(), 0);
 
-			String firstPath;
-			String[] firstSequence = querySequence[0].split(" ");
-			if (pathProperties.get(0).isInverse()) {
-				firstPath = firstSequence[2].trim() + " <" + sPath.split(";")[0] + "> " + firstSequence[0].trim();
-			} else {
-				firstPath = firstSequence[0].trim() + " <" + sPath.split(";")[0] + "> " + firstSequence[2].trim();
-			}
+			String secondPath = getPath(pathProperties.get(1).isInverse(), 1);
 
-			String secondPath;
-			String[] secSequence = querySequence[1].split(" ");
-			if (pathProperties.get(1).isInverse()) {
-				secondPath = secSequence[2].trim() + " <" + sPath.split(";")[1] + "> " + secSequence[0].trim();
-			} else {
-				secondPath = secSequence[0].trim() + " <" + sPath.split(";")[1] + "> " + secSequence[2].trim();
-			}
-
-			String thirdPath;
-			String[] thirdSequence = querySequence[2].split(" ");
-			if (pathProperties.get(1).isInverse()) {
-				thirdPath = thirdSequence[2].trim() + " <" + sPath.split(";")[2] + "> " + thirdSequence[0].trim();
-			} else {
-				thirdPath = thirdSequence[0].trim() + " <" + sPath.split(";")[2] + "> " + thirdSequence[2].trim();
-			}
+			String thirdPath = getPath(pathProperties.get(2).isInverse(), 2);
 
 			String pathQueryString = "select (coalesce(sum(?b3*?k),0) as ?sum) where { \n"
 					+ "select (count(*) as ?b3) (?b2*?b1 as ?k) ?x1 where { \n" + firstPath + " .\n" + subTypeTriples
@@ -168,106 +109,94 @@ public class NPMICalculator {
 					+ "select (count(*) as ?b1) ?x2 where { \n" + thirdPath + ". \n" + objTypeTriples
 					+ "} group by ?x2\n" + "}\n" + "} group by ?b1 ?x1\n" + "}\n" + "} group by ?x1 ?b2 ?b1\n" + "}\n";
 
-			Query pathQuery = QueryFactory.create(pathQueryString);
-			QueryExecution pathQueryExecution = QueryExecutionFactory
-					.createServiceRequest(counter.getServiceRequestURL(), pathQuery);
-			double count_Path_Occurrence = pathQueryExecution.execSelect().next().get("?sum").asLiteral().getDouble();
-			pathQueryExecution.close();
-
 			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + subTypeTriples
 					+ secondPath + " .\n" + thirdPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}\n";
 
-			Query pathPredicateQuery = QueryFactory.create(pathPredicateQueryString);
-			QueryExecution predicatePathQueryExecution = QueryExecutionFactory
-					.createServiceRequest(counter.getServiceRequestURL(), pathPredicateQuery);
-
-			double count_path_Predicate_Occurrence = predicatePathQueryExecution.execSelect().next().get("?c")
-					.asLiteral().getDouble();
-			predicatePathQueryExecution.close();
+			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
+			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
+					"?c");
 
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		} else if (path.getPathLength() == 2) {
-			String[] querySequence = builder.split(";");
 
-			String firstPath;
-			if (pathProperties.get(0).isInverse()) {
-				firstPath = querySequence[0].split(" ")[2].trim() + " <" + sPath.split(";")[0] + "> "
-						+ querySequence[0].split(" ")[0].trim();
-			} else {
-				firstPath = querySequence[0].split(" ")[0].trim() + " <" + sPath.split(";")[0] + "> "
-						+ querySequence[0].split(" ")[2].trim();
-			}
+			String firstPath = getPath(pathProperties.get(0).isInverse(), 0);
 
-			String secondPath;
-			if (pathProperties.get(1).isInverse()) {
-				secondPath = querySequence[1].split(" ")[2].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[0].trim();
-			} else {
-				secondPath = querySequence[1].split(" ")[0].trim() + " <" + sPath.split(";")[1] + "> "
-						+ querySequence[1].split(" ")[2].trim();
-			}
+			String secondPath = getPath(pathProperties.get(1).isInverse(), 1);
 
 			String pathQueryString = "Select (sum(?b1*?b2) as ?sum) where {\n"
 					+ "select (count(*) as ?b2) ?b1 where { \n" + firstPath + " .\n" + subTypeTriples + "{ \n"
 					+ "select (count(*) as ?b1) ?x1 where { \n" + secondPath + " .\n" + objTypeTriples
 					+ "} group by ?x1\n" + "}\n" + "} group by ?b1\n" + "}\n";
 
-			Query pathQuery = QueryFactory.create(pathQueryString);
-			QueryExecution pathQueryExecution = QueryExecutionFactory
-					.createServiceRequest(counter.getServiceRequestURL(), pathQuery);
-			double count_Path_Occurrence = pathQueryExecution.execSelect().next().get("?sum").asLiteral().getDouble();
-			pathQueryExecution.close();
-
 			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + subTypeTriples
-					+ secondPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}\n";
+					+ secondPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}";
 
-			Query pathPredicateQuery = QueryFactory.create(pathPredicateQueryString);
-
-			QueryExecution pathPredicateQueryExecution = QueryExecutionFactory
-					.createServiceRequest(counter.getServiceRequestURL(), pathPredicateQuery);
-			double count_path_Predicate_Occurrence = pathPredicateQueryExecution.execSelect().next().get("?c")
-					.asLiteral().getDouble();
-			pathPredicateQueryExecution.close();
+			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
+			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
+					"?c");
 
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 
 		} else {
 
-			String[] querySequence = builder.split(";");
-			String firstPath;
-			if (pathProperties.get(0).isInverse()) {
-				firstPath = querySequence[0].split(" ")[2].trim() + " <" + sPath.split(";")[0] + "> "
-						+ querySequence[0].split(" ")[0].trim();
-			} else {
-				firstPath = querySequence[0].split(" ")[0].trim() + " <" + sPath.split(";")[0] + "> "
-						+ querySequence[0].split(" ")[2].trim();
-			}
+			String firstPath = getPath(pathProperties.get(0).isInverse(), 0);
 
 			String pathQueryString = "Select (count(*) as ?sum) where {\n" + firstPath + " .\n" + subTypeTriples
 					+ objTypeTriples + "}\n";
 
-			Query pathQuery = QueryFactory.create(pathQueryString);
-			QueryExecution pathQueryExecution = QueryExecutionFactory
-					.createServiceRequest(counter.getServiceRequestURL(), pathQuery);
-			double count_Path_Occurrence = pathQueryExecution.execSelect().next().get("?sum").asLiteral().getDouble();
-			pathQueryExecution.close();
-
 			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + subTypeTriples
 					+ objTypeTriples + predicateTriple + "\n" + "}\n";
 
-			Query pathPredicateQuery = QueryFactory.create(pathPredicateQueryString);
-			QueryExecution pathPredicateQueryExecution = QueryExecutionFactory
-					.createServiceRequest(counter.getServiceRequestURL(), pathPredicateQuery);
-
-			double count_path_Predicate_Occurrence = pathPredicateQueryExecution.execSelect().next().get("?c")
-					.asLiteral().getDouble();
-			pathPredicateQueryExecution.close();
+			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
+			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
+					"?c");
 
 			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		}
 
 	}
 
+	private String getPath(boolean isInverse, int i) {
+		String path;
+		String[] vars = builder.split(";")[i].split(" ");
+		if (isInverse) {
+			path = vars[2].trim() + " <" + sPath.split(";")[i] + "> " + vars[0].trim();
+		} else {
+			path = vars[0].trim() + " <" + sPath.split(";")[i] + "> " + vars[2].trim();
+		}
+		return path;
+	}
+
+	public double pmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence) {
+		double score = 0.0;
+		try {
+
+			BigDecimal NO_OF_SUBJECT_TRIPLES = new BigDecimal(Integer.toString(counter.getSubjectTriplesCount()));
+			BigDecimal NO_OF_OBJECT_TRIPLES = new BigDecimal(Integer.toString(counter.getObjectTriplesCount()));
+			BigDecimal NO_PATH_PREDICATE_TRIPLES = new BigDecimal(Double.toString(count_path_Predicate_Occurrence));
+			BigDecimal SUBJECT_OBJECT_TRIPLES = NO_OF_SUBJECT_TRIPLES.multiply(NO_OF_OBJECT_TRIPLES);
+
+
+			// add a small epsilon = 10 power -18 to avoid zero in logarithm
+			double PROBABILITY_PATH_PREDICATE = NO_PATH_PREDICATE_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue() + 0.000000000000000001;
+			BigDecimal NO_PATH_TRIPLES = new BigDecimal(Double.toString(count_Path_Occurrence));
+			BigDecimal NO_OF_PREDICATE_TRIPLES = new BigDecimal(Integer.toString(counter.getPredicateTriplesCount()));
+			double PROBABILITY_PATH = NO_PATH_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue();
+			double PROBABILITY_PREDICATE = NO_OF_PREDICATE_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue();
+
+			score = Math.log(PROBABILITY_PATH_PREDICATE / (PROBABILITY_PATH * PROBABILITY_PREDICATE)) / -Math.log(PROBABILITY_PATH_PREDICATE);
+			return score;
+		}
+
+		catch (Exception ex){
+			ex.printStackTrace();
+			return score;
+		} finally {
+			path.setFinalScore(score);
+		}
+	}
+	
+	
 	public double npmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence)
 			throws IllegalArgumentException {
 		// If the predicate never occurs
@@ -305,7 +234,7 @@ public class NPMICalculator {
 //                count_Path_Occurrence, count_predicate_Occurrence))) {
 //            throw new NPMIFilterException("The NPMI filter rejected the calculated NPMI.");
 //        }
-		
+
 		path.setFinalScore(npmi);
 		return npmi;
 	}
