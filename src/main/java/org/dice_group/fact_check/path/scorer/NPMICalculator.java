@@ -1,7 +1,5 @@
 package org.dice_group.fact_check.path.scorer;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,14 +55,13 @@ public class NPMICalculator {
 			pathQueryString = "Select (count(*) as ?cnt) where {select distinct ?s ?o { " + firstPath + " . " + subjType
 					+ secondPath + " . " + objType + "}} ";
 
-			pathPredicateQueryString = "Select (count(*) as ?c) where {select distinct ?s ?o {\n" + firstPath + " .\n"
-					+ secondPath + " .\n" + predicateTriple + "\n" + "}}\n";
+			pathPredicateQueryString = "Select (count(*) as ?c) where {select distinct ?s ?o {" + firstPath + " . "
+					+ secondPath + " . " + predicateTriple + " }}";
 		} else {
-			pathQueryString = "Select (count(*) as ?cnt) where {\n" + firstPath + " .\n" + subjType + objType + "}\n";
+			pathQueryString = "Select (count(*) as ?cnt) where {" + firstPath + " .\n" + subjType + objType + "}\n";
 
-			pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
-					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + predicateTriple + "\n"
-					+ "}}\n";
+			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where {"
+					+ firstPath + " . " + predicateTriple + " }}";
 
 		}
 
@@ -86,15 +83,16 @@ public class NPMICalculator {
 		Iterator<Node> subTypeIterator = counter.getSubjectTypes().iterator();
 		String subTypeTriples = "";
 		while (subTypeIterator.hasNext()) {
-			subTypeTriples = subTypeTriples + "?s a <" + subTypeIterator.next() + "> . \n";
+			subTypeTriples = subTypeTriples + "?s a <" + subTypeIterator.next() + "> . ";
 		}
 
 		Iterator<Node> objTypeIterator = counter.getObjectTypes().iterator();
 		String objTypeTriples = "";
 		while (objTypeIterator.hasNext()) {
-			objTypeTriples = objTypeTriples + "?o a <" + objTypeIterator.next() + "> . \n";
+			objTypeTriples = objTypeTriples + "?o a <" + objTypeIterator.next() + "> . ";
 		}
-
+		
+		String pathQueryString, pathPredicateQueryString;
 		String predicateTriple = "?s <" + counter.getStmt().getPredicate() + "> ?o .";
 
 		if (path.getPathLength() == 3) {
@@ -104,59 +102,46 @@ public class NPMICalculator {
 
 			String thirdPath = getPath(pathProperties.get(2).isInverse(), 2);
 
-			String pathQueryString = "select (coalesce(sum(?b3*?k),0) as ?sum) where { \n"
-					+ "select (count(*) as ?b3) (?b2*?b1 as ?k) ?x1 where { \n" + firstPath + " .\n" + subTypeTriples
-					+ "{ \n" + "Select (count(*) as ?b2) ?x1 ?b1 where { \n" + secondPath + "{ \n"
-					+ "select (count(*) as ?b1) ?x2 where { \n" + thirdPath + ". \n" + objTypeTriples
-					+ "} group by ?x2\n" + "}\n" + "} group by ?b1 ?x1\n" + "}\n" + "} group by ?x1 ?b2 ?b1\n" + "}\n";
+			pathQueryString = "select (coalesce(sum(?b3*?k),0) as ?sum) where { "
+					+ "select (count(*) as ?b3) (?b2*?b1 as ?k) ?x1 where { " + firstPath + " . " + subTypeTriples
+					+ "{ \n" + "Select (count(*) as ?b2) ?x1 ?b1 where { " + secondPath + "{ "
+					+ "select (count(*) as ?b1) ?x2 where { " + thirdPath + ". " + objTypeTriples
+					+ "} group by ?x2 " + "} " + "} group by ?b1 ?x1" + " } } group by ?x1 ?b2 ?b1 }";
 
-			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
-					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + subTypeTriples
-					+ secondPath + " .\n" + thirdPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}}\n";
+			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where { "
+					+ firstPath + " . " + subTypeTriples + secondPath + " . " + thirdPath + " ." + objTypeTriples
+					+ predicateTriple + " }}";
 
-			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
-			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
-					"?c");
-
-			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		} else if (path.getPathLength() == 2) {
 
 			String firstPath = getPath(pathProperties.get(0).isInverse(), 0);
 
 			String secondPath = getPath(pathProperties.get(1).isInverse(), 1);
 
-			String pathQueryString = "Select (sum(?b1*?b2) as ?sum) where {\n"
-					+ "select (count(*) as ?b2) ?b1 where { \n" + firstPath + " .\n" + subTypeTriples + "{ \n"
-					+ "select (count(*) as ?b1) ?x1 where { \n" + secondPath + " .\n" + objTypeTriples
-					+ "} group by ?x1\n" + "}\n" + "} group by ?b1\n" + "}\n";
+			pathQueryString = "Select (sum(?b1*?b2) as ?sum) where {\n" + "select (count(*) as ?b2) ?b1 where { \n"
+					+ firstPath + " .\n" + subTypeTriples + "{ \n" + "select (count(*) as ?b1) ?x1 where { \n"
+					+ secondPath + " .\n" + objTypeTriples + "} group by ?x1\n" + "}\n" + "} group by ?b1\n" + "}\n";
 
-			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
-					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + subTypeTriples
-					+ secondPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}}";
-
-			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
-			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
-					"?c");
-
-			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
+			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where { "
+					+ firstPath + " . " + subTypeTriples + secondPath + " . " + objTypeTriples + predicateTriple
+					+ " }}";
 
 		} else {
 
 			String firstPath = getPath(pathProperties.get(0).isInverse(), 0);
 
-			String pathQueryString = "Select (count(*) as ?sum) where {\n" + firstPath + " .\n" + subTypeTriples
-					+ objTypeTriples + "}\n";
+			pathQueryString = "Select (count(*) as ?sum) where { " + firstPath + " . " + subTypeTriples
+					+ objTypeTriples + "}";
 
-			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
-					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + subTypeTriples
-					+ objTypeTriples + predicateTriple + "\n" + "}}\n";
+			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where { "
+					+ firstPath + " . " + subTypeTriples + objTypeTriples + predicateTriple + " }}";
 
-			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
-			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
-					"?c");
-
-			return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 		}
+
+		double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
+		double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString, "?c");
+
+		return npmiValue(count_Path_Occurrence, count_path_Predicate_Occurrence);
 
 	}
 
@@ -200,7 +185,7 @@ public class NPMICalculator {
 //		}
 //	}
 //	
-	
+
 	public double npmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence)
 			throws IllegalArgumentException {
 		// If the predicate never occurs
