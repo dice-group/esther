@@ -136,6 +136,26 @@ public class Property implements Comparable<Property> {
 		return list;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public List<Integer> getIDDPath() {
+		List<Integer> list = new ArrayList<Integer>();
+		int edge = this.isInverse ? -this.edge: this.edge;
+		list.add(edge);
+		if (this.backPointer != null) {
+			PropertyBackPointer temp = this.backPointer;
+			while (temp != null) {
+				int tEdge = temp.getProperty().isInverse ? -temp.getProperty().getEdge() : temp.getProperty().getEdge();
+				list.add(0, tEdge);
+				temp = temp.getProperty().getBackPointer();
+			}
+		}
+		return list;
+	}
+	
+	
 	public List<Property> getPaths() {
 		List<Property> list = new ArrayList<Property>();
 		list.add(this);

@@ -1,5 +1,9 @@
 package org.dice_group.main;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,10 +29,8 @@ import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.CSVUtils;
 import org.dice_group.util.QueryExecutioner;
-import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,7 @@ public class Launcher {
 
 		// read testing data - facts to check
 		Model testData = ModelFactory.createDefaultModel();
-		testData.read(pArgs.folderPath + "/ns_test.nt");//ns_test mixed_false_triples
+		testData.read(pArgs.folderPath + "/reduced.nt");//ns_test mixed_false_triples
 
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
@@ -85,6 +87,8 @@ public class Launcher {
 		} else {
 			eModel = new TransE(null, relations);
 		}
+		
+		
 
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
@@ -112,7 +116,7 @@ public class Launcher {
 //			  !SparqlHelper.askModel(pArgs.serviceRequestURL, SparqlHelper.getAskQuery(
 //			  PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
 //			  curStmt.getSubject().toString(), curStmt.getObject().toString())));
-//			 
+			 
 
 			OccurrencesCounter c = new OccurrencesCounter(curStmt, sparqlExec, false);
 			c.count();
@@ -147,11 +151,24 @@ public class Launcher {
 			LOGGER.info(i++ + "/" + testData.size() + " : " + f + " - " + curStmt.toString());
 			graphs.add(new Graph(p, f, curStmt));
 		}
+		
+		StringBuilder builder = new StringBuilder();
+		for(Graph g : graphs) {
+			builder.append(g.getPrintableResults(dict.getId2Relations()));
+		}
+		
+		File file = new File("paths.txt");
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+		    writer.write(builder.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// write results in gerbil's format
 		ResultWriter results = new ResultWriter(0);
 		results.addResults(graphs);
-		results.printToFile(pArgs.folderPath + "/Results/" + matrix.toString() + results.getCurID()+"f_test2_pos_results.nt");
+		results.printToFile(pArgs.folderPath + "/Results/" + matrix.toString() + results.getCurID()+"reduced_pos_results.nt");
 	}
 }
 

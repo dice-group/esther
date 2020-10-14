@@ -62,8 +62,9 @@ public class NPMICalculator {
 		} else {
 			pathQueryString = "Select (count(*) as ?cnt) where {\n" + firstPath + " .\n" + subjType + objType + "}\n";
 
-			pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + predicateTriple + "\n"
-					+ "}\n";
+			pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
+					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + predicateTriple + "\n"
+					+ "}}\n";
 
 		}
 
@@ -109,8 +110,9 @@ public class NPMICalculator {
 					+ "select (count(*) as ?b1) ?x2 where { \n" + thirdPath + ". \n" + objTypeTriples
 					+ "} group by ?x2\n" + "}\n" + "} group by ?b1 ?x1\n" + "}\n" + "} group by ?x1 ?b2 ?b1\n" + "}\n";
 
-			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + subTypeTriples
-					+ secondPath + " .\n" + thirdPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}\n";
+			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
+					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + subTypeTriples
+					+ secondPath + " .\n" + thirdPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}}\n";
 
 			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
 			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
@@ -128,8 +130,9 @@ public class NPMICalculator {
 					+ "select (count(*) as ?b1) ?x1 where { \n" + secondPath + " .\n" + objTypeTriples
 					+ "} group by ?x1\n" + "}\n" + "} group by ?b1\n" + "}\n";
 
-			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + subTypeTriples
-					+ secondPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}";
+			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
+					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + subTypeTriples
+					+ secondPath + " .\n" + objTypeTriples + predicateTriple + "\n" + "}}";
 
 			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
 			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
@@ -144,8 +147,9 @@ public class NPMICalculator {
 			String pathQueryString = "Select (count(*) as ?sum) where {\n" + firstPath + " .\n" + subTypeTriples
 					+ objTypeTriples + "}\n";
 
-			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + firstPath + " .\n" + subTypeTriples
-					+ objTypeTriples + predicateTriple + "\n" + "}\n";
+			String pathPredicateQueryString = "Select (count(*) as ?c) where {\n" + 
+					"    Select distinct ?s ?o where {\n" + firstPath + " .\n" + subTypeTriples
+					+ objTypeTriples + predicateTriple + "\n" + "}}\n";
 
 			double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
 			double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString,
@@ -167,35 +171,35 @@ public class NPMICalculator {
 		return path;
 	}
 
-	public double pmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence) {
-		double score = 0.0;
-		try {
-
-			BigDecimal NO_OF_SUBJECT_TRIPLES = new BigDecimal(Integer.toString(counter.getSubjectTriplesCount()));
-			BigDecimal NO_OF_OBJECT_TRIPLES = new BigDecimal(Integer.toString(counter.getObjectTriplesCount()));
-			BigDecimal NO_PATH_PREDICATE_TRIPLES = new BigDecimal(Double.toString(count_path_Predicate_Occurrence));
-			BigDecimal SUBJECT_OBJECT_TRIPLES = NO_OF_SUBJECT_TRIPLES.multiply(NO_OF_OBJECT_TRIPLES);
-
-
-			// add a small epsilon = 10 power -18 to avoid zero in logarithm
-			double PROBABILITY_PATH_PREDICATE = NO_PATH_PREDICATE_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue() + 0.000000000000000001;
-			BigDecimal NO_PATH_TRIPLES = new BigDecimal(Double.toString(count_Path_Occurrence));
-			BigDecimal NO_OF_PREDICATE_TRIPLES = new BigDecimal(Integer.toString(counter.getPredicateTriplesCount()));
-			double PROBABILITY_PATH = NO_PATH_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue();
-			double PROBABILITY_PREDICATE = NO_OF_PREDICATE_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue();
-
-			score = Math.log(PROBABILITY_PATH_PREDICATE / (PROBABILITY_PATH * PROBABILITY_PREDICATE)) / -Math.log(PROBABILITY_PATH_PREDICATE);
-			return score;
-		}
-
-		catch (Exception ex){
-			ex.printStackTrace();
-			return score;
-		} finally {
-			path.setFinalScore(score);
-		}
-	}
-	
+//	public double pmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence) {
+//		double score = 0.0;
+//		try {
+//
+//			BigDecimal NO_OF_SUBJECT_TRIPLES = new BigDecimal(Integer.toString(counter.getSubjectTriplesCount()));
+//			BigDecimal NO_OF_OBJECT_TRIPLES = new BigDecimal(Integer.toString(counter.getObjectTriplesCount()));
+//			BigDecimal NO_PATH_PREDICATE_TRIPLES = new BigDecimal(Double.toString(count_path_Predicate_Occurrence));
+//			BigDecimal SUBJECT_OBJECT_TRIPLES = NO_OF_SUBJECT_TRIPLES.multiply(NO_OF_OBJECT_TRIPLES);
+//
+//
+//			// add a small epsilon = 10 power -18 to avoid zero in logarithm
+//			double PROBABILITY_PATH_PREDICATE = NO_PATH_PREDICATE_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue() + 0.000000000000000001;
+//			BigDecimal NO_PATH_TRIPLES = new BigDecimal(Double.toString(count_Path_Occurrence));
+//			BigDecimal NO_OF_PREDICATE_TRIPLES = new BigDecimal(Integer.toString(counter.getPredicateTriplesCount()));
+//			double PROBABILITY_PATH = NO_PATH_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue();
+//			double PROBABILITY_PREDICATE = NO_OF_PREDICATE_TRIPLES.divide(SUBJECT_OBJECT_TRIPLES, 20, RoundingMode.HALF_EVEN).doubleValue();
+//
+//			score = Math.log(PROBABILITY_PATH_PREDICATE / (PROBABILITY_PATH * PROBABILITY_PREDICATE)) / -Math.log(PROBABILITY_PATH_PREDICATE);
+//			return score;
+//		}
+//
+//		catch (Exception ex){
+//			ex.printStackTrace();
+//			return score;
+//		} finally {
+//			path.setFinalScore(score);
+//		}
+//	}
+//	
 	
 	public double npmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence)
 			throws IllegalArgumentException {
