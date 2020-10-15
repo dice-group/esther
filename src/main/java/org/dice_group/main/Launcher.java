@@ -108,8 +108,7 @@ public class Launcher {
 
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
-		int i = 1;
-		while (checkStmts.hasNext()) {
+		for (int i = 1; checkStmts.hasNext();) {
 			Statement curStmt = checkStmts.next();
 
 			// get precalculated meta-path
