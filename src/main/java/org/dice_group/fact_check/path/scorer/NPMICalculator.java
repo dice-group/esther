@@ -1,5 +1,7 @@
 package org.dice_group.fact_check.path.scorer;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +113,10 @@ public class NPMICalculator {
 			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where { "
 					+ firstPath + " . " + subTypeTriples + secondPath + " . " + thirdPath + " ." + objTypeTriples
 					+ predicateTriple + " }}";
+			
+//			pathPredicateQueryString = "Select (count(*) as ?c) where { "
+//					+ firstPath + " . " + subTypeTriples + secondPath + " . " + thirdPath + " ." + objTypeTriples
+//					+ predicateTriple + " }";
 
 		} else if (path.getPathLength() == 2) {
 
@@ -125,6 +131,10 @@ public class NPMICalculator {
 			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where { "
 					+ firstPath + " . " + subTypeTriples + secondPath + " . " + objTypeTriples + predicateTriple
 					+ " }}";
+			
+//			pathPredicateQueryString = "Select (count(*) as ?c) where { "
+//					+ firstPath + " . " + subTypeTriples + secondPath + " . " + objTypeTriples + predicateTriple
+//					+ " }";
 
 		} else {
 
@@ -135,6 +145,9 @@ public class NPMICalculator {
 
 			pathPredicateQueryString = "Select (count(*) as ?c) where { Select distinct ?s ?o where { "
 					+ firstPath + " . " + subTypeTriples + objTypeTriples + predicateTriple + " }}";
+			
+//			pathPredicateQueryString = "Select (count(*) as ?c) where { "
+//					+ firstPath + " . " + subTypeTriples + objTypeTriples + predicateTriple + " }";
 
 		}
 
@@ -184,7 +197,7 @@ public class NPMICalculator {
 //			path.setFinalScore(score);
 //		}
 //	}
-//	
+	
 
 	public double npmiValue(double count_Path_Occurrence, double count_path_Predicate_Occurrence)
 			throws IllegalArgumentException {
@@ -194,10 +207,10 @@ public class NPMICalculator {
 					"The given predicate does never occur. The NPMI is not defined for this case.");
 		}
 		// If the path never occurs
-//		if (count_Path_Occurrence == 0) {
-//			throw new IllegalArgumentException(
-//					"The given path does never occur. The NPMI is not defined for this case.");
-//		}
+		if (count_Path_Occurrence == 0) {
+			throw new IllegalArgumentException(
+					"The given path does never occur. The NPMI is not defined for this case.");
+		}
 		// If subject or object types never occur
 		if ((counter.getSubjectTriplesCount() == 0) || (counter.getObjectTriplesCount() == 0)) {
 			throw new IllegalArgumentException(
@@ -207,7 +220,7 @@ public class NPMICalculator {
 
 		double npmi;
 		// Path and predicate never occur together
-		if (count_path_Predicate_Occurrence == 0 || count_Path_Occurrence == 0) {
+		if (count_path_Predicate_Occurrence == 0 ) {
 			// Since we know that A and B exist, there is a chance that they should occur
 			// together. Since it never happens, we have to return -1
 			// npmi = -1;

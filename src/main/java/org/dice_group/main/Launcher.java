@@ -14,9 +14,11 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
+import org.dice_group.fact_check.path.scorer.CubicMeanSummarist;
 import org.dice_group.fact_check.path.scorer.NPMICalculator;
 import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
 import org.dice_group.fact_check.path.scorer.ResultWriter;
+import org.dice_group.fact_check.path.scorer.ScoreSummarist;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
@@ -29,8 +31,10 @@ import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
+import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.CSVUtils;
 import org.dice_group.util.QueryExecutioner;
+import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,12 +50,12 @@ public class Launcher {
 		LOGGER.info("Reading data from file: " + pArgs.folderPath);
 		LOGGER.info("Embeddings Model: " + pArgs.eModel);
 		LOGGER.info("k: " + pArgs.k);
-		
+
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
 
 		// read testing data - facts to check
 		Model testData = ModelFactory.createDefaultModel();
-		testData.read(pArgs.folderPath + "/reduced.nt");//ns_test mixed_false_triples
+		testData.read(pArgs.folderPath + "/ns_test.nt");// ns_test mixed_false_triples
 
 		// read dictionary from file
 		DictionaryHelper dictHelper = new DictionaryHelper();
@@ -59,7 +63,8 @@ public class Launcher {
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		// double[][] entities = CSVUtils.readCSVFile(folderPath+"/entity_embedding.csv");
+		// double[][] entities =
+		// CSVUtils.readCSVFile(folderPath+"/entity_embedding.csv");
 		double[][] relations = CSVUtils.readCSVFile(pArgs.folderPath + "/relation_embedding.csv");
 
 		Set<Graph> graphs = new HashSet<Graph>();
@@ -87,8 +92,6 @@ public class Launcher {
 		} else {
 			eModel = new TransE(null, relations);
 		}
-		
-		
 
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
@@ -103,20 +106,18 @@ public class Launcher {
 			PathCreator creator = new PathCreator(dict, eModel);
 			Set<Property> p = creator.findPropertyPaths(curStmt, matrix, pArgs.k);
 
+			/*
+			 * remove if property path not present in graph
+			 */
+			p.removeIf(curProp -> !SparqlHelper.askModel(pArgs.serviceRequestURL,
+					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
+							curStmt.getSubject().toString(), curStmt.getObject().toString())));
+
 			// no paths found
 			if (p.isEmpty()) {
 				graphs.add(new Graph(p, 0, curStmt));
 				continue;
 			}
-
-			/*
-			 * remove if property path not present in graph 
-			 */ 
-//			p.removeIf(curProp ->
-//			  !SparqlHelper.askModel(pArgs.serviceRequestURL, SparqlHelper.getAskQuery(
-//			  PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
-//			  curStmt.getSubject().toString(), curStmt.getObject().toString())));
-			 
 
 			OccurrencesCounter c = new OccurrencesCounter(curStmt, sparqlExec, false);
 			c.count();
@@ -140,35 +141,32 @@ public class Launcher {
 			double[] scores = new double[p.size()];
 			scores = p.stream().mapToDouble(s -> s.getFinalScore()).toArray();
 
-			// aggregate the path's scores into one triple veracity score
-			double score = 1.0;
-			for (int s = scores.length - 1; s >= 0; s--) {
-				if (scores[s] > 1)
-					continue;
-				score = score * (1 - scores[s]);
-			}
-			double f = 1 - score;
-			LOGGER.info(i++ + "/" + testData.size() + " : " + f + " - " + curStmt.toString());
-			graphs.add(new Graph(p, f, curStmt));
+			ScoreSummarist summarist = new CubicMeanSummarist();
+			double score = summarist.summarize(scores);
+
+			LOGGER.info(i++ + "/" + testData.size() + " : " + score + " - " + curStmt.toString());
+			graphs.add(new Graph(p, score, curStmt));
 		}
+
 		
-		StringBuilder builder = new StringBuilder();
-		for(Graph g : graphs) {
-			builder.append(g.getPrintableResults(dict.getId2Relations()));
-		}
 		
-		File file = new File("paths.txt");
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-		    writer.write(builder.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 		// write results in gerbil's format
 		ResultWriter results = new ResultWriter(0);
 		results.addResults(graphs);
-		results.printToFile(pArgs.folderPath + "/Results/" + matrix.toString() + results.getCurID()+"reduced_pos_results.nt");
+		results.printToFile(pArgs.folderPath + "/Results/" + matrix.toString() + results.getCurID() + "pos_results.nt");
+		
+		StringBuilder builder = new StringBuilder();
+		for (Graph g : graphs) {
+			builder.append(g.getPrintableResults(dict.getId2Relations()));
+		}
+
+		File file = new File("paths.txt");
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+			writer.write(builder.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
-
