@@ -38,12 +38,12 @@ public class QueryExecutioner {
 				try {
 					return queryExec.execSelect().next().get(desiredVar).asLiteral().getDouble();
 				} catch (Exception e) {
-					try {
-						// sleep for 5 seconds before re-trying
-						TimeUnit.SECONDS.sleep(5);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
+//					try {
+//						// sleep for 5 seconds before re-trying
+//						TimeUnit.SECONDS.sleep(5);
+//					} catch (InterruptedException e1) {
+//						e1.printStackTrace();
+//					}
 					
 					// if tries are reached, throw the exception anyhow
 					if(tries > MAX_ATTEMPTS_PER_QUERY) {
