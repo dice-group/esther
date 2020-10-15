@@ -10,16 +10,12 @@ import org.dice_group.graph_search.distance.Distance;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyBackPointer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Follows a slightly modified A* search algorithm that returns n-paths
  *
  */
 public class PropertySearch implements SearchAlgorithm {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(PropertySearch.class);
 
 	private Matrix matrix;
 

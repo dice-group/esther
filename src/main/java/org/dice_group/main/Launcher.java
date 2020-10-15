@@ -4,7 +4,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
@@ -63,8 +65,7 @@ public class Launcher {
 		Dictionary dict = dictHelper.getDictionary();
 
 		// read embeddings from file
-		// double[][] entities =
-		// CSVUtils.readCSVFile(folderPath+"/entity_embedding.csv");
+		// double[][] entities = CSVUtils.readCSVFile(folderPath+"/entity_embedding.csv");
 		double[][] relations = CSVUtils.readCSVFile(pArgs.folderPath + "/relation_embedding.csv");
 
 		Set<Graph> graphs = new HashSet<Graph>();
@@ -92,6 +93,18 @@ public class Launcher {
 		} else {
 			eModel = new TransE(null, relations);
 		}
+		
+		// preprocess the meta-paths for all existing properties 
+		Map<String, Set<Property>> metaPaths = new HashMap<String, Set<Property>>();
+		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
+		for(String curPredicate: dict.getRelations2ID().keySet()) {
+			// set score function's target edge as current
+			eModel.updateScorer(dict.getRelations2ID().get(curPredicate));
+			
+			// find property combinations 
+			Set<Property> p = creator.findPropertyPaths(curPredicate);
+			metaPaths.put(curPredicate, p);
+		}
 
 		// check each statement
 		StmtIterator checkStmts = testData.listStatements();
@@ -99,16 +112,11 @@ public class Launcher {
 		while (checkStmts.hasNext()) {
 			Statement curStmt = checkStmts.next();
 
-			// set score function's target edge as current
-			eModel.updateScorer(dict.getRelations2ID().get(curStmt.getPredicate().toString()));
+			// get precalculated meta-path
+			Set<Property> p = metaPaths.get(curStmt.getPredicate().toString());
 
-			// find property combinations in graph
-			PathCreator creator = new PathCreator(dict, eModel);
-			Set<Property> p = creator.findPropertyPaths(curStmt, matrix, pArgs.k);
-
-			/*
-			 * remove if property path not present in graph
-			 */
+			
+			//remove if property path not present in graph
 			p.removeIf(curProp -> !SparqlHelper.askModel(pArgs.serviceRequestURL,
 					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
 							curStmt.getSubject().toString(), curStmt.getObject().toString())));
@@ -119,6 +127,7 @@ public class Launcher {
 				continue;
 			}
 
+			// count occurrences
 			OccurrencesCounter c = new OccurrencesCounter(curStmt, sparqlExec, false);
 			c.count();
 
@@ -138,6 +147,7 @@ public class Launcher {
 
 			}
 
+			// aggregate scores
 			double[] scores = new double[p.size()];
 			scores = p.stream().mapToDouble(s -> s.getFinalScore()).toArray();
 
@@ -147,9 +157,6 @@ public class Launcher {
 			LOGGER.info(i++ + "/" + testData.size() + " : " + score + " - " + curStmt.toString());
 			graphs.add(new Graph(p, score, curStmt));
 		}
-
-		
-		
 
 		// write results in gerbil's format
 		ResultWriter results = new ResultWriter(0);

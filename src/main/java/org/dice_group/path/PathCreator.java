@@ -3,7 +3,6 @@ package org.dice_group.path;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.rdf.model.Statement;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.graph_search.algorithms.PropertySearch;
 import org.dice_group.graph_search.algorithms.SearchAlgorithm;
@@ -18,10 +17,16 @@ public class PathCreator {
 	private EmbeddingModel emodel;
 
 	private Dictionary dictionary;
+	
+	private Matrix matrix;
+	
+	private int k;
 
-	public PathCreator(Dictionary dictionary, EmbeddingModel emodel) {
+	public PathCreator(Dictionary dictionary, EmbeddingModel emodel, Matrix matrix, int k) {
 		this.dictionary = dictionary;
 		this.emodel = emodel;
+		this.matrix = matrix;
+		this.k = k;
 	}
 
 	/**
@@ -32,10 +37,8 @@ public class PathCreator {
 	 * @param destination goal node
 	 * @return
 	 */
-	public Set<Property> findPropertyPaths(Statement stmt, Matrix matrix, int k) {
+	public Set<Property> findPropertyPaths(String edge) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
-
-		String edge = stmt.getPredicate().toString();
 
 		// get corresponding ids for embeddings
 		int edgeID = rel2ID.getOrDefault(edge, -1);
