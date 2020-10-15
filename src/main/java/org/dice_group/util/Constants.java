@@ -11,8 +11,14 @@ public interface Constants {
 	String SO_QUERY 	= "select * where { ?n ?p1 ?q . ?n2 ?p2 ?n . filter (?p1!=?p2 || ?q!=?n2). } ";
 	String OS_QUERY 	= "select * where { ?n ?p1 ?q . ?q ?p2 ?n2 . filter (?p1!=?p2 || ?q!=?n2). } ";
 
-	String ENT_DICT_FILE 	= "/entities.dict";
-	String REL_DICT_FILE 	= "/relations.dict";
+	String ENT_DICT_FILE 	= "entities.dict";
+	String REL_DICT_FILE 	= "relations.dict";
 	
+	String ENT_EMB_FILE 	= "entity_embedding.csv";
+	String REL_EMB_FILE 	= "relation_embedding.csv";
+	
+	String DENSE_STRING 	= "DensE";
+	String ROTATE_STRING 	= "RotatE";
+	String TRANSE_STRING 	= "TransE";
 	
 }

@@ -24,14 +24,14 @@ import org.dice_group.util.QueryExecutioner;
 public class OccurrencesCounter {
 
 	/**
-	 * triples in a given graph that possess the same subject type (domain) as the
-	 * statement we want to check
+	 * triples in a given graph that possess as the subject type, the domain of the
+	 * statement's predicate we want to check
 	 */
 	private int subjectTriplesCount;
 
 	/**
-	 * triples in a given graph that possess the same object type (range) as the
-	 * statement we want to check
+	 * triples in a given graph that possess as the object type, the range of the
+	 * statement's predicate we want to check
 	 */
 	private int objectTriplesCount;
 
@@ -58,7 +58,6 @@ public class OccurrencesCounter {
 		this.objectTypes = new HashSet<Node>();
 		this.vTy = vTy;
 		getDomainRangeInfo();
-		//count();
 	}
 
 	private void getDomainRangeInfo() {
@@ -105,13 +104,12 @@ public class OccurrencesCounter {
 		typeBuilder.addWhere(subject, property, NodeFactory.createVariable("x"));
 
 		Query typeQuery = typeBuilder.build();
-		QueryExecution queryExecution = sparqlExec.createExecutioner(typeQuery);
-
-		ResultSet resultSet = queryExecution.execSelect();
-
-		while (resultSet.hasNext())
-			types.add(resultSet.next().get("x").asNode());
-		queryExecution.close();
+		try(QueryExecution queryExecution = sparqlExec.createExecutioner(typeQuery);){
+			ResultSet resultSet = queryExecution.execSelect();
+			while (resultSet.hasNext()) {
+				types.add(resultSet.next().get("x").asNode());
+			}
+		}
 		return types;
 	}
 
@@ -143,13 +141,13 @@ public class OccurrencesCounter {
 
 	public int returnCount(SelectBuilder builder) {
 		Query queryOccurrence = builder.build();
-		QueryExecution queryExecution = sparqlExec.createExecutioner(queryOccurrence);
-		int count_Occurrence = 0;
-		ResultSet resultSet = queryExecution.execSelect();
-		if (resultSet.hasNext())
-			count_Occurrence = resultSet.next().get("?c").asLiteral().getInt();
-		queryExecution.close();
-		return count_Occurrence;
+		try (QueryExecution queryExecution = sparqlExec.createExecutioner(queryOccurrence);){
+			int count_Occurrence = 0;
+			ResultSet resultSet = queryExecution.execSelect();
+			if (resultSet.hasNext())
+				count_Occurrence = resultSet.next().get("?c").asLiteral().getInt();
+			return count_Occurrence;
+		}
 	}
 
 	public boolean isvTy() {

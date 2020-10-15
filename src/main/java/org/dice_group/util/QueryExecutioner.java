@@ -1,7 +1,5 @@
 package org.dice_group.util;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -38,13 +36,6 @@ public class QueryExecutioner {
 				try {
 					return queryExec.execSelect().next().get(desiredVar).asLiteral().getDouble();
 				} catch (Exception e) {
-//					try {
-//						// sleep for 5 seconds before re-trying
-//						TimeUnit.SECONDS.sleep(5);
-//					} catch (InterruptedException e1) {
-//						e1.printStackTrace();
-//					}
-					
 					// if tries are reached, throw the exception anyhow
 					if(tries > MAX_ATTEMPTS_PER_QUERY) {
 						LOGGER.error("Tried the query "+tries+" times and still failed.\n"+queryExec.getQuery());

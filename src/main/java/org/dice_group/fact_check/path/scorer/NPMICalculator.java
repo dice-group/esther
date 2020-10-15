@@ -1,7 +1,5 @@
 package org.dice_group.fact_check.path.scorer;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;

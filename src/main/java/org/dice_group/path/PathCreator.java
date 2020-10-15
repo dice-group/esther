@@ -1,5 +1,6 @@
 package org.dice_group.path;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,9 +18,9 @@ public class PathCreator {
 	private EmbeddingModel emodel;
 
 	private Dictionary dictionary;
-	
+
 	private Matrix matrix;
-	
+
 	private int k;
 
 	public PathCreator(Dictionary dictionary, EmbeddingModel emodel, Matrix matrix, int k) {
@@ -30,14 +31,11 @@ public class PathCreator {
 	}
 
 	/**
-	 * 
-	 * @param k 
-	 * @param source      source node
+	 * Calculates the meta-paths for a single edge
 	 * @param edge
-	 * @param destination goal node
-	 * @return
+	 * @return the paths found
 	 */
-	public Set<Property> findPropertyPaths(String edge) {
+	public Set<Property> getMetaPaths(String edge) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
 
 		// get corresponding ids for embeddings
@@ -50,9 +48,25 @@ public class PathCreator {
 
 		// search for property combos
 		SearchAlgorithm propertyCombos = new PropertySearch(matrix, emodel.getScorer());
-		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, emodel.getRelations(),k);
+		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, emodel.getRelations(), k);
 
 		return propertyPaths;
+	}
+
+	/**
+	 * Calculates the meta-paths for multiple edges
+	 * @param edges
+	 * @return the edge to paths found map
+	 */
+	public Map<String, Set<Property>> getMultipleMetaPaths(Set<String> edges) {
+		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
+		Map<String, Set<Property>> metaPaths = new HashMap<String, Set<Property>>();
+		for (String edge : edges) {
+			emodel.updateScorer(rel2ID.get(edge));
+			Set<Property> propertyPaths = getMetaPaths(edge);
+			metaPaths.put(edge, propertyPaths);
+		}
+		return metaPaths;
 	}
 
 	public EmbeddingModel getEmodel() {

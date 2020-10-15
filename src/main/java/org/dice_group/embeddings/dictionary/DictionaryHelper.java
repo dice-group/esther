@@ -33,7 +33,7 @@ public class DictionaryHelper {
 	 * 
 	 * @param dataFolderPath
 	 */
-	public void readDictionary(String dataFolderPath) {
+	public Dictionary readDictionary(String dataFolderPath) {
 
 		// read id2entities and id2relations from file
 		Map<Integer, String> id2entities = readMap(dataFolderPath + Constants.ENT_DICT_FILE);
@@ -45,7 +45,7 @@ public class DictionaryHelper {
 		Map<String, Integer> rel2ID = id2relations.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 
-		dictionary = new Dictionary(ent2ID, rel2ID, id2entities, id2relations);
+		return new Dictionary(ent2ID, rel2ID, id2entities, id2relations);
 
 	}
 

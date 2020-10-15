@@ -1,26 +1,12 @@
 package org.dice_group.main;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
-import org.dice_group.fact_check.path.scorer.CubicMeanSummarist;
-import org.dice_group.fact_check.path.scorer.NPMICalculator;
-import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
+import org.dice_group.fact_check.FactChecker;
 import org.dice_group.fact_check.path.scorer.ResultWriter;
-import org.dice_group.fact_check.path.scorer.ScoreSummarist;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NotDisjointDR;
@@ -33,10 +19,9 @@ import org.dice_group.models.TransE;
 import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.CSVUtils;
+import org.dice_group.util.Constants;
 import org.dice_group.util.QueryExecutioner;
-import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,131 +33,74 @@ public class Launcher {
 	public static void main(String[] args) {
 		ProgramArgs pArgs = new ProgramArgs();
 		JCommander.newBuilder().addObject(pArgs).build().parse(args);
-
-		LOGGER.info("Reading data from file: " + pArgs.folderPath);
-		LOGGER.info("Embeddings Model: " + pArgs.eModel);
-		LOGGER.info("k: " + pArgs.k);
-
-		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
-
-		// read testing data - facts to check
-		Model testData = ModelFactory.createDefaultModel();
-		testData.read(pArgs.folderPath + "/ns_test.nt");// ns_test mixed_false_triples
+		pArgs.printArgs();
 
 		// read dictionary from file
+		LOGGER.info("Reading data from file");
 		DictionaryHelper dictHelper = new DictionaryHelper();
-		dictHelper.readDictionary(pArgs.folderPath);
-		Dictionary dict = dictHelper.getDictionary();
+		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath);
 
 		// read embeddings from file
-		// double[][] entities = CSVUtils.readCSVFile(folderPath+"/entity_embedding.csv");
-		double[][] relations = CSVUtils.readCSVFile(pArgs.folderPath + "/relation_embedding.csv");
-
-		Set<Graph> graphs = new HashSet<Graph>();
+		double[][] entities = null;
+		if (pArgs.eModel.equals(Constants.DENSE_STRING))
+			entities = CSVUtils.readCSVFile(pArgs.folderPath + Constants.ENT_EMB_FILE);
+		double[][] relations = CSVUtils.readCSVFile(pArgs.folderPath + Constants.REL_EMB_FILE);
 
 		// create d/r edge adjacency matrix
-		Matrix matrix;
-		if (pArgs.type.equals("ND")) {
-			matrix = new NotDisjointDR(sparqlExec, dict);
-		} else if (pArgs.type.equals("S")) {
-			matrix = new StrictDR(sparqlExec, dict);
-		} else if (pArgs.type.equals("SS")) {
-			matrix = new SubsumedDR(sparqlExec, dict);
-		} else {
-			matrix = new IrrelevantDR(sparqlExec, dict);
-		}
-		LOGGER.info("Matrix type: " + matrix.toString());
+		LOGGER.info("Creating edge adjacency matrix from d/r");
+		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
+		Matrix matrix = getMatrixType(pArgs.type, sparqlExec, dict);
 		matrix.populateMatrix();
 
-		// get embedding model
-		EmbeddingModel eModel;
-		if (pArgs.eModel.equals("R")) {
-			eModel = new RotatE(null, relations);
-		} else if (pArgs.eModel.equals("D")) {
-			eModel = new DensE(null, relations);
-		} else {
-			eModel = new TransE(null, relations);
-		}
-		
-		// preprocess the meta-paths for all existing properties 
-		Map<String, Set<Property>> metaPaths = new HashMap<String, Set<Property>>();
+		// preprocess the meta-paths for all existing properties
+		LOGGER.info("Preprocessing meta-paths");
+		EmbeddingModel eModel = getModel(pArgs.eModel, relations, entities);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
-		for(String curPredicate: dict.getRelations2ID().keySet()) {
-			// set score function's target edge as current
-			eModel.updateScorer(dict.getRelations2ID().get(curPredicate));
-			
-			// find property combinations 
-			Set<Property> p = creator.findPropertyPaths(curPredicate);
-			metaPaths.put(curPredicate, p);
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet());
+
+		// check each fact
+		LOGGER.info("Applying meta-paths to KG");
+		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
+		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
+
+		// write results 
+		ResultWriter results = new ResultWriter(pArgs.initID, graphs);
+		results.printToFile(pArgs.folderPath + pArgs.savePath);
+		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath, dict.getId2Relations());
+	}
+
+	private static Matrix getMatrixType(String type, QueryExecutioner sparqlExec, Dictionary dict) {
+		Matrix matrix;
+		switch (type) {
+		case "ND":
+			matrix = new NotDisjointDR(sparqlExec, dict);
+			break;
+		case "S":
+			matrix = new StrictDR(sparqlExec, dict);
+			break;
+		case "SS":
+			matrix = new SubsumedDR(sparqlExec, dict);
+			break;
+		default:
+			matrix = new IrrelevantDR(sparqlExec, dict);
+			break;
 		}
+		return matrix;
+	}
 
-		// check each statement
-		StmtIterator checkStmts = testData.listStatements();
-		for (int i = 1; checkStmts.hasNext();) {
-			Statement curStmt = checkStmts.next();
-
-			// get precalculated meta-path
-			Set<Property> p = metaPaths.get(curStmt.getPredicate().toString());
-
-			
-			//remove if property path not present in graph
-			p.removeIf(curProp -> !SparqlHelper.askModel(pArgs.serviceRequestURL,
-					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, dict.getId2Relations()),
-							curStmt.getSubject().toString(), curStmt.getObject().toString())));
-
-			// no paths found
-			if (p.isEmpty()) {
-				graphs.add(new Graph(p, 0, curStmt));
-				continue;
-			}
-
-			// count occurrences
-			OccurrencesCounter c = new OccurrencesCounter(curStmt, sparqlExec, false);
-			c.count();
-
-			// calculate npmi for each path found
-			for (Property path : p) {
-				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
-					graphs.add(new Graph(p, 0, curStmt));
-					continue;
-				}
-				NPMICalculator cal = new NPMICalculator(path, dict.getId2Relations(), c);
-				try {
-					cal.calculatePMIScore();
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-			}
-
-			// aggregate scores
-			double[] scores = new double[p.size()];
-			scores = p.stream().mapToDouble(s -> s.getFinalScore()).toArray();
-
-			ScoreSummarist summarist = new CubicMeanSummarist();
-			double score = summarist.summarize(scores);
-
-			LOGGER.info(i++ + "/" + testData.size() + " : " + score + " - " + curStmt.toString());
-			graphs.add(new Graph(p, score, curStmt));
+	private static EmbeddingModel getModel(String model, double[][] relations, double[][] entities) {
+		EmbeddingModel eModel;
+		switch (model) {
+		case Constants.ROTATE_STRING:
+			eModel = new RotatE(null, relations);
+			break;
+		case Constants.DENSE_STRING:
+			eModel = new DensE(entities, relations);
+			break;
+		default:
+			eModel = new TransE(null, relations);
+			break;
 		}
-
-		// write results in gerbil's format
-		ResultWriter results = new ResultWriter(0);
-		results.addResults(graphs);
-		results.printToFile(pArgs.folderPath + "/Results/" + matrix.toString() + results.getCurID() + "pos_results.nt");
-		
-		StringBuilder builder = new StringBuilder();
-		for (Graph g : graphs) {
-			builder.append(g.getPrintableResults(dict.getId2Relations()));
-		}
-
-		File file = new File("paths.txt");
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write(builder.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		return eModel;
 	}
 }

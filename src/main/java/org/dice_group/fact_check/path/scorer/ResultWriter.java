@@ -1,7 +1,10 @@
 package org.dice_group.fact_check.path.scorer;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -13,18 +16,30 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.path.Graph;
 
 public class ResultWriter {
+	// gerbil format result model
 	private Model resultsModel;
-
+	
+	// starting statement id
 	private int curID;
+	
+	// each graph corresponds to one triple and the paths found
+	private Set<Graph> graphs;
 
 	private static final String STMT = "http://swc2019.dice-research.org/task/dataset/s-";
 	private static final String TRUTH_VALUE_STR = "http://swc2017.aksw.org/hasTruthValue";
 
-	public ResultWriter(int id) {
+	public ResultWriter(int id, Set<Graph> graphs) {
 		resultsModel = ModelFactory.createDefaultModel();
 		curID = id;
+		this.graphs = graphs;
+		addResults();
 	}
 
+	/**
+	 * Prints the npmi for each triple in gerbil format
+	 * 
+	 * @param fileName
+	 */
 	public void printToFile(String fileName) {
 		try (FileWriter out = new FileWriter(fileName)) {
 			resultsModel.write(out, "NT");
@@ -33,12 +48,30 @@ public class ResultWriter {
 		}
 	}
 
+	/**
+	 * Prints all the scores, paths for each triple
+	 * 
+	 * @param fileName
+	 * @param id2rel
+	 */
+	public void printPathsToFile(String fileName, Map<Integer, String> id2rel) {
+		StringBuilder builder = new StringBuilder();
+		for (Graph g : graphs) {
+			builder.append(g.getPrintableResults(id2rel));
+		}
+		File file = new File(fileName);
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+			writer.write(builder.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void addResult(Graph graph) {
-		//Statement curStmt = graph.getTriple();
+		// Statement curStmt = graph.getTriple();
 		RDFNode truthValue = ResourceFactory.createTypedLiteral(String.valueOf(graph.getScore()),
 				XSDDatatype.XSDdouble);
 		Resource subject = ResourceFactory.createResource(STMT + String.format("%05d", ++curID));
-
 //		resultsModel.add(ResourceFactory.createStatement(subject, RDF.type, RDF.Statement));
 //		resultsModel.add(ResourceFactory.createStatement(subject, RDF.subject, curStmt.getSubject()));
 //		resultsModel.add(ResourceFactory.createStatement(subject, RDF.predicate, curStmt.getPredicate()));
@@ -47,7 +80,7 @@ public class ResultWriter {
 
 	}
 
-	public void addResults(Set<Graph> graphs) {
+	public void addResults() {
 		graphs.forEach(g -> addResult(g));
 	}
 
