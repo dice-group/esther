@@ -3,6 +3,7 @@ package org.dice_group.datasets.preprocessing;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -30,30 +31,33 @@ public class FalseTriplesGenerator {
 	public static void main(String[] args) {
 		Model trueFacts = ModelFactory.createDefaultModel();
 		trueFacts.read(args[0]);
-
+		
+		List<Statement> trueF = trueFacts.listStatements().toList();
+		Model finalTrueFacts = ModelFactory.createDefaultModel();
+		addRandomNSamples(trueF, finalTrueFacts, 750);
+		
 		Model trainingData = ModelFactory.createDefaultModel();
 		trainingData.read(args[1]);
 
-		Set<Statement> falsetriples;
-		String type = args[2];
-		switch (type) {
-		case "S":
-			falsetriples = corruptStmt(trueFacts, trainingData, type);
-			break;
-		case "O":
-			falsetriples = corruptStmt(trueFacts, trainingData, type);
-			break;
-		default:
-			falsetriples = corruptStmt(trueFacts, trainingData, type);
-			break;
-		}
-
+		List<Statement> sTriples = new ArrayList<Statement>(corruptStmt(finalTrueFacts, trainingData, "S"));
+		List<Statement> oTriples = new ArrayList<Statement>(corruptStmt(finalTrueFacts, trainingData, "O"));
+		List<Statement> soTriples = new ArrayList<Statement>(corruptStmt(finalTrueFacts, trainingData, "SO"));
+		
 		Model falseFacts = ModelFactory.createDefaultModel();
-		falseFacts.add(new ArrayList<Statement>(falsetriples));
+		addRandomNSamples(sTriples, falseFacts, 250);
+		addRandomNSamples(oTriples, falseFacts, 250);
+		addRandomNSamples(soTriples, falseFacts, 250);
 
-		String fileName = "all_false_triples_" + type + ".nt";
+		String fileName = args[2];
 		try (FileWriter out = new FileWriter(fileName)) {
 			falseFacts.write(out, "NT");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		fileName = args[3];
+		try (FileWriter out = new FileWriter(fileName)) {
+			finalTrueFacts.write(out, "NT");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -78,13 +82,13 @@ public class FalseTriplesGenerator {
 
 		List<Resource> nodes = new ArrayList<Resource>(nodesSet);
 		Set<Statement> falseTriples = new HashSet<Statement>();
-		StmtIterator stmtIterator = trueFacts.listStatements();
+
 		Random random = new Random();
 		int count = 0;
 		
+		StmtIterator stmtIterator = trueFacts.listStatements();
 		while (stmtIterator.hasNext()) {
-			Statement curStmt = stmtIterator.next();
-
+			Statement curStmt  = stmtIterator.next();
 			// get a random possible subject
 			Resource newSubject = null;
 			Resource newObject = null;
@@ -153,4 +157,15 @@ public class FalseTriplesGenerator {
 		return falseTriples;
 	}
 
+	private static void addRandomNSamples(List<Statement> stmts, Model finalFalseFacts, int n) {
+		Collections.shuffle(stmts);
+		int cur = 0;
+		for (int i = 0; i < stmts.size() && cur < n; i++) {
+			Statement curStmt = stmts.get(i);
+			if (finalFalseFacts.contains(curStmt))
+				continue;
+			finalFalseFacts.add(curStmt);
+			cur++;
+		}
+	}
 }

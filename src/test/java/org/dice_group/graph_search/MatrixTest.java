@@ -40,6 +40,7 @@ public class MatrixTest {
 		Assert.assertTrue(strictMatrix.compareSets(a, b));
 		Assert.assertFalse(strictMatrix.compareSets(a, c));
 		Assert.assertFalse(strictMatrix.compareSets(a, d));
+		
 	}
 
 	@Test

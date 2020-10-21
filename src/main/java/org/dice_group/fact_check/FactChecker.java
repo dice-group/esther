@@ -42,8 +42,8 @@ public class FactChecker {
 			Statement curStmt = checkStmts.next();
 
 			// get precalculated meta-path
-			Set<Property> p = metaPaths.get(curStmt.getPredicate().toString());
-
+			Set<Property> p = new HashSet<Property>(metaPaths.get(curStmt.getPredicate().toString()));
+			
 			// remove if meta-path not present in graph
 			p.removeIf(curProp -> !SparqlHelper.askModel(sparqlExec.getRequestURL(),
 					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, id2rel),
@@ -52,6 +52,7 @@ public class FactChecker {
 			// no paths found
 			if (p.isEmpty()) {
 				graphs.add(new Graph(p, 0, curStmt));
+				LOGGER.warn("Skipping edge "+i+" due to no paths found: "+curStmt);
 				continue;
 			}
 
@@ -63,6 +64,7 @@ public class FactChecker {
 			for (Property path : p) {
 				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
+					LOGGER.warn("Skipping edge "+i+" due to no subj/obj types: "+curStmt);
 					continue;
 				}
 				NPMICalculator cal = new NPMICalculator(path, id2rel, c);
@@ -79,7 +81,7 @@ public class FactChecker {
 
 			ScoreSummarist summarist = new CubicMeanSummarist();
 			double score = summarist.summarize(scores);
-
+			
 			LOGGER.info(i + "/" + testData.size() + " : " + score + " - " + curStmt.toString());
 			graphs.add(new Graph(p, score, curStmt));
 		}

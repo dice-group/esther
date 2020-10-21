@@ -7,7 +7,6 @@ import java.util.Queue;
 import java.util.Set;
 
 import org.dice_group.graph_search.distance.Distance;
-import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyBackPointer;
@@ -67,8 +66,7 @@ public class PropertySearch implements SearchAlgorithm {
 			if (mat[pRange].equals(mat[curRange])) {
 				propertyPaths.add(curProperty);
 				pathCount++;
-				if(!(matrix instanceof IrrelevantDR))
-					continue;
+				//continue;
 			}
 
 			/**

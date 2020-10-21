@@ -53,9 +53,9 @@ public abstract class Matrix implements MatrixInterface {
 			//OntProperty cProp = ontology.getOntProperty(curProperty);
 			
 			// TODO substitute with a filter that defaults to none, this is specific to freebase at the moment
-			Pattern pattern = Pattern.compile("\\.\\.");
-			if(curProperty == null || pattern.matcher(curProperty).find())
-				continue;
+//			Pattern pattern = Pattern.compile("\\.\\.");
+//			if(curProperty == null || pattern.matcher(curProperty).find())
+//				continue;
 			
 			
 			//Set<? extends OntResource> domainI = cProp.listDomain().toSet();
@@ -73,9 +73,9 @@ public abstract class Matrix implements MatrixInterface {
 			for (int j = 0; j < relCount; j++) {
 				String curJ = id2relmap.get(j);
 				
-				Pattern pattern2 = Pattern.compile("\\.\\.");
-				if(curProperty == null || pattern2.matcher(curJ).find())
-					continue;
+//				Pattern pattern2 = Pattern.compile("\\.\\.");
+//				if(curProperty == null || pattern2.matcher(curJ).find())
+//					continue;
 				
 				List<Resource> domainJ = SparqlHelper.getDomain(sparqlExec, curJ);
 				List<Resource> rangeJ = SparqlHelper.getRange(sparqlExec, curJ);

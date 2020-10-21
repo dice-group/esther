@@ -35,7 +35,7 @@ public class Launcher {
 		JCommander.newBuilder().addObject(pArgs).build().parse(args);
 		pArgs.printArgs();
 
-		// read dictionary from file
+		// read dictionary from file	
 		LOGGER.info("Reading data from file");
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath);

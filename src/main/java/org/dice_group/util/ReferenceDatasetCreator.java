@@ -16,15 +16,17 @@ public class ReferenceDatasetCreator {
 	private static final String TRUTH_VALUE_STR = "http://swc2017.aksw.org/hasTruthValue";
 
 	public static void main(String[] args) {
-		String fileName = args[0];
-		String fileName2 = args[1];
+		String fileName2 = "/home/ana-silva/Work/esther/strict_final_neg_fb.nt";
+		String fileName = "/home/ana-silva/Work/esther/strict_final_pos_fb.nt";
 		
 		RDFNode truthValue = ResourceFactory.createTypedLiteral(String.valueOf(1.0), XSDDatatype.XSDdouble);
 		RDFNode truthValueFalse = ResourceFactory.createTypedLiteral(String.valueOf(0.0), XSDDatatype.XSDdouble);
 
+		// true facts
 		Model model = ModelFactory.createDefaultModel();
 		model.read(fileName);
 		
+		// false facts
 		Model falseFacts = ModelFactory.createDefaultModel();
 		falseFacts.read(fileName2);
 		
@@ -32,7 +34,7 @@ public class ReferenceDatasetCreator {
 		addFacts(reference, model.listSubjects(), truthValue);
 		addFacts(reference, falseFacts.listSubjects(), truthValueFalse);
 		
-		try (FileWriter out = new FileWriter("reference_dataset.nt")) {
+		try (FileWriter out = new FileWriter("/media/ana-silva/Storage/models/freebase_transe/Results/old/reference_dataset_750.nt")) {
 			reference.write(out, "NT");
 		} catch (IOException e) {
 			e.printStackTrace();
