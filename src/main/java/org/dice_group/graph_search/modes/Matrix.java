@@ -39,7 +39,7 @@ public abstract class Matrix implements MatrixInterface {
 	/**
 	 * Populates the d/r edge adjacency matrix
 	 */
-	public void populateMatrix() {
+	public void populateMatrix() {		
 		if (this instanceof IrrelevantDR) {
 			for (int i = 0; i < edgeAdjMatrix.length; i++) {
 				edgeAdjMatrix[i].set(0, edgeAdjMatrix.length);
@@ -52,16 +52,16 @@ public abstract class Matrix implements MatrixInterface {
 		for (int i = 0; i < dictionary.getRelCount(); i++) {
 			String curProperty = id2relmap.get(i);
 
-			List<Resource> domainI = SparqlHelper.getDomain(sparqlExec, curProperty);
-			List<Resource> rangeI = SparqlHelper.getRange(sparqlExec, curProperty);
+			List<Resource> domainI = sparqlExec.selectResources(SparqlHelper.getDomainQuery(curProperty));
+			List<Resource> rangeI = sparqlExec.selectResources(SparqlHelper.getRangeQuery(curProperty));
 
 			int offset = dictionary.getRelCount();
 
 			for (int j = 0; j < offset; j++) {
 				String curJ = id2relmap.get(j);
 
-				List<Resource> domainJ = SparqlHelper.getDomain(sparqlExec, curJ);
-				List<Resource> rangeJ = SparqlHelper.getRange(sparqlExec, curJ);
+				List<Resource> domainJ = sparqlExec.selectResources(SparqlHelper.getDomainQuery(curJ));
+				List<Resource> rangeJ = sparqlExec.selectResources(SparqlHelper.getRangeQuery(curJ));
 
 				// check domain - range : d_i(p) = r_j(p)
 				if (compareSets(domainI, rangeJ)) {

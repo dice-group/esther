@@ -1,5 +1,7 @@
 package org.dice_group.main;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,22 +52,28 @@ public class Launcher {
 		LOGGER.info("Creating edge adjacency matrix from d/r");
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
 		Matrix matrix = getMatrixType(pArgs.type, sparqlExec, dict);
+		Instant startTime = Instant.now();
 		matrix.populateMatrix();
-
-		// preprocess the meta-paths for all existing properties
+		
+		// preprocess the meta-paths for all properties
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, relations, entities);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
-		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, false);
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, true);
+		Duration elapsed = Duration.between(Instant.now(), startTime);
+		LOGGER.info("Meta-paths generated in "+elapsed.toMinutesPart()+" min and "+elapsed.toSecondsPart()+" seconds. ");
 		
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
+		Instant startFactTime = Instant.now();
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
+		Duration elapsedFactTime = Duration.between(Instant.now(), startFactTime);
+		LOGGER.info("Facts checked in "+elapsedFactTime.toMinutesPart()+" min, "+elapsedFactTime.toSecondsPart()+" seconds.");
 
 		// write results
 		ResultWriter results = new ResultWriter(pArgs.initID, graphs);
-		results.printToFile(pArgs.folderPath + "pos_" + pArgs.savePath);
+		results.printToFile(pArgs.folderPath + pArgs.savePath);
 		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath, results.getPaths(dict.getId2Relations()));
 	}
 

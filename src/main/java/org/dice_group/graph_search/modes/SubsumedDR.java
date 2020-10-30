@@ -34,6 +34,9 @@ public class SubsumedDR extends Matrix {
 	 * @return true if set a subsumes b
 	 */
 	private boolean isSubsumedBy(List<Resource> a, List<Resource> b) {
+		if(a.isEmpty() || b.isEmpty())
+			return false;
+		
 		if (a.equals(b) || isSubSetOf(a, b)) {
 			return true;
 		}
@@ -49,17 +52,11 @@ public class SubsumedDR extends Matrix {
 	 */
 	private boolean isSubSetOf(List<Resource> a, List<Resource> b) {
 		for(Resource cur: b) {
-//			OntClass curClass = ontology.getOntClass(cur.toString());
-//			if(curClass == null) {
-//				return false;
-//			}
-//			Set<OntClass> sub = curClass.listSubClasses(false).toSet();
-			List<Resource> sub = SparqlHelper.getSubclasses(sparqlExec, cur.toString());
+			List<Resource> sub = sparqlExec.selectResources(SparqlHelper.getSubClassesQuery(cur.toString()));
 			
 			if(sub.isEmpty() || Collections.disjoint(a, sub)) {
 				return false;
 			} 
-			
 		}
 		return true;
 	}
@@ -68,5 +65,4 @@ public class SubsumedDR extends Matrix {
 	public String toString() {
 		return "Subsumed";
 	}
-
 }

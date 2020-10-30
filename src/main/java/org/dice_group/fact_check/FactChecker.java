@@ -43,23 +43,23 @@ public class FactChecker {
 
 			// get precalculated meta-path
 			Set<Property> p = new HashSet<Property>(metaPaths.get(curStmt.getPredicate().toString()));
-			
+
 			int pSize = p.size();
-			
+
 			// remove if meta-path not present in graph
-			p.removeIf(curProp -> !SparqlHelper.askModel(sparqlExec.getRequestURL(),
-					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, id2rel),
+			p.removeIf(
+					curProp -> !sparqlExec.ask(SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, id2rel),
 							curStmt.getSubject().toString(), curStmt.getObject().toString())));
-			
+
 			// if there are metapaths but none apply, assume false
 			// if no metapaths are found, conclude nothing (0.0)
 			if (p.isEmpty()) {
 				int npmi = 0;
-				if(pSize != 0) {
+				if (pSize != 0) {
 					npmi = -1;
 				}
 				graphs.add(new Graph(p, npmi, curStmt));
-				LOGGER.warn("No applicable paths for triple "+i);
+				LOGGER.warn("No applicable paths for triple " + i);
 				LOGGER.info(i + "/" + testData.size() + " : " + npmi + " - " + curStmt.toString());
 				continue;
 			}
@@ -72,7 +72,7 @@ public class FactChecker {
 			for (Property path : p) {
 				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
-					LOGGER.warn("Skipping edge "+i+" due to no subj/obj types: "+curStmt);
+					LOGGER.warn("Skipping edge " + i + " due to no subj/obj types: " + curStmt);
 					LOGGER.info(i + "/" + testData.size() + " : " + 0 + " - " + curStmt.toString());
 					continue;
 				}
@@ -90,11 +90,19 @@ public class FactChecker {
 
 			ScoreSummarist summarist = new CubicMeanSummarist();
 			double score = summarist.summarize(scores);
-			
+
 			LOGGER.info(i + "/" + testData.size() + " : " + score + " - " + curStmt.toString());
 			graphs.add(new Graph(p, score, curStmt));
 		}
 		return graphs;
+	}
+
+	public Model getTestData() {
+		return testData;
+	}
+
+	public void setTestData(Model testData) {
+		this.testData = testData;
 	}
 
 }

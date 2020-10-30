@@ -1,9 +1,12 @@
 package org.dice_group.util;
 
+import java.util.List;
+
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,35 +49,35 @@ public class QueryExecutioner {
 		}
 	}
 	
+	public List<Resource> selectResources(String query){
+		for(int tries = 0;;tries++) {
+			try {
+				return SparqlHelper.selectEndpoint(requestURL, query);
+			} catch (Exception e) {
+				// if tries are reached, throw the exception anyhow
+				if(tries > MAX_ATTEMPTS_PER_QUERY) {
+					LOGGER.error("Tried the query "+tries+" times and still failed.\n"+query);
+					throw e;
+				}
+			}
+		}
+	}
+	
+	public boolean ask (String query) {
+		for(int tries = 0;;tries++) {
+			try {
+				return SparqlHelper.ask(requestURL, query);
+			} catch (Exception e) {
+				// if tries are reached, throw the exception anyhow
+				if(tries > MAX_ATTEMPTS_PER_QUERY) {
+					LOGGER.error("Tried the query "+tries+" times and still failed.\n"+query);
+					throw e;
+				}
+			}
+		}
+	}
+	
 	public QueryExecution createExecutioner(Query query) {
 		return QueryExecutionFactory.createServiceRequest(requestURL, query);
 	}
-	
-	/**
-	 * Attempts the same query n times, if it exceeds it will throw 
-	 * @param queryExecution
-	 * @param desiredVar
-	 * @return
-	 */
-//	public RDFNode trySelectQuery(QueryExecution queryExecution, String desiredVar) {
-//		for(int tries = 0;;tries++) {
-//			try {
-//				return queryExecution.execSelect().next().get(desiredVar);
-//			} catch (Exception e) {
-//				
-//				try {
-//					// sleep for 10 seconds before re-trying
-//					TimeUnit.SECONDS.sleep(2);
-//				} catch (InterruptedException e1) {
-//					e1.printStackTrace();
-//				}
-//				
-//				// if tries are reached, throw the exception anyhow
-//				if(tries > MAX_ATTEMPTS_PER_QUERY) {
-//					LOGGER.error("Tried the query "+tries+" times and still failed.\n"+queryExecution.getQuery());
-//					throw e;
-//				}
-//			} 
-//		}
-//	}
 }

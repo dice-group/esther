@@ -47,8 +47,7 @@ public class PropertySearch implements SearchAlgorithm {
 				
 				Property curProp = new Property(i, isInverse);
 				int index = isInverse ?  i-offset : i;
-				double score = scorer.computeDistance(curProp, relations[index], isInverse);
-				curProp.updateCost(score);
+				scorer.computeDistance(curProp, relations[index], isInverse);
 				queue.add(curProp);
 			}
 		}
@@ -84,10 +83,10 @@ public class PropertySearch implements SearchAlgorithm {
 						continue;						
 					}
 					
-					Property tempProp = new Property(curProperty);
+					Property newProp = new Property(i, new PropertyBackPointer(curProperty), isInverse);
 					int index = isInverse ?  i-offset : i;
-					double score = scorer.computeDistance(tempProp, relations[index], isInverse);
-					queue.add(new Property(i, new PropertyBackPointer(tempProp), score, isInverse));
+					scorer.computeDistance(newProp, relations[index], isInverse);
+					queue.add(newProp);
 				}
 			}
 

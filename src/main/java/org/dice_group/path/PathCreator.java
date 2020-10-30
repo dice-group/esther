@@ -75,6 +75,7 @@ public class PathCreator {
 		int count = 0;
 		StringBuilder builder = new StringBuilder();
 		for (String edge : edges) {
+		
 			emodel.updateScorer(rel2ID.get(edge));
 			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed);
 			metaPaths.put(edge, propertyPaths);
@@ -110,7 +111,7 @@ public class PathCreator {
 				.collect(Collectors.toList());
 
 		
-		builder.append("Length").append("\t").append("A* score").append("\t").append("Path(s)");
+		builder.append("\nLength").append("\t").append("A* score").append("\t").append("Path(s)");
 		for (Property path : result) {
 			builder.append("\n").append(path.getPathLength()).append("\t").append(path.getPathCost()).append("\t")
 					.append(PropertyHelper.translate2DirectedIRI(path, dictionary.getId2Relations()));

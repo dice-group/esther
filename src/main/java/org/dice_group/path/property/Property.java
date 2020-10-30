@@ -69,6 +69,14 @@ public class Property implements Comparable<Property> {
 		this.fullCost = heuristics + pathLength;
 		this.isInverse = isInverse;
 	}
+	
+	public Property(int edge, PropertyBackPointer backPointer, boolean isInverse) {
+		this.edge = edge;
+		this.backPointer = backPointer;
+		this.pathLength = backPointer.getProperty().getPathLength() + 1;
+		this.fullCost = pathLength;
+		this.isInverse = isInverse;
+	}
 
 	/**
 	 * Constructor to enable object's deep copy
@@ -205,12 +213,6 @@ public class Property implements Comparable<Property> {
 
 	public void setInverse(boolean isInverse) {
 		this.isInverse = isInverse;
-	}
-
-	@Override
-	protected Object clone() throws CloneNotSupportedException {
-		// TODO Auto-generated method stub
-		return super.clone();
 	}
 
 	@Override
