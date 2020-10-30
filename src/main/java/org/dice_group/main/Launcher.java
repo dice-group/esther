@@ -35,7 +35,7 @@ public class Launcher {
 		JCommander.newBuilder().addObject(pArgs).build().parse(args);
 		pArgs.printArgs();
 
-		// read dictionary from file	
+		// read dictionary from file
 		LOGGER.info("Reading data from file");
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath);
@@ -56,17 +56,17 @@ public class Launcher {
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, relations, entities);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
-		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet());
-
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, false);
+		
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
 
-		// write results 
+		// write results
 		ResultWriter results = new ResultWriter(pArgs.initID, graphs);
-		results.printToFile(pArgs.folderPath + pArgs.savePath);
-		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath, dict.getId2Relations());
+		results.printToFile(pArgs.folderPath + "pos_" + pArgs.savePath);
+		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath, results.getPaths(dict.getId2Relations()));
 	}
 
 	private static Matrix getMatrixType(String type, QueryExecutioner sparqlExec, Dictionary dict) {

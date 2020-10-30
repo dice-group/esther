@@ -6,6 +6,14 @@ public class PropertyBackPointer {
 	public PropertyBackPointer(Property property) {
 		this.property = property;
 	}
+	
+	/**
+	 * Constructor to enable object's deep copy
+	 * @param backPointer
+	 */
+	public PropertyBackPointer(PropertyBackPointer backPointer) {
+		this.property = new Property(backPointer.getProperty());
+	}
 
 	public Property getProperty() {
 		return property;

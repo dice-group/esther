@@ -1,15 +1,10 @@
 package org.dice_group.graph_search.distance;
 
-import java.util.Arrays;
-import java.util.stream.DoubleStream;
-
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyBackPointer;
 import org.dice_group.util.ArrayUtils;
 
 /**
- * Computes the L1-norm for Complex vectors d = || (r_1 ° r_2 ° ... °r_n) - r_p
- * || = sum [sqrt(real² + im²)]
+ * Computes the L1-norm d = || (r_1 ° r_2 ° ... °r_n) - r_p || 
  *
  */
 public class RotatEL1 implements Distance {
@@ -25,43 +20,36 @@ public class RotatEL1 implements Distance {
 	}
 
 	@Override
-	public double computeDistance(Property property, double[] newEdge) {
-		double[] inner;
-		PropertyBackPointer previous = property.getBackPointer();
-		if (previous == null) {
-			inner = setIntermediateCalcs(property, newEdge);
-		} else {
-			inner = setIntermediateCalcs(previous.getProperty(), newEdge);
-		}
+	public double computeDistance(Property property, double[] newEdge, boolean isNewInverse) {
+		intermediateCalcs(property, newEdge, isNewInverse);
+		double[] inner = property.getInnerProduct();
 		
 		// (r_1 ° r_2 ° ... °r_n) - r_p
-		double[] res = ArrayUtils.computeVectorSubtraction(inner, targetEdge);
+		double[] diff = ArrayUtils.computeVectorSubtraction(inner, targetEdge);
+		
+		// sqrt(real² + im²)
+		double [] absValues = ArrayUtils.computeComplexAbsoluteValue(diff);
 
-		// separate the real and imaginary part of the vector
-		int offset = (int) Math.floor(res.length / 2);
-		double[] realPart = Arrays.copyOfRange(res, 0, offset);
-		double[] imPart = Arrays.copyOfRange(res, offset, res.length);
-
-		// || (r_1 ° r_2 ° ... °r_n) - r_p ||
-		double[] temp = ArrayUtils.computeAbsoluteValue(realPart, imPart);
-
-		return DoubleStream.of(temp).sum();
+		// sum(abs. values)
+		return ArrayUtils.computeVectorsL1(absValues);
 	}
 	
 	/**
 	 * (r_1 ° r_2 ° ... ° r_n)
-	 * 
 	 * @param property
 	 * @param newEdge
 	 * @return
 	 */
-	private double[] setIntermediateCalcs(Property property, double[] newEdge) {
+	private void intermediateCalcs(Property property, double[] newEdge, boolean isNewInverse) {
 		if (property.getInnerProduct() == null) {
 			property.setInnerProduct(newEdge);
 		} else {
-			property.setInnerProduct(ArrayUtils.computeHadamardProduct(property.getInnerProduct(), newEdge));
+			double [] tempNewEdge = newEdge;
+			if(isNewInverse) {
+				tempNewEdge = ArrayUtils.getConjugate(newEdge);
+			}
+			property.setInnerProduct(ArrayUtils.computeHadamardProduct(property.getInnerProduct(), tempNewEdge));
 		}
-		return property.getInnerProduct();
 	}
 
 	public double[] getTargetEdge() {

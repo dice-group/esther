@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.apache.jena.rdf.model.Resource;
 import org.dice_group.embeddings.dictionary.Dictionary;
@@ -16,9 +15,9 @@ public abstract class Matrix implements MatrixInterface {
 	protected BitSet[] edgeAdjMatrix;
 
 	protected Dictionary dictionary;
-	
+
 	protected QueryExecutioner sparqlExec;
-	
+
 	public Matrix() {
 	}
 
@@ -37,6 +36,9 @@ public abstract class Matrix implements MatrixInterface {
 		this.sparqlExec = sparqlExec;
 	}
 
+	/**
+	 * Populates the d/r edge adjacency matrix
+	 */
 	public void populateMatrix() {
 		if (this instanceof IrrelevantDR) {
 			for (int i = 0; i < edgeAdjMatrix.length; i++) {
@@ -47,39 +49,20 @@ public abstract class Matrix implements MatrixInterface {
 
 		Map<Integer, String> id2relmap = dictionary.getId2Relations();
 
-		for(int i = 0; i<dictionary.getRelCount();i++) {
+		for (int i = 0; i < dictionary.getRelCount(); i++) {
 			String curProperty = id2relmap.get(i);
 
-			//OntProperty cProp = ontology.getOntProperty(curProperty);
-			
-			// TODO substitute with a filter that defaults to none, this is specific to freebase at the moment
-//			Pattern pattern = Pattern.compile("\\.\\.");
-//			if(curProperty == null || pattern.matcher(curProperty).find())
-//				continue;
-			
-			
-			//Set<? extends OntResource> domainI = cProp.listDomain().toSet();
-			//Set<? extends OntResource> rangeI = cProp.listRange().toSet();
-			
 			List<Resource> domainI = SparqlHelper.getDomain(sparqlExec, curProperty);
 			List<Resource> rangeI = SparqlHelper.getRange(sparqlExec, curProperty);
 
-			/**
-			 * Since the matrix is extended by a factor of 2, this variable is also the
-			 * offset between p_n and p-_n
-			 */
-			int relCount = dictionary.getRelCount();
+			int offset = dictionary.getRelCount();
 
-			for (int j = 0; j < relCount; j++) {
+			for (int j = 0; j < offset; j++) {
 				String curJ = id2relmap.get(j);
-				
-//				Pattern pattern2 = Pattern.compile("\\.\\.");
-//				if(curProperty == null || pattern2.matcher(curJ).find())
-//					continue;
-				
+
 				List<Resource> domainJ = SparqlHelper.getDomain(sparqlExec, curJ);
 				List<Resource> rangeJ = SparqlHelper.getRange(sparqlExec, curJ);
-				
+
 				// check domain - range : d_i(p) = r_j(p)
 				if (compareSets(domainI, rangeJ)) {
 					edgeAdjMatrix[i].set(j);
@@ -87,17 +70,17 @@ public abstract class Matrix implements MatrixInterface {
 
 				// check domain - domain : d_i(p) = d_j(p) [d_i(p) = r_j(p-)]
 				if (compareSets(domainI, domainJ)) {
-					edgeAdjMatrix[i].set(j + relCount);
+					edgeAdjMatrix[i].set(j + offset);
 				}
 
 				// check range - range : r_i(p) = r_j(p) [d_i(p-) = r_j(p)]
 				if (compareSets(rangeI, rangeJ)) {
-					edgeAdjMatrix[i + relCount].set(j);
+					edgeAdjMatrix[i + offset].set(j);
 				}
 
 				// check range - domain : r_i(p) = d_j(p) [d_i(p-) = r_j(p-)]
 				if (compareSets(rangeI, domainJ)) {
-					edgeAdjMatrix[i + relCount].set(j + relCount);
+					edgeAdjMatrix[i + offset].set(j + offset);
 				}
 
 			}
@@ -107,17 +90,11 @@ public abstract class Matrix implements MatrixInterface {
 	/**
 	 * 
 	 * @param id
-	 * @return the inverse id 
+	 * @return the inverse id of a relation in the matrix
 	 */
 	public int getInverseID(int id) {
 		int offset = edgeAdjMatrix.length / 2;
-		int temp;
-		if (id >= offset) {
-			temp = id - offset;
-		} else {
-			temp = id + offset;
-		}
-		return temp;
+		return id >= offset ? id - offset : id + offset;
 	}
 
 	public BitSet[] getEdgeAdjMatrix() {
@@ -140,6 +117,5 @@ public abstract class Matrix implements MatrixInterface {
 	public String toString() {
 		return Arrays.toString(edgeAdjMatrix);
 	}
-	
-	
+
 }

@@ -2,9 +2,9 @@ package org.dice_group.graph_search.algorithms;
 
 import java.util.BitSet;
 import java.util.HashSet;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import org.dice_group.graph_search.distance.Distance;
 import org.dice_group.graph_search.modes.Matrix;
@@ -27,7 +27,7 @@ public class PropertySearch implements SearchAlgorithm {
 	}
 
 	@Override
-	public Set<Property> findPaths(int edgeID, double[][] relations, int k) {
+	public Set<Property> findPaths(int edgeID, double[][] relations, int k, int maxPathLength, boolean isLoopAllowed) {
 		BitSet[] mat = matrix.getEdgeAdjMatrix();
 		Set<Property> propertyPaths = new HashSet<Property>();
 		int offset = mat.length / 2;
@@ -37,27 +37,25 @@ public class PropertySearch implements SearchAlgorithm {
 		 * d(P) = d(x_i) -> starting condition get all properties that share the same
 		 * domain
 		 */
-		Queue<Property> queue = new PriorityQueue<Property>();
+		Queue<Property> queue = new PriorityBlockingQueue<Property>();
 		for (int i = 0; i < mat.length; i++) {
 			boolean isInverse = i >= offset;
 			if (mat[edgeID].equals(mat[i])) {
-				Property curProp;
-				double score;
-				if (isInverse) {
-					curProp = new Property(i, isInverse);
-					score = scorer.computeDistance(curProp, relations[i - offset]);
-				} else {
-					curProp = new Property(i);
-					score = scorer.computeDistance(curProp, relations[i]);
-				}
-				curProp.addToScore(score);
+				// skip self if loops are not desired
+				if(!isLoopAllowed && edgeID == i)
+					continue;
+				
+				Property curProp = new Property(i, isInverse);
+				int index = isInverse ?  i-offset : i;
+				double score = scorer.computeDistance(curProp, relations[index], isInverse);
+				curProp.updateCost(score);
 				queue.add(curProp);
 			}
 		}
 
 		while (!queue.isEmpty() && pathCount < k) {
 			Property curProperty = queue.poll();
-
+			
 			/**
 			 * r(P) = r(j) -> stop condition
 			 */
@@ -66,7 +64,6 @@ public class PropertySearch implements SearchAlgorithm {
 			if (mat[pRange].equals(mat[curRange])) {
 				propertyPaths.add(curProperty);
 				pathCount++;
-				//continue;
 			}
 
 			/**
@@ -78,23 +75,31 @@ public class PropertySearch implements SearchAlgorithm {
 
 				int previousEdge = matrix.getInverseID(curProperty.getEdge());
 				if (mat[previousEdge].equals(mat[i])) {
-					if (curProperty.getPathLength() >= SearchAlgorithm.MAX_PATH_LENGTH)
+					
+					if (curProperty.getPathLength() >= maxPathLength)
 						continue;
-					double score;
-					if (isInverse) {
-						score = scorer.computeDistance(curProperty, relations[i - offset]);
-					} else {
-						score = scorer.computeDistance(curProperty, relations[i]);
+					
+					// do not allow a property and its inverse consecutively, or its own
+					if(!isLoopAllowed && (i == edgeID || isPropertyConsecutive(i, curProperty))) {
+						continue;						
 					}
 					
-					// TODO check if this is necessary:  !propertyHasAncestor(i, curProperty)
-					Property temp = new Property(i, new PropertyBackPointer(curProperty), score, isInverse);
-					queue.add(temp);
+					Property tempProp = new Property(curProperty);
+					int index = isInverse ?  i-offset : i;
+					double score = scorer.computeDistance(tempProp, relations[index], isInverse);
+					queue.add(new Property(i, new PropertyBackPointer(tempProp), score, isInverse));
 				}
 			}
 
 		}
 		return propertyPaths;
+	}
+	
+	public boolean isPropertyConsecutive(int edge, Property prop) {
+		if (prop.getEdge() == edge || prop.getEdge() == matrix.getInverseID(edge)) {
+			return true;
+		}
+		return false;
 	}
 
 	public boolean propertyHasAncestor(int edge, Property p) {
@@ -102,10 +107,7 @@ public class PropertySearch implements SearchAlgorithm {
 		while (temp != null) {
 			Property curProp = temp.getProperty();
 
-			if (curProp.getEdge() == edge) {
-				return true;
-			}
-			if (curProp.getEdge() == matrix.getInverseID(edge)) {
+			if (curProp.getEdge() == edge || curProp.getEdge() == matrix.getInverseID(edge)) {
 				return true;
 			}
 

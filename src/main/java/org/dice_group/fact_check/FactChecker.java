@@ -44,15 +44,23 @@ public class FactChecker {
 			// get precalculated meta-path
 			Set<Property> p = new HashSet<Property>(metaPaths.get(curStmt.getPredicate().toString()));
 			
+			int pSize = p.size();
+			
 			// remove if meta-path not present in graph
 			p.removeIf(curProp -> !SparqlHelper.askModel(sparqlExec.getRequestURL(),
 					SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, id2rel),
 							curStmt.getSubject().toString(), curStmt.getObject().toString())));
-
-			// no paths found
+			
+			// if there are metapaths but none apply, assume false
+			// if no metapaths are found, conclude nothing (0.0)
 			if (p.isEmpty()) {
-				graphs.add(new Graph(p, 0, curStmt));
-				LOGGER.warn("Skipping edge "+i+" due to no paths found: "+curStmt);
+				int npmi = 0;
+				if(pSize != 0) {
+					npmi = -1;
+				}
+				graphs.add(new Graph(p, npmi, curStmt));
+				LOGGER.warn("No applicable paths for triple "+i);
+				LOGGER.info(i + "/" + testData.size() + " : " + npmi + " - " + curStmt.toString());
 				continue;
 			}
 
@@ -65,6 +73,7 @@ public class FactChecker {
 				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
 					LOGGER.warn("Skipping edge "+i+" due to no subj/obj types: "+curStmt);
+					LOGGER.info(i + "/" + testData.size() + " : " + 0 + " - " + curStmt.toString());
 					continue;
 				}
 				NPMICalculator cal = new NPMICalculator(path, id2rel, c);
@@ -77,7 +86,7 @@ public class FactChecker {
 
 			// aggregate scores
 			double[] scores = new double[p.size()];
-			scores = p.stream().mapToDouble(s -> s.getFinalScore()).toArray();
+			scores = p.stream().mapToDouble(s -> s.getPathNPMI()).toArray();
 
 			ScoreSummarist summarist = new CubicMeanSummarist();
 			double score = summarist.summarize(scores);

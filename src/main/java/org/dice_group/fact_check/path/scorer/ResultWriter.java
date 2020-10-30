@@ -47,6 +47,14 @@ public class ResultWriter {
 			e.printStackTrace();
 		}
 	}
+	
+	public StringBuilder getPaths(Map<Integer, String> id2rel) {
+		StringBuilder builder = new StringBuilder();
+		for (Graph g : graphs) {
+			builder.append(g.getPrintableResults(id2rel));
+		}
+		return builder;
+	}
 
 	/**
 	 * Prints all the scores, paths for each triple
@@ -54,14 +62,11 @@ public class ResultWriter {
 	 * @param fileName
 	 * @param id2rel
 	 */
-	public void printPathsToFile(String fileName, Map<Integer, String> id2rel) {
-		StringBuilder builder = new StringBuilder();
-		for (Graph g : graphs) {
-			builder.append(g.getPrintableResults(id2rel));
-		}
+	public void printPathsToFile(String fileName, StringBuilder stringbuilder) {
 		File file = new File(fileName);
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write(builder.toString());
+			writer.write(stringbuilder.toString());
+			writer.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -92,4 +97,17 @@ public class ResultWriter {
 		this.curID = curID;
 	}
 
+	public Model getResultsModel() {
+		return resultsModel;
+	}
+
+	public void setResultsModel(Model resultsModel) {
+		this.resultsModel = resultsModel;
+	}
+	
+	public void addResultsModel(Model anotherModel) {
+		this.resultsModel.add(anotherModel);
+	}
+	
+	
 }

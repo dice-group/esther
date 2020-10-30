@@ -15,7 +15,7 @@ public class Graph {
 	private Set<Property> paths;
 	private double score;
 	private Statement triple;
-	
+
 	public Graph(Set<Property> paths, double score, Statement triple) {
 		this.paths = paths;
 		this.score = score;
@@ -49,18 +49,21 @@ public class Graph {
 	public StringBuilder getPrintableResults(Map<Integer, String> id2rel) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("\nTriple: ").append(triple);
-		builder.append("\nNPMI:" ).append(score);
-		builder.append("\nPath NPMI").append("\t").append("A* score").append("\t").append("Length").append("\t").append("Path(s)");
-		
-		List<Property> result = paths.stream().sorted(Comparator.comparingDouble(Property :: getFinalScore)).collect(Collectors.toList());
-		
-		for(Property path : result) {
-			builder.append("\n").append(path.getFinalScore()).append("\t").append(path.getScore()).append("\t").append(path.getPathLength());
+		builder.append("\nNPMI:").append(score);
+		builder.append("\nPath NPMI").append("\t").append("A* score").append("\t").append("Length").append("\t")
+				.append("Path(s)");
+
+		List<Property> result = paths.stream().sorted(Comparator.comparingDouble(Property::getPathNPMI))
+				.collect(Collectors.toList());
+
+		for (Property path : result) {
+			builder.append("\n").append(path.getPathNPMI()).append("\t").append(path.getHeuristics()).append("\t")
+					.append(path.getPathLength());
 			builder.append("\t").append(PropertyHelper.translate2DirectedIRI(path, id2rel));
+
 		}
 		builder.append("\n");
 		return builder;
-		
 
 	}
 

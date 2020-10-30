@@ -25,6 +25,18 @@ public class SparqlHelper {
 				+ "> <http://www.w3.org/2000/01/rdf-schema#range> ?o  filter isIri(?o) }";
 		return selectEndpoint(sparqlExec, sparqlQuery);
 	}
+	
+	public static List<Resource> getDomainFromModel(Model model, String property) {
+		String sparqlQuery = "select ?o where { <" + property
+				+ "> <http://www.w3.org/2000/01/rdf-schema#domain> ?o  filter isIri(?o) }";
+		return selectEndpointFromModel(model, sparqlQuery);
+	}
+
+	public static List<Resource> getRangeFromModel(Model model, String property) {
+		String sparqlQuery = "select ?o where { <" + property
+				+ "> <http://www.w3.org/2000/01/rdf-schema#range> ?o  filter isIri(?o) }";
+		return selectEndpointFromModel(model, sparqlQuery);
+	}
 
 	public static List<Resource> getSubclasses(QueryExecutioner sparqlExec, String property) {
 		String sparqlQuery = "select ?o where { <" + property
@@ -36,6 +48,18 @@ public class SparqlHelper {
 		Query query = QueryFactory.create(sparqlQuery);
 		List<Resource> objects = new ArrayList<Resource>();
 		try (QueryExecution queryExecution = sparqlExec.createExecutioner(query);) {
+			ResultSet resultSet = queryExecution.execSelect();
+			while (resultSet.hasNext()) {
+				objects.add(resultSet.next().get("?o").asResource());
+			}
+		}
+		return objects;
+	}
+	
+	public static List<Resource> selectEndpointFromModel(Model model, String sparqlQuery) {
+		Query query = QueryFactory.create(sparqlQuery);
+		List<Resource> objects = new ArrayList<Resource>();
+		try (QueryExecution queryExecution =  QueryExecutionFactory.create(query, model)) {
 			ResultSet resultSet = queryExecution.execSelect();
 			while (resultSet.hasNext()) {
 				objects.add(resultSet.next().get("?o").asResource());

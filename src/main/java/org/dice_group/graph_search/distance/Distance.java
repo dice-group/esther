@@ -6,10 +6,11 @@ public interface Distance {
 	
 	/**
 	 * computes a new score for a path with an added edge
-	 * @param node
-	 * @param newEdge
+	 * @param property object to add the new edge to
+	 * @param newEdge edge to be added
+	 * @param isNewInverse true if the new edge is traversed inversely
 	 * @return
 	 */
-	double computeDistance(Property edge, double [] newEdge);
+	double computeDistance(Property property, double [] newEdge, boolean isNewInverse);
 
 }

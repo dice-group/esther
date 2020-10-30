@@ -9,7 +9,7 @@ public class ProgramArgs {
 	@Parameter(names = { "--data", "-d" }, description = "Folder path", required = true)
 	String folderPath;
 
-	@Parameter(names = { "--topk", "-k" }, description = "The number of optimal paths we want to find. k=100 is the default value.")
+	@Parameter(names = { "--topk", "-k" }, description = "The number of meta-paths we want to find. 100 is the default value.")
 	int k = 100;
 
 	@Parameter(names = { "--matrix",
@@ -26,10 +26,13 @@ public class ProgramArgs {
 	String savePath;
 	
 	@Parameter(names = { "--test", "-t" }, description = "Filename of the facts under folder path")
-	String testData = "ns_test.nt";
+	String testData = "true_facts_750.nt";
 	
 	@Parameter(names = { "-id"}, description = "Initial ID for the result files")
 	int initID = 0;
+	
+	@Parameter(names = { "-l"}, description = "Maximum Path length")
+	int max_length = 3;
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramArgs.class);
 	
@@ -37,6 +40,7 @@ public class ProgramArgs {
 		LOGGER.info("Reading data from folder: " + folderPath);
 		LOGGER.info("Embeddings Model: " + eModel);
 		LOGGER.info("k: " + k);
+		LOGGER.info("Max Path length: " + max_length);
 		LOGGER.info("Matrix type: " + type);
 		LOGGER.info("Endpoint: " + serviceRequestURL);
 		LOGGER.info("Test data: " + testData);

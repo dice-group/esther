@@ -158,6 +158,13 @@ public class NPMICalculator {
 
 	}
 
+	/**
+	 * 
+	 * @param isInverse
+	 * @param i 1st, 2nd or 3rd path
+	 * @param pathLength
+	 * @return
+	 */
 	private String getPath(boolean isInverse, int i, int pathLength) {
 		String path;
 		String[] vars = builder.split(";")[i].split(" ");
@@ -201,7 +208,7 @@ public class NPMICalculator {
 			ex.printStackTrace();
 			return score;
 		} finally {
-			path.setFinalScore(score);
+			path.setPathNPMI(score);
 		}
 	}
 
@@ -245,7 +252,7 @@ public class NPMICalculator {
 //            throw new NPMIFilterException("The NPMI filter rejected the calculated NPMI.");
 //        }
 
-		path.setFinalScore(npmi);
+		path.setPathNPMI(npmi);
 		return npmi;
 	}
 
@@ -266,6 +273,6 @@ public class NPMICalculator {
 
 	@Override
 	public String toString() {
-		return path.getFinalScore() + "" + path.toString();
+		return path.getPathNPMI() + "" + path.toString();
 	}
 }

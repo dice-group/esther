@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Represents a path 
+ * Represents a path
  *
  */
 public class Property implements Comparable<Property> {
@@ -14,40 +14,46 @@ public class Property implements Comparable<Property> {
 	 * edge id
 	 */
 	private int edge;
-	
+
 	/**
-	 * back tracker in the hierarchy
+	 * back tracker in the hierarchy TODO: might not be necessary to encase in
+	 * another class anymore
 	 */
 	private PropertyBackPointer backPointer;
-	
+
 	private int pathLength;
-	
+
 	/**
 	 * used to ease the score calculations in the case of r_1*...*r_n - r_p
 	 */
 	private double[] innerProduct;
-	
+
 	/**
 	 * is this edge traversed in the opposite direction
 	 */
 	private boolean isInverse;
-	
+
 	/**
 	 * score = heuristics + path length
 	 */
-	private double score;
-	
+	private double fullCost;
+
 	/**
-	 * the npmi score of the path 
+	 * calculated depending on the embeddings model
 	 */
-	private double finalScore;
+	private double heuristics;
+
+	/**
+	 * the npmi score of the path
+	 */
+	private double pathNpmi;
 
 	public Property(int edge) {
 		this.edge = edge;
 		backPointer = null;
 		this.pathLength = 1;
 	}
-	
+
 	public Property(int edge, boolean isInverse) {
 		this.edge = edge;
 		backPointer = null;
@@ -55,20 +61,94 @@ public class Property implements Comparable<Property> {
 		this.isInverse = isInverse;
 	}
 
-	public Property(int edge, PropertyBackPointer backPointer, double score, boolean isInverse) {
+	public Property(int edge, PropertyBackPointer backPointer, double heuristics, boolean isInverse) {
 		this.edge = edge;
 		this.backPointer = backPointer;
 		this.pathLength = backPointer.getProperty().getPathLength() + 1;
-		this.score = score + pathLength;
+		this.heuristics = heuristics;
+		this.fullCost = heuristics + pathLength;
 		this.isInverse = isInverse;
 	}
 
-	public double getScore() {
-		return score;
+	/**
+	 * Constructor to enable object's deep copy
+	 * 
+	 * @param property
+	 */
+	public Property(Property property) {
+		this.edge = property.getEdge();
+		this.pathLength = property.getPathLength();
+		this.heuristics = property.getHeuristics();
+		this.fullCost = property.getPathCost();
+		this.isInverse = property.isInverse();
+		this.pathNpmi = property.getPathNPMI();
+		this.backPointer = property.getBackPointer() == null ? null : new PropertyBackPointer(property.getBackPointer());
+		this.innerProduct = property.getInnerProduct() == null ? null : Arrays.copyOf(property.getInnerProduct(), property.getInnerProduct().length);
 	}
 
-	public void addToScore(double score) {
-		this.score = score + this.pathLength;
+	/**
+	 * Updates the path score
+	 * 
+	 * @param score
+	 */
+	public void updateCost(double score) {
+		this.fullCost = score + pathLength;
+		this.heuristics = score;
+	}
+
+	/**
+	 * 
+	 * @return an ordered list of the property ids that constitute this path
+	 *         (undirected)
+	 */
+	public List<Integer> getIDPath() {
+		List<Integer> list = new ArrayList<Integer>();
+		list.add(this.edge);
+		if (this.backPointer != null) {
+			PropertyBackPointer temp = this.backPointer;
+			while (temp != null) {
+				list.add(0, temp.getProperty().getEdge());
+				temp = temp.getProperty().getBackPointer();
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * 
+	 * @return an ordered list of the property ids that constitute this path, a
+	 *         property traversed inversely assumes a negative value
+	 */
+	public List<Integer> getIDDPath() {
+		List<Integer> list = new ArrayList<Integer>();
+		int edge = this.isInverse ? -this.edge : this.edge;
+		list.add(edge);
+		if (this.backPointer != null) {
+			PropertyBackPointer temp = this.backPointer;
+			while (temp != null) {
+				int tEdge = temp.getProperty().isInverse ? -temp.getProperty().getEdge() : temp.getProperty().getEdge();
+				list.add(0, tEdge);
+				temp = temp.getProperty().getBackPointer();
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * 
+	 * @return an ordered list of properties that constitute this path
+	 */
+	public List<Property> getPaths() {
+		List<Property> list = new ArrayList<Property>();
+		list.add(this);
+		if (this.backPointer != null) {
+			PropertyBackPointer temp = this.backPointer;
+			while (temp != null) {
+				list.add(0, temp.getProperty());
+				temp = temp.getProperty().getBackPointer();
+			}
+		}
+		return list;
 	}
 
 	public double[] getInnerProduct() {
@@ -77,6 +157,14 @@ public class Property implements Comparable<Property> {
 
 	public void setInnerProduct(double[] innerProduct) {
 		this.innerProduct = Arrays.copyOf(innerProduct, innerProduct.length);
+	}
+
+	public double getHeuristics() {
+		return heuristics;
+	}
+
+	public double getPathCost() {
+		return fullCost;
 	}
 
 	public int getEdge() {
@@ -103,12 +191,12 @@ public class Property implements Comparable<Property> {
 		this.pathLength = pathLength;
 	}
 
-	public double getFinalScore() {
-		return finalScore;
+	public double getPathNPMI() {
+		return pathNpmi;
 	}
 
-	public void setFinalScore(double finalScore) {
-		this.finalScore = finalScore;
+	public void setPathNPMI(double pathNpmi) {
+		this.pathNpmi = pathNpmi;
 	}
 
 	public boolean isInverse() {
@@ -119,69 +207,25 @@ public class Property implements Comparable<Property> {
 		this.isInverse = isInverse;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
-	public List<Integer> getIDPath() {
-		List<Integer> list = new ArrayList<Integer>();
-		list.add(this.edge);
-		if (this.backPointer != null) {
-			PropertyBackPointer temp = this.backPointer;
-			while (temp != null) {
-				list.add(0, temp.getProperty().getEdge());
-				temp = temp.getProperty().getBackPointer();
-			}
-		}
-		return list;
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		// TODO Auto-generated method stub
+		return super.clone();
 	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public List<Integer> getIDDPath() {
-		List<Integer> list = new ArrayList<Integer>();
-		int edge = this.isInverse ? -this.edge: this.edge;
-		list.add(edge);
-		if (this.backPointer != null) {
-			PropertyBackPointer temp = this.backPointer;
-			while (temp != null) {
-				int tEdge = temp.getProperty().isInverse ? -temp.getProperty().getEdge() : temp.getProperty().getEdge();
-				list.add(0, tEdge);
-				temp = temp.getProperty().getBackPointer();
-			}
-		}
-		return list;
-	}
-	
-	
-	public List<Property> getPaths() {
-		List<Property> list = new ArrayList<Property>();
-		list.add(this);
-		if (this.backPointer != null) {
-			PropertyBackPointer temp = this.backPointer;
-			while (temp != null) {
-				list.add(0, temp.getProperty());
-				temp = temp.getProperty().getBackPointer();
-			}
-		}
-		return list;
-	}
-	
+
 	@Override
 	public int compareTo(Property arg0) {
-		if (this.score > arg0.score) {
+		if (this.fullCost > arg0.fullCost) {
 			return 1;
-		} else if (this.score < arg0.score) {
+		} else if (this.fullCost < arg0.fullCost) {
 			return -1;
 		} else {
 			return 0;
 		}
 	}
-	
+
 	@Override
 	public String toString() {
-		return this.score+ " : "+ getIDPath().toString();
+		return this.fullCost + " : " + getIDPath().toString();
 	}
 }
