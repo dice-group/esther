@@ -75,17 +75,17 @@ public class PathCreator {
 		int count = 0;
 		StringBuilder builder = new StringBuilder();
 		for (String edge : edges) {
-		
+		//String edge = "http://rdf.freebase.com/ns/people.person.nationality";
 			emodel.updateScorer(rel2ID.get(edge));
 			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed);
 			metaPaths.put(edge, propertyPaths);
 			LOGGER.info(++count + "/" + edges.size() + " meta-paths processed.");
 
 			// prepare meta-paths to be printed
-			builder.append("Predicate:").append("\t").append(edge);
+			builder.append("\nPredicate:").append("\t").append(edge);
 			addPrintableMetaPaths(builder, propertyPaths);
 		}
-		print(builder, "metapaths.txt");
+		print(builder);
 		return metaPaths;
 	}
 
@@ -118,8 +118,16 @@ public class PathCreator {
 		}
 	}
 	
-	public void print(StringBuilder builder, String fileName) {
+	public void print(StringBuilder builder) {
+		int index = 1;
+		String fileName = "/media/ana-silva/Storage/models/freebase_transe/"+index+"__metapaths_"+k+".txt";
 		File file = new File(fileName);
+		while(file.exists()) {
+			String newFileName = "/media/ana-silva/Storage/models/freebase_transe/"+ ++index +"_metapaths_"+k+".txt";
+			file = new File(newFileName);
+		}
+		
+		
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			writer.write(builder.toString());
 			writer.flush();

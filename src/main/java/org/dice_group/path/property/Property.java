@@ -52,12 +52,14 @@ public class Property implements Comparable<Property> {
 		this.edge = edge;
 		backPointer = null;
 		this.pathLength = 1;
+		this.fullCost = pathLength;
 	}
 
 	public Property(int edge, boolean isInverse) {
 		this.edge = edge;
 		backPointer = null;
 		this.pathLength = 1;
+		this.fullCost = pathLength;
 		this.isInverse = isInverse;
 	}
 
@@ -69,7 +71,7 @@ public class Property implements Comparable<Property> {
 		this.fullCost = heuristics + pathLength;
 		this.isInverse = isInverse;
 	}
-	
+
 	public Property(int edge, PropertyBackPointer backPointer, boolean isInverse) {
 		this.edge = edge;
 		this.backPointer = backPointer;
@@ -90,8 +92,10 @@ public class Property implements Comparable<Property> {
 		this.fullCost = property.getPathCost();
 		this.isInverse = property.isInverse();
 		this.pathNpmi = property.getPathNPMI();
-		this.backPointer = property.getBackPointer() == null ? null : new PropertyBackPointer(property.getBackPointer());
-		this.innerProduct = property.getInnerProduct() == null ? null : Arrays.copyOf(property.getInnerProduct(), property.getInnerProduct().length);
+		this.backPointer = property.getBackPointer() == null ? null
+				: new PropertyBackPointer(property.getBackPointer());
+		this.innerProduct = property.getInnerProduct() == null ? null
+				: Arrays.copyOf(property.getInnerProduct(), property.getInnerProduct().length);
 	}
 
 	/**
@@ -159,6 +163,41 @@ public class Property implements Comparable<Property> {
 		return list;
 	}
 
+	/**
+	 * 
+	 * @param edge
+	 * @param offset
+	 * @return true if the path has already used the given edge before (in either direction)
+	 */
+	public boolean hasAncestor(int edge, int offset) {
+		if (isEdgeConsecutive(edge, offset)) {
+			return true;
+		}
+		PropertyBackPointer temp = this.backPointer;
+		if(temp == null)
+			return false;
+		
+		while (temp != null) {
+			Property curProp = temp.getProperty();
+			if(curProp.isEdgeConsecutive(edge, offset)) {
+				return true;
+			}
+			temp = curProp.getBackPointer();
+		}
+		return false;
+	}
+	
+	public boolean isEdgeConsecutive(int edge, int offset) {
+		if (this.edge == edge || this.edge == getInverseID(edge, offset)) {
+			return true;
+		}
+		return false;
+	}
+
+	public int getInverseID(int edge, int offset) {
+		return edge >= offset ? edge - offset : edge + offset;
+	}
+
 	public double[] getInnerProduct() {
 		return innerProduct;
 	}
@@ -222,6 +261,11 @@ public class Property implements Comparable<Property> {
 		} else if (this.fullCost < arg0.fullCost) {
 			return -1;
 		} else {
+//			if (this.pathLength < arg0.pathLength) {
+//				return 1;
+//			} else if (this.pathLength > arg0.pathLength) {
+//				return -1;
+//			} 
 			return 0;
 		}
 	}

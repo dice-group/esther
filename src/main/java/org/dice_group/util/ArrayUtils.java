@@ -102,6 +102,12 @@ public class ArrayUtils {
 		}
 		return conjugate;
 	}
+	
+	public static double[] flipSignArray(double[] a) {
+		double flippedArray[] = new double[a.length];
+		Arrays.parallelSetAll(flippedArray, i -> -a[i]);
+		return flippedArray;
+	}
 
 	/**
 	 * Helper function to compute element-wise operations between 2 arrays

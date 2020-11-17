@@ -11,6 +11,7 @@ import org.dice_group.fact_check.FactChecker;
 import org.dice_group.fact_check.path.scorer.ResultWriter;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
+import org.dice_group.graph_search.modes.NDSubsumedDR;
 import org.dice_group.graph_search.modes.NotDisjointDR;
 import org.dice_group.graph_search.modes.StrictDR;
 import org.dice_group.graph_search.modes.SubsumedDR;
@@ -23,6 +24,7 @@ import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.CSVUtils;
 import org.dice_group.util.Constants;
+import org.dice_group.util.LogUtils;
 import org.dice_group.util.QueryExecutioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,17 +61,16 @@ public class Launcher {
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, relations, entities);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
-		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, true);
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, false);
 		Duration elapsed = Duration.between(Instant.now(), startTime);
-		LOGGER.info("Meta-paths generated in "+elapsed.toMinutesPart()+" min and "+elapsed.toSecondsPart()+" seconds. ");
+		LogUtils.printTextToLog("Meta-paths generated in "+elapsed.toSeconds(), pArgs.folderPath);
 		
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
 		Instant startFactTime = Instant.now();
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
-		Duration elapsedFactTime = Duration.between(Instant.now(), startFactTime);
-		LOGGER.info("Facts checked in "+elapsedFactTime.toMinutesPart()+" min, "+elapsedFactTime.toSecondsPart()+" seconds.");
+		LogUtils.printTextToLog("Facts checked in "+ Duration.between(Instant.now(), startFactTime).toSeconds(), pArgs.folderPath);
 
 		// write results
 		ResultWriter results = new ResultWriter(pArgs.initID, graphs);
@@ -88,6 +89,9 @@ public class Launcher {
 			break;
 		case "SS":
 			matrix = new SubsumedDR(sparqlExec, dict);
+			break;
+		case "NDS":
+			matrix = new NDSubsumedDR(sparqlExec, dict);
 			break;
 		default:
 			matrix = new IrrelevantDR(sparqlExec, dict);

@@ -80,8 +80,6 @@ public class NPMICalculator {
 		if (counter.isvTy())
 			return calculatePMIScore_vTy();
 
-		// Find all subject and object types, we need them in query
-
 		Iterator<Node> subTypeIterator = counter.getSubjectTypes().iterator();
 		String subTypeTriples = "";
 		while (subTypeIterator.hasNext()) {
@@ -104,7 +102,7 @@ public class NPMICalculator {
 
 			String thirdPath = getPath(pathProperties.get(2).isInverse(), 2, path.getPathLength());
 
-			pathQueryString = "select (sum(?b3*?k) as ?sum) where { "
+			pathQueryString = "select (coalesce(sum(?b3*?k),0) as ?sum) where { "
 					+ "select (count(*) as ?b3) (?b2*?b1 as ?k) ?x1 where { " + firstPath + " . " + subTypeTriples
 					+ "{ \n" + "Select (count(*) as ?b2) ?x1 ?b1 where { " + secondPath + "{ "
 					+ "select (count(*) as ?b1) ?x2 where { " + thirdPath + ". " + objTypeTriples + "} group by ?x2 "
@@ -124,7 +122,7 @@ public class NPMICalculator {
 
 			String secondPath = getPath(pathProperties.get(1).isInverse(), 1, path.getPathLength());
 
-			pathQueryString = "Select (sum(?b1*?b2) as ?sum) where {\n" + "select (count(*) as ?b2) ?b1 where { \n"
+			pathQueryString = "Select (coalesce(sum(?b1*?b2), 0) as ?sum) where {\n" + "select (count(*) as ?b2) ?b1 where { \n"
 					+ firstPath + " .\n" + subTypeTriples + "{ \n" + "select (count(*) as ?b1) ?x1 where { \n"
 					+ secondPath + " .\n" + objTypeTriples + "} group by ?x1\n" + "}\n" + "} group by ?b1\n" + "}\n";
 
@@ -222,8 +220,9 @@ public class NPMICalculator {
 		}
 		// If the path never occurs
 		if (count_Path_Occurrence == 0) {
-			throw new IllegalArgumentException(
-					"The given path does never occur. The NPMI is not defined for this case.");
+			return 0;
+//			throw new IllegalArgumentException(
+//					"The given path does never occur. The NPMI is not defined for this case.");
 		}
 		// If subject or object types never occur
 		if ((counter.getSubjectTriplesCount() == 0) || (counter.getObjectTriplesCount() == 0)) {
@@ -251,8 +250,8 @@ public class NPMICalculator {
 //                count_Path_Occurrence, count_predicate_Occurrence))) {
 //            throw new NPMIFilterException("The NPMI filter rejected the calculated NPMI.");
 //        }
-
-		path.setPathNPMI(npmi);
+		if(npmi > 0)
+			path.setPathNPMI(npmi);
 		return npmi;
 	}
 

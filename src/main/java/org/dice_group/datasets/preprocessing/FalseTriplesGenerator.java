@@ -30,14 +30,14 @@ public class FalseTriplesGenerator {
 
 	public static void main(String[] args) {
 		Model trueFacts = ModelFactory.createDefaultModel();
-		trueFacts.read(args[0]);
+		trueFacts.read("/home/ana-silva/Downloads/freebase_data/test/true_triples.nt");
 		
 		List<Statement> trueF = trueFacts.listStatements().toList();
 		Model finalTrueFacts = ModelFactory.createDefaultModel();
 		addRandomNSamples(trueF, finalTrueFacts, 750);
 		
 		Model trainingData = ModelFactory.createDefaultModel();
-		trainingData.read(args[1]);
+		trainingData.read("/home/ana-silva/Downloads/freebase_data/train/train_valid_dr_n_types.nt");
 
 		List<Statement> sTriples = new ArrayList<Statement>(corruptStmt(finalTrueFacts, trainingData, "S"));
 		List<Statement> oTriples = new ArrayList<Statement>(corruptStmt(finalTrueFacts, trainingData, "O"));
@@ -48,14 +48,14 @@ public class FalseTriplesGenerator {
 		addRandomNSamples(oTriples, falseFacts, 250);
 		addRandomNSamples(soTriples, falseFacts, 250);
 
-		String fileName = args[2];
+		String fileName = "/home/ana-silva/Downloads/freebase_data/test/false_triples_750.nt";
 		try (FileWriter out = new FileWriter(fileName)) {
 			falseFacts.write(out, "NT");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		fileName = args[3];
+		fileName = "/home/ana-silva/Downloads/freebase_data/test/true_triples_750.nt";
 		try (FileWriter out = new FileWriter(fileName)) {
 			finalTrueFacts.write(out, "NT");
 		} catch (IOException e) {

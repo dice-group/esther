@@ -18,19 +18,28 @@ public class TransEL1 implements Distance {
 		this.targetEdge = targetEdge;
 	}
 
-	/**
-	 * TODO change || (r_1 + r_2 + ... + r_n) - r_p ||, inner products are no longer
-	 * needed, check if it's required for compability with the other models
-	 */
 	@Override
 	public double computeDistance(Property property, double[] newEdge, boolean isNewInverse) {
-		if (property.getInnerProduct() == null) {
-			property.setInnerProduct(newEdge);
-		} else {
+		
+		// starting condition
+		if (property.getInnerProduct() == null && property.getBackPointer() == null) {
+			
 			if(isNewInverse) {
-				property.setInnerProduct(ArrayUtils.computeVectorSubtraction(property.getInnerProduct(), newEdge));
+				property.setInnerProduct(ArrayUtils.flipSignArray(newEdge));
 			} else {
-				property.setInnerProduct(ArrayUtils.computeVectorSummation(property.getInnerProduct(), newEdge));
+				property.setInnerProduct(newEdge);
+			}
+			
+		
+		} else {
+			double [] inner = property.getInnerProduct() == null ? property.getBackPointer().getProperty().getInnerProduct() : property.getInnerProduct();
+			if(property.getInnerProduct() != null) {
+				System.out.println();
+			}
+			if(isNewInverse) {
+				property.setInnerProduct(ArrayUtils.computeVectorSubtraction(inner, newEdge));
+			} else {
+				property.setInnerProduct(ArrayUtils.computeVectorSummation(inner, newEdge));
 			}
 		}
 		

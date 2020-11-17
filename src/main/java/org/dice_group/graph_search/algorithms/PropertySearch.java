@@ -17,8 +17,14 @@ import org.dice_group.path.property.PropertyBackPointer;
  */
 public class PropertySearch implements SearchAlgorithm {
 
+	/**
+	 * Domain-range adjacency matrix
+	 */
 	private Matrix matrix;
 
+	/**
+	 * Score function to be used depending on the embeddings model used
+	 */
 	private Distance scorer;
 
 	public PropertySearch(Matrix matrix, Distance scorer) {
@@ -41,10 +47,8 @@ public class PropertySearch implements SearchAlgorithm {
 		for (int i = 0; i < mat.length; i++) {
 			boolean isInverse = i >= offset;
 			if (mat[edgeID].equals(mat[i])) {
-				// skip self if loops are not desired
 				if(!isLoopAllowed && edgeID == i)
 					continue;
-				
 				Property curProp = new Property(i, isInverse);
 				int index = isInverse ?  i-offset : i;
 				scorer.computeDistance(curProp, relations[index], isInverse);
@@ -54,6 +58,9 @@ public class PropertySearch implements SearchAlgorithm {
 
 		while (!queue.isEmpty() && pathCount < k) {
 			Property curProperty = queue.poll();
+			
+			if (curProperty.getPathLength() >= maxPathLength)
+				continue;
 			
 			/**
 			 * r(P) = r(j) -> stop condition
@@ -74,15 +81,9 @@ public class PropertySearch implements SearchAlgorithm {
 
 				int previousEdge = matrix.getInverseID(curProperty.getEdge());
 				if (mat[previousEdge].equals(mat[i])) {
-					
-					if (curProperty.getPathLength() >= maxPathLength)
-						continue;
-					
-					// do not allow a property and its inverse consecutively, or its own
-					if(!isLoopAllowed && (i == edgeID || isPropertyConsecutive(i, curProperty))) {
+					if(!isLoopAllowed && curProperty.hasAncestor(i, offset)) {
 						continue;						
 					}
-					
 					Property newProp = new Property(i, new PropertyBackPointer(curProperty), isInverse);
 					int index = isInverse ?  i-offset : i;
 					scorer.computeDistance(newProp, relations[index], isInverse);
@@ -93,27 +94,4 @@ public class PropertySearch implements SearchAlgorithm {
 		}
 		return propertyPaths;
 	}
-	
-	public boolean isPropertyConsecutive(int edge, Property prop) {
-		if (prop.getEdge() == edge || prop.getEdge() == matrix.getInverseID(edge)) {
-			return true;
-		}
-		return false;
-	}
-
-	public boolean propertyHasAncestor(int edge, Property p) {
-		PropertyBackPointer temp = new PropertyBackPointer(p);
-		while (temp != null) {
-			Property curProp = temp.getProperty();
-
-			if (curProp.getEdge() == edge || curProp.getEdge() == matrix.getInverseID(edge)) {
-				return true;
-			}
-
-			temp = curProp.getBackPointer();
-		}
-
-		return false;
-	}
-
 }
