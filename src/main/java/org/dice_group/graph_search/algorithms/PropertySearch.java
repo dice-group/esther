@@ -59,7 +59,7 @@ public class PropertySearch implements SearchAlgorithm {
 		while (!queue.isEmpty() && pathCount < k) {
 			Property curProperty = queue.poll();
 			
-			if (curProperty.getPathLength() >= maxPathLength)
+			if (curProperty.getPathLength() > maxPathLength)
 				continue;
 			
 			/**
