@@ -13,8 +13,8 @@ public class LogUtils {
 	 * @param text
 	 * @param folderPath
 	 */
-	public static void printTextToLog(String text, String folderPath) {
-		try (FileWriter fw = new FileWriter(folderPath + "/log.txt", true);
+	public static void printTextToLog(String text) {
+		try (FileWriter fw = new FileWriter("log.txt", true);
 				BufferedWriter bw = new BufferedWriter(fw);
 				PrintWriter out = new PrintWriter(bw)) {
 			out.println(text);

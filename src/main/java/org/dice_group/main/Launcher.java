@@ -63,14 +63,14 @@ public class Launcher {
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, false);
 		Duration elapsed = Duration.between(Instant.now(), startTime);
-		LogUtils.printTextToLog("Meta-paths generated in "+elapsed.toSeconds(), pArgs.folderPath);
+		LogUtils.printTextToLog("Meta-paths generated in "+elapsed.toSeconds());
 		
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
 		Instant startFactTime = Instant.now();
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
-		LogUtils.printTextToLog("Facts checked in "+ Duration.between(Instant.now(), startFactTime).toSeconds(), pArgs.folderPath);
+		LogUtils.printTextToLog("Facts checked in "+ Duration.between(Instant.now(), startFactTime).toSeconds());
 
 		// write results
 		ResultWriter results = new ResultWriter(pArgs.initID, graphs);

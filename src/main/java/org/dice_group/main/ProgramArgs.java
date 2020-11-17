@@ -56,6 +56,6 @@ public class ProgramArgs {
 		builder.append("\nSaving to: ").append(savePath);
 		LOGGER.info(builder.toString());
 		
-		LogUtils.printTextToLog(builder.toString(), folderPath);
+		LogUtils.printTextToLog(builder.toString());
 	}
 }

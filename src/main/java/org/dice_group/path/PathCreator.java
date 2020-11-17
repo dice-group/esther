@@ -18,6 +18,7 @@ import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.models.EmbeddingModel;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyHelper;
+import org.dice_group.util.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,7 +126,8 @@ public class PathCreator {
 			String newFileName = ++index + "_metapaths_" + k + ".txt";
 			file = new File(newFileName);
 		}
-
+		
+		LogUtils.printTextToLog(file.getAbsolutePath());
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			writer.write(builder.toString());
 			writer.flush();
