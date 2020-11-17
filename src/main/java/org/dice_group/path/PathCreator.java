@@ -75,7 +75,7 @@ public class PathCreator {
 		int count = 0;
 		StringBuilder builder = new StringBuilder();
 		for (String edge : edges) {
-		//String edge = "http://rdf.freebase.com/ns/people.person.nationality";
+			// String edge = "http://rdf.freebase.com/ns/people.person.nationality";
 			emodel.updateScorer(rel2ID.get(edge));
 			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed);
 			metaPaths.put(edge, propertyPaths);
@@ -104,30 +104,28 @@ public class PathCreator {
 	public void setDictionary(Dictionary dictionary) {
 		this.dictionary = dictionary;
 	}
-	
+
 	public void addPrintableMetaPaths(StringBuilder builder, Set<Property> propertyPaths) {
 		List<Property> result = propertyPaths.stream()
 				.sorted(Comparator.comparingDouble(Property::getPathLength).thenComparing(Property::getPathCost))
 				.collect(Collectors.toList());
 
-		
 		builder.append("\nLength").append("\t").append("A* score").append("\t").append("Path(s)");
 		for (Property path : result) {
 			builder.append("\n").append(path.getPathLength()).append("\t").append(path.getPathCost()).append("\t")
 					.append(PropertyHelper.translate2DirectedIRI(path, dictionary.getId2Relations()));
 		}
 	}
-	
+
 	public void print(StringBuilder builder) {
 		int index = 1;
-		String fileName = "/media/ana-silva/Storage/models/freebase_transe/"+index+"__metapaths_"+k+".txt";
+		String fileName = index + "_metapaths_" + k + ".txt";
 		File file = new File(fileName);
-		while(file.exists()) {
-			String newFileName = "/media/ana-silva/Storage/models/freebase_transe/"+ ++index +"_metapaths_"+k+".txt";
+		while (file.exists()) {
+			String newFileName = ++index + "_metapaths_" + k + ".txt";
 			file = new File(newFileName);
 		}
-		
-		
+
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			writer.write(builder.toString());
 			writer.flush();
