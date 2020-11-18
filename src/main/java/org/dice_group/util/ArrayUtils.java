@@ -3,7 +3,49 @@ package org.dice_group.util;
 import java.util.Arrays;
 import java.util.function.IntToDoubleFunction;
 
+import org.apache.commons.math3.complex.Quaternion;
+
 public class ArrayUtils {
+
+	public static Quaternion[] getQuaternion(double[] relW, double[] relX, double[] relY, double[] relZ) {
+		Quaternion[] quatArray = new Quaternion[relW.length];
+		for (int i = 0; i < relW.length; i++) {
+			quatArray[i] = new Quaternion(relW[i], relX[i], relY[i], relZ[i]);
+		}
+		return quatArray;
+	}
+
+	public static Quaternion[] getInverseQuat(Quaternion[] q) {
+		Quaternion[] result = new Quaternion[q.length];
+		for (int i = 0; i < q.length; i++) {
+			result[i] = q[i].getInverse();
+		}
+		return result;
+	}
+
+	public static Quaternion[] computeHamiltonProduct(Quaternion[] a, Quaternion[] b) {
+		Quaternion[] result = new Quaternion[a.length];
+		for (int i = 0; i < a.length; i++) {
+			result[i] = a[i].multiply(b[i]);
+		}
+		return result;
+	}
+
+	public static Quaternion[] computeQuatSubtraction(Quaternion[] a, Quaternion[] b) {
+		Quaternion[] result = new Quaternion[a.length];
+		for (int i = 0; i < a.length; i++) {
+			result[i] = a[i].subtract(b[i]);
+		}
+		return result;
+	}
+	
+	public static double[] getQuatNorm(Quaternion[] q) {
+		double[] result = new double[q.length];
+		for (int i = 0; i < q.length; i++) {
+			result[i] = q[i].getNorm();
+		}
+		return result;
+	}
 
 	/**
 	 * Computes the element-wise product of 2 vectors
@@ -102,7 +144,7 @@ public class ArrayUtils {
 		}
 		return conjugate;
 	}
-	
+
 	public static double[] flipSignArray(double[] a) {
 		double flippedArray[] = new double[a.length];
 		Arrays.parallelSetAll(flippedArray, i -> -a[i]);
@@ -125,5 +167,4 @@ public class ArrayUtils {
 		Arrays.parallelSetAll(result, generator);
 		return result;
 	}
-
 }

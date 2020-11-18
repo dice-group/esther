@@ -44,38 +44,33 @@ public class Launcher {
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath);
 
-		// read embeddings from file
-		double[][] entities = null;
-		if (pArgs.eModel.equals(Constants.DENSE_STRING))
-			entities = CSVUtils.readCSVFile(pArgs.folderPath + Constants.ENT_EMB_FILE);
-		double[][] relations = CSVUtils.readCSVFile(pArgs.folderPath + Constants.REL_EMB_FILE);
-
 		// create d/r edge adjacency matrix
 		LOGGER.info("Creating edge adjacency matrix from d/r");
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
 		Matrix matrix = getMatrixType(pArgs.type, sparqlExec, dict);
 		Instant startTime = Instant.now();
 		matrix.populateMatrix();
-		
+
 		// preprocess the meta-paths for all properties
 		LOGGER.info("Preprocessing meta-paths");
-		EmbeddingModel eModel = getModel(pArgs.eModel, relations, entities);
+		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, false);
 		Duration elapsed = Duration.between(Instant.now(), startTime);
-		LogUtils.printTextToLog("Meta-paths generated in "+elapsed.toSeconds());
-		
+		LogUtils.printTextToLog("Meta-paths generated in " + elapsed.toSeconds());
+
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
 		Instant startFactTime = Instant.now();
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
-		LogUtils.printTextToLog("Facts checked in "+ Duration.between(Instant.now(), startFactTime).toSeconds());
+		LogUtils.printTextToLog("Facts checked in " + Duration.between(Instant.now(), startFactTime).toSeconds());
 
 		// write results
 		ResultWriter results = new ResultWriter(pArgs.initID, graphs);
 		results.printToFile(pArgs.folderPath + pArgs.savePath);
-		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath, results.getPaths(dict.getId2Relations()));
+		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath,
+				results.getPaths(dict.getId2Relations()));
 	}
 
 	private static Matrix getMatrixType(String type, QueryExecutioner sparqlExec, Dictionary dict) {
@@ -100,17 +95,23 @@ public class Launcher {
 		return matrix;
 	}
 
-	private static EmbeddingModel getModel(String model, double[][] relations, double[][] entities) {
-		EmbeddingModel eModel;
+	private static EmbeddingModel getModel(String model, String folderPath) {
+		EmbeddingModel eModel = null;
 		switch (model) {
 		case Constants.ROTATE_STRING:
-			eModel = new RotatE(null, relations);
+			double[][] relations = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE);
+			eModel = new RotatE(relations);
 			break;
 		case Constants.DENSE_STRING:
-			eModel = new DensE(entities, relations);
+			double[][] relW = CSVUtils.readCSVFile(folderPath + Constants.REL_W_FILE);
+			double[][] relX = CSVUtils.readCSVFile(folderPath + Constants.REL_X_FILE);
+			double[][] relY = CSVUtils.readCSVFile(folderPath + Constants.REL_Y_FILE);
+			double[][] relZ = CSVUtils.readCSVFile(folderPath + Constants.REL_Z_FILE);
+			eModel = new DensE(relW, relX, relY, relZ);
 			break;
 		default:
-			eModel = new TransE(null, relations);
+			double[][] relations2 = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE);
+			eModel = new TransE(relations2);
 			break;
 		}
 		return eModel;

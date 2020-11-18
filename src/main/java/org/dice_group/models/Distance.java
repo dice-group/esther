@@ -1,4 +1,4 @@
-package org.dice_group.graph_search.distance;
+package org.dice_group.models;
 
 import org.dice_group.path.property.Property;
 
@@ -9,10 +9,10 @@ public interface Distance {
 	 * the property object
 	 * 
 	 * @param property     object to add the new edge to
-	 * @param newEdge      edge to be added
+	 * @param index      edge to be added
 	 * @param isNewInverse true if the new edge is traversed inversely
 	 * @return
 	 */
-	double computeDistance(Property property, double[] newEdge, boolean isNewInverse);
+	double computeDistance(Property property, int index, boolean isNewInverse);
 
 }

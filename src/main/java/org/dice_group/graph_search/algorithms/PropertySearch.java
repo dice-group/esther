@@ -6,8 +6,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import org.dice_group.graph_search.distance.Distance;
 import org.dice_group.graph_search.modes.Matrix;
+import org.dice_group.models.EmbeddingModel;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyBackPointer;
 
@@ -22,18 +22,15 @@ public class PropertySearch implements SearchAlgorithm {
 	 */
 	private Matrix matrix;
 
-	/**
-	 * Score function to be used depending on the embeddings model used
-	 */
-	private Distance scorer;
+	private EmbeddingModel eModel;
 
-	public PropertySearch(Matrix matrix, Distance scorer) {
+	public PropertySearch(Matrix matrix, EmbeddingModel eModel) {
 		this.matrix = matrix;
-		this.scorer = scorer;
+		this.eModel = eModel;
 	}
 
 	@Override
-	public Set<Property> findPaths(int edgeID, double[][] relations, int k, int maxPathLength, boolean isLoopAllowed) {
+	public Set<Property> findPaths(int edgeID, int k, int maxPathLength, boolean isLoopAllowed) {
 		BitSet[] mat = matrix.getEdgeAdjMatrix();
 		Set<Property> propertyPaths = new HashSet<Property>();
 		int offset = mat.length / 2;
@@ -51,7 +48,7 @@ public class PropertySearch implements SearchAlgorithm {
 					continue;
 				Property curProp = new Property(i, isInverse);
 				int index = isInverse ?  i-offset : i;
-				scorer.computeDistance(curProp, relations[index], isInverse);
+				eModel.computeDistance(curProp, index, isInverse);
 				queue.add(curProp);
 			}
 		}
@@ -86,7 +83,7 @@ public class PropertySearch implements SearchAlgorithm {
 					}
 					Property newProp = new Property(i, new PropertyBackPointer(curProperty), isInverse);
 					int index = isInverse ?  i-offset : i;
-					scorer.computeDistance(newProp, relations[index], isInverse);
+					eModel.computeDistance(newProp, index, isInverse);
 					queue.add(newProp);
 				}
 			}
