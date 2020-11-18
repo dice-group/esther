@@ -33,7 +33,7 @@ public class DensE extends QuatEmbeddingModel {
 
 		property.setInnerProduct(norm);
 		double[] inner = property.getInnerProduct();
-		double[] res = ArrayUtils.computeHadamardProduct(inner, ArrayUtils.getQuatNorm(targetEdge));
+		double[] res = ArrayUtils.computeHadamardProduct(inner, ArrayUtils.getQuatNorm(ArrayUtils.getInverseQuat(targetEdge)));
 		double score = ArrayUtils.computeVectorsL1(res);
 
 		property.updateCost(score);
