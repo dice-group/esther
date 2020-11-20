@@ -75,8 +75,8 @@ public class PathCreator {
 		Map<String, Set<Property>> metaPaths = new HashMap<String, Set<Property>>();
 		int count = 0;
 		StringBuilder builder = new StringBuilder();
-		//for (String edge : edges) {
-			String edge = "http://rdf.freebase.com/ns/people.person.nationality";
+		for (String edge : edges) {
+			//String edge = "http://rdf.freebase.com/ns/people.person.nationality";
 			emodel.updateTargetEdge(rel2ID.get(edge));
 			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed);
 			metaPaths.put(edge, propertyPaths);
@@ -85,7 +85,7 @@ public class PathCreator {
 			// prepare meta-paths to be printed
 			builder.append("\nPredicate:").append("\t").append(edge);
 			addPrintableMetaPaths(builder, propertyPaths);
-		//}
+		}
 		print(builder);
 		return metaPaths;
 	}
