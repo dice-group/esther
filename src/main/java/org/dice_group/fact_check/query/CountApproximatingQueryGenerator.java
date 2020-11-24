@@ -24,7 +24,7 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
             Set<Node> objectTypes) {
         StringBuilder sTypeTriples = generateTypeRestrictions(subjectTypes, SUBJECT_VARIABLE_NAME);
         StringBuilder oTypeTriples = generateTypeRestrictions(objectTypes, OBJECT_VARIABLE_NAME);
-
+        
         if (pathProperties.size() == 1) {
             return createSinglePropertyQuery(pathProperties.get(0), propURIs[0], sTypeTriples, oTypeTriples);
         } else {
@@ -73,11 +73,11 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
             // This is the last property in the list --> recursion ends
             queryBuilder.append("Select (count(*) as ?b1) ?x1 where { \n");
             // Use the subject variable
-            addTriplePattern(pathProperties.get(0), propURIs[0], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
+            addTriplePattern(pathProperties.get(propId), propURIs[propId], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
                     OBJECT_VARIABLE_NAME, queryBuilder);
             // Add subject types
             queryBuilder.append(oTypeTriples);
-            queryBuilder.append("} group by ?" + INTERMEDIATE_NODE_VARIABLE_NAME);
+            queryBuilder.append("} group by " + INTERMEDIATE_NODE_VARIABLE_NAME);
             queryBuilder.append(propId);
             queryBuilder.append('\n');
         } else {
@@ -90,13 +90,13 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
             // If this is the first sub select
             if (propId == 0) {
                 // Use the subject variable
-                addTriplePattern(pathProperties.get(0), propURIs[0], SUBJECT_VARIABLE_NAME,
-                        INTERMEDIATE_NODE_VARIABLE_NAME + propId + 1, queryBuilder);
+                addTriplePattern(pathProperties.get(propId), propURIs[propId], SUBJECT_VARIABLE_NAME,
+                        INTERMEDIATE_NODE_VARIABLE_NAME + (propId + 1), queryBuilder);
                 // Add subject types
                 queryBuilder.append(sTypeTriples);
             } else {
-                addTriplePattern(pathProperties.get(0), propURIs[0], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
-                        INTERMEDIATE_NODE_VARIABLE_NAME + propId + 1, queryBuilder);
+                addTriplePattern(pathProperties.get(propId), propURIs[propId], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
+                        INTERMEDIATE_NODE_VARIABLE_NAME + (propId + 1), queryBuilder);
             }
             // Start the recursion
             queryBuilder.append("{\n");
