@@ -7,6 +7,7 @@ public class PropertyHelper {
 
 	/**
 	 * Translates the path of ids into the corresponding IRIs
+	 *TODO to be deleted
 	 * 
 	 * @param property
 	 * @param id2rel
@@ -27,6 +28,26 @@ public class PropertyHelper {
 				builder.append(";");
 		}
 		return builder.toString();
+	}
+	
+	/**
+	 * Translates the path of ids into the corresponding IRIs
+	 * 
+	 * @param property
+	 * @param id2rel
+	 * @return
+	 */
+	public static String[] translate2IRIArray(Property property, Map<Integer, String> id2rel) {
+		String[] iris = new String[property.getPathLength()];
+		int offset = id2rel.size();
+		List<Integer> path = property.getIDPath();
+		for (int i = 0; i < path.size(); i++) {
+			String t = id2rel.getOrDefault(path.get(i), id2rel.get(path.get(i) - offset));
+			if (t == null)
+				throw new IllegalArgumentException("Could not find the relation");
+			iris[i] = t;
+		}
+		return iris;
 	}
 
 	public static String translate2DirectedIRI(Property property, Map<Integer, String> id2rel) {

@@ -150,7 +150,7 @@ public class Property implements Comparable<Property> {
 	 * 
 	 * @return an ordered list of properties that constitute this path
 	 */
-	public List<Property> getPaths() {
+	public List<Property> getProperties() {
 		List<Property> list = new ArrayList<Property>();
 		list.add(this);
 		if (this.backPointer != null) {
