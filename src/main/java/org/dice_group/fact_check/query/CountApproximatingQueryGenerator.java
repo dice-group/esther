@@ -9,10 +9,10 @@ import org.dice_group.path.property.Property;
 public class CountApproximatingQueryGenerator implements QueryGenerator {
 
     protected static final String COUNT_VARIABLE_NAME = "?sum";
-    protected static final String SUBJECT_VARIABLE_NAME = "?s";
-    protected static final String OBJECT_VARIABLE_NAME = "?o";
     protected static final String INTERMEDIATE_COUNT_VARIABLE_NAME = "?c";
     protected static final String INTERMEDIATE_NODE_VARIABLE_NAME = "?x";
+    protected static final String SUBJECT_VARIABLE_NAME = INTERMEDIATE_NODE_VARIABLE_NAME + "0";
+    protected static final String OBJECT_VARIABLE_NAME = "?o";
 
     @Override
     public String getCountVariableName() {
@@ -73,7 +73,7 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
             // This is the last property in the list --> recursion ends
             queryBuilder.append("Select (count(*) as " + INTERMEDIATE_COUNT_VARIABLE_NAME);
                 queryBuilder.append(propId);
-                    queryBuilder.append(") ?" + INTERMEDIATE_NODE_VARIABLE_NAME);
+                    queryBuilder.append(") " + INTERMEDIATE_NODE_VARIABLE_NAME);
             queryBuilder.append(propId);
             queryBuilder.append(" where { \n");
             // Use the subject variable
