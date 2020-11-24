@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.jena.graph.Node;
+import org.apache.jena.vocabulary.RDFS;
 import org.dice_group.path.property.Property;
+import org.dice_group.util.QueryExecutioner;
+import org.dice_group.util.SparqlHelper;
 
 public class CountApproximatingQueryGenerator implements QueryGenerator {
 
@@ -13,6 +16,12 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
     protected static final String INTERMEDIATE_NODE_VARIABLE_NAME = "?x";
     protected static final String SUBJECT_VARIABLE_NAME = INTERMEDIATE_NODE_VARIABLE_NAME + "0";
     protected static final String OBJECT_VARIABLE_NAME = "?o";
+    
+    private QueryExecutioner sparqlExec;
+    
+    public CountApproximatingQueryGenerator(QueryExecutioner sparqlExec) {
+		this.sparqlExec = sparqlExec;
+	}
 
     @Override
     public String getCountVariableName() {
@@ -20,8 +29,11 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
     }
 
     @Override
-    public String createCountQuery(List<Property> pathProperties, String[] propURIs, Set<Node> subjectTypes,
-            Set<Node> objectTypes) {
+    public String createCountQuery(List<Property> pathProperties, String[] propURIs, org.apache.jena.rdf.model.Property predicate) {
+    	
+    	Set<Node> subjectTypes = SparqlHelper.getTypeInformation(predicate, RDFS.domain, sparqlExec);
+		Set<Node> objectTypes = SparqlHelper.getTypeInformation(predicate, RDFS.range, sparqlExec);
+    	
         StringBuilder sTypeTriples = generateTypeRestrictions(subjectTypes, SUBJECT_VARIABLE_NAME);
         StringBuilder oTypeTriples = generateTypeRestrictions(objectTypes, OBJECT_VARIABLE_NAME);
         

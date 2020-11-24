@@ -5,31 +5,22 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.graph.Node;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDFS;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyBackPointer;
 import org.dice_group.path.property.PropertyHelper;
-import org.dice_group.util.SparqlHelper;
+import org.dice_group.util.QueryExecutioner;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class QueryGeneratorTest {
-
+	private static final Logger LOGGER = LoggerFactory.getLogger(QueryGeneratorTest.class);
 	private static final String DUMMY_NS = "http://www.example.com/";
 
 	@Test
 	public void testQueryGeneration() {
-		Resource givenPredicate = ResourceFactory.createResource(DUMMY_NS+6);
-		Model model = ModelFactory.createDefaultModel();
-		model.add(ResourceFactory.createStatement(givenPredicate, RDFS.domain, ResourceFactory.createResource(DUMMY_NS+"type0")));
-		model.add(ResourceFactory.createStatement(givenPredicate, RDFS.range, ResourceFactory.createResource(DUMMY_NS+"type1")));
-		
-		Set<Node> subjectTypes = SparqlHelper.getDomainFromModel(model, givenPredicate.getURI());
-		Set<Node> objectTypes = SparqlHelper.getRangeFromModel(model, givenPredicate.getURI());
+		org.apache.jena.rdf.model.Property givenPredicate = ResourceFactory.createProperty(DUMMY_NS+6);
 		
 		Set<Property> paths = new HashSet<Property>();
 		
@@ -52,14 +43,25 @@ public class QueryGeneratorTest {
 			id2rel.put(i, DUMMY_NS + i);
 		}
 
-		QueryGenerator generator = new CountApproximatingQueryGenerator();
+		QueryExecutioner exec = new QueryExecutioner("http://lemming.cs.uni-paderborn.de:8890/sparql");
+		QueryGenerator generator = new CountApproximatingQueryGenerator(exec);
 		for (Property path : paths) {
-			String query = generator.createCountQuery(path.getProperties(), PropertyHelper.translate2IRIArray(path, id2rel), subjectTypes, objectTypes);
-			System.out.println("#############");
-			System.out.println(path);
-			System.out.println(query);
+			String query = generator.createCountQuery(path.getProperties(), PropertyHelper.translate2IRIArray(path, id2rel), givenPredicate);
+			LOGGER.info("#############");
+			LOGGER.info(path.toString());
+			LOGGER.info(query);
+			// TODO 
+			exec.selectDoubleVar(query, "?sum");
 		}
-
+		
+		QueryGenerator pairGenerator = new PairCountingQueryGenerator();
+		for (Property path : paths) {
+			String query = pairGenerator.createCountQuery(path.getProperties(), PropertyHelper.translate2IRIArray(path, id2rel), givenPredicate);
+			LOGGER.info("#############");
+			LOGGER.info(path.toString());
+			LOGGER.info(query);
+			exec.selectDoubleVar(query, "?sum");
+		}
 	}
 	
 	

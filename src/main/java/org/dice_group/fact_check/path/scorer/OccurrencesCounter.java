@@ -11,12 +11,12 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.dice_group.util.QueryExecutioner;
+import org.dice_group.util.SparqlHelper;
 
 /**
  *
@@ -49,39 +49,28 @@ public class OccurrencesCounter {
 
 	private QueryExecutioner sparqlExec;
 
-	private boolean vTy;
-
 	public OccurrencesCounter(Statement stmt, QueryExecutioner sparqlExec, boolean vTy) {
 		this.stmt = stmt;
 		this.sparqlExec = sparqlExec;
 		this.subjectTypes = new HashSet<Node>();
 		this.objectTypes = new HashSet<Node>();
-		this.vTy = vTy;
 		getDomainRangeInfo();
+		this.predicateTriplesCount = countPredicateOccurrences(NodeFactory.createVariable("s"), stmt.getPredicate(),
+				NodeFactory.createVariable("o"));
+		this.subjectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, subjectTypes);
+		this.objectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, objectTypes);
 	}
 
 	private void getDomainRangeInfo() {
-		subjectTypes = getTypeInformation(stmt.getPredicate(), RDFS.domain);
-		objectTypes = getTypeInformation(stmt.getPredicate(), RDFS.range);
+		subjectTypes = SparqlHelper.getTypeInformation(stmt.getPredicate(), RDFS.domain, sparqlExec);
+		objectTypes =  SparqlHelper.getTypeInformation(stmt.getPredicate(), RDFS.range, sparqlExec);
 
 		if (subjectTypes.isEmpty()) {
-			subjectTypes = getTypeInformation(stmt.getSubject().asResource(), RDF.type);
+			subjectTypes =  SparqlHelper.getTypeInformation(stmt.getSubject().asResource(), RDF.type, sparqlExec);
 		}
 
 		if (objectTypes.isEmpty()) {
-			objectTypes = getTypeInformation(stmt.getSubject().asResource(), RDF.type);
-		}
-	}
-
-	public void count() {
-		this.predicateTriplesCount = countPredicateOccurrences(NodeFactory.createVariable("s"), stmt.getPredicate(),
-				NodeFactory.createVariable("o"));
-		if (!vTy) {
-			this.subjectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, subjectTypes);
-			this.objectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, objectTypes);
-		} else {
-			this.subjectTriplesCount = countSOOccurrances("count(distinct ?s)", stmt.getPredicate());
-			this.objectTriplesCount = countSOOccurrances("count(distinct ?o)", stmt.getPredicate());
+			objectTypes =  SparqlHelper.getTypeInformation(stmt.getSubject().asResource(), RDF.type, sparqlExec);
 		}
 	}
 
@@ -95,22 +84,6 @@ public class OccurrencesCounter {
 		}
 
 		return returnCount(occurrenceBuilder);
-	}
-
-	public Set<Node> getTypeInformation(Resource subject, Property property) {
-		Set<Node> types = new HashSet<Node>();
-		SelectBuilder typeBuilder = new SelectBuilder().addPrefix("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-		typeBuilder.addPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-		typeBuilder.addWhere(subject, property, NodeFactory.createVariable("x"));
-
-		Query typeQuery = typeBuilder.build();
-		try(QueryExecution queryExecution = sparqlExec.createExecutioner(typeQuery);){
-			ResultSet resultSet = queryExecution.execSelect();
-			while (resultSet.hasNext()) {
-				types.add(resultSet.next().get("x").asNode());
-			}
-		}
-		return types;
 	}
 
 	public int countOccurrences(Node subject, Property property, Set<Node> objectTypes) {
@@ -148,14 +121,6 @@ public class OccurrencesCounter {
 				count_Occurrence = resultSet.next().get("?c").asLiteral().getInt();
 			return count_Occurrence;
 		}
-	}
-
-	public boolean isvTy() {
-		return vTy;
-	}
-
-	public void setvTy(boolean vTy) {
-		this.vTy = vTy;
 	}
 
 	public Set<Node> getSubjectTypes() {

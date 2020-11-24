@@ -61,7 +61,6 @@ public class FactChecker {
 
 			// count occurrences
 			OccurrencesCounter c = new OccurrencesCounter(curStmt, sparqlExec, false);
-			c.count();
 
 			// calculate npmi for each path found
 			for (Property path : p) {
@@ -70,9 +69,9 @@ public class FactChecker {
 					LOGGER.info(i + "/" + testData.size() + " : " + 0 + " - " + curStmt.toString());
 					continue;
 				}
-				NPMICalculator cal = new NPMICalculator(path, id2rel, c);
+				NPMICalculator cal = new NPMICalculator(path, c);
 				try {
-					cal.calculatePMIScore();
+					cal.calculatePMIScore(id2rel);
 				} catch (ParseException e) {
 					e.printStackTrace();
 				}
