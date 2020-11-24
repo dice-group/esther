@@ -1,8 +1,11 @@
 package org.dice_group.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.jena.graph.Node;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -41,25 +44,25 @@ public class SparqlHelper {
 		return objects;
 	}
 
-	public static List<Resource> getDomainFromModel(Model model, String property) {
+	public static Set<Node> getDomainFromModel(Model model, String property) {
 		String sparqlQuery = "select ?o where { <" + property
 				+ "> <http://www.w3.org/2000/01/rdf-schema#domain> ?o  filter isIri(?o) }";
 		return selectEndpointFromModel(model, sparqlQuery);
 	}
 
-	public static List<Resource> getRangeFromModel(Model model, String property) {
+	public static Set<Node> getRangeFromModel(Model model, String property) {
 		String sparqlQuery = "select ?o where { <" + property
 				+ "> <http://www.w3.org/2000/01/rdf-schema#range> ?o  filter isIri(?o) }";
 		return selectEndpointFromModel(model, sparqlQuery);
 	}
 
-	public static List<Resource> selectEndpointFromModel(Model model, String sparqlQuery) {
+	public static Set<Node> selectEndpointFromModel(Model model, String sparqlQuery) {
 		Query query = QueryFactory.create(sparqlQuery);
-		List<Resource> objects = new ArrayList<Resource>();
+		Set<Node> objects = new HashSet<Node>();
 		try (QueryExecution queryExecution = QueryExecutionFactory.create(query, model)) {
 			ResultSet resultSet = queryExecution.execSelect();
 			while (resultSet.hasNext()) {
-				objects.add(resultSet.next().get("?o").asResource());
+				objects.add(resultSet.next().get("?o").asNode());
 			}
 		}
 		return objects;

@@ -29,7 +29,7 @@ public class NPMICalculator {
 		this.counter = counter;
 		builder = "?s ?p1 ?x1;?x1 ?p2 ?x2;?x2 ?p3 ?o";
 		sPath = PropertyHelper.translate2IRI(path, id2rel);
-		pathProperties = path.getPaths();
+		pathProperties = path.getProperties();
 	}
 
 	public double calculatePMIScore_vTy() {
