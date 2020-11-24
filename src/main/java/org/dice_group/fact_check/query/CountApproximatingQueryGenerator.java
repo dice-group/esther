@@ -11,7 +11,7 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
     protected static final String COUNT_VARIABLE_NAME = "?sum";
     protected static final String SUBJECT_VARIABLE_NAME = "?s";
     protected static final String OBJECT_VARIABLE_NAME = "?o";
-    protected static final String INTERMEDIATE_COUNT_VARIABLE_NAME = "?b";
+    protected static final String INTERMEDIATE_COUNT_VARIABLE_NAME = "?c";
     protected static final String INTERMEDIATE_NODE_VARIABLE_NAME = "?x";
 
     @Override
@@ -71,7 +71,11 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
             StringBuilder sTypeTriples, StringBuilder oTypeTriples, StringBuilder queryBuilder) {
         if (propId == pathProperties.size() - 1) {
             // This is the last property in the list --> recursion ends
-            queryBuilder.append("Select (count(*) as ?b1) ?x1 where { \n");
+            queryBuilder.append("Select (count(*) as " + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append(propId);
+                    queryBuilder.append(") ?" + INTERMEDIATE_NODE_VARIABLE_NAME);
+            queryBuilder.append(propId);
+            queryBuilder.append(" where { \n");
             // Use the subject variable
             addTriplePattern(pathProperties.get(propId), propURIs[propId], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
                     OBJECT_VARIABLE_NAME, queryBuilder);
@@ -83,20 +87,32 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
         } else {
             // Create first sub select which selects the subject and it's types
             queryBuilder.append("Select (count(*) as " + INTERMEDIATE_COUNT_VARIABLE_NAME);
-            queryBuilder.append(propId + 1);
-            queryBuilder.append(") " + INTERMEDIATE_COUNT_VARIABLE_NAME);
             queryBuilder.append(propId);
+            queryBuilder.append(") " + INTERMEDIATE_NODE_VARIABLE_NAME);
+            queryBuilder.append(propId);
+            // If we are at the position before the last position
+            if (propId == pathProperties.size() - 2) {
+                // We simply select the count from the last position
+                queryBuilder.append(" " + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append(propId + 1);
+            } else {
+                // Calculate the product of the previous counts
+                // with propId=0, this would look like (?c1*?c2 as ?c1)
+                queryBuilder.append(" (" + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append(propId + 1);
+                queryBuilder.append("*" + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append(propId + 2);
+                queryBuilder.append(" as " + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append(propId + 1);
+                queryBuilder.append(")");
+            }
             queryBuilder.append(" where { \n");
+            addTriplePattern(pathProperties.get(propId), propURIs[propId], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
+                    INTERMEDIATE_NODE_VARIABLE_NAME + (propId + 1), queryBuilder);
             // If this is the first sub select
             if (propId == 0) {
-                // Use the subject variable
-                addTriplePattern(pathProperties.get(propId), propURIs[propId], SUBJECT_VARIABLE_NAME,
-                        INTERMEDIATE_NODE_VARIABLE_NAME + (propId + 1), queryBuilder);
                 // Add subject types
                 queryBuilder.append(sTypeTriples);
-            } else {
-                addTriplePattern(pathProperties.get(propId), propURIs[propId], INTERMEDIATE_NODE_VARIABLE_NAME + propId,
-                        INTERMEDIATE_NODE_VARIABLE_NAME + (propId + 1), queryBuilder);
             }
             // Start the recursion
             queryBuilder.append("{\n");
@@ -104,7 +120,9 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
                     queryBuilder);
             queryBuilder.append("}\n");
             // Finalize sub select of this recursion step
-            queryBuilder.append("} group by ?b");
+            queryBuilder.append("} group by " + INTERMEDIATE_NODE_VARIABLE_NAME);
+            queryBuilder.append(propId);
+            queryBuilder.append(" " + INTERMEDIATE_COUNT_VARIABLE_NAME);
             queryBuilder.append(propId + 1);
             queryBuilder.append('\n');
         }
