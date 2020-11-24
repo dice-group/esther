@@ -100,9 +100,9 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
                 // with propId=0, this would look like (?c1*?c2 as ?c1)
                 queryBuilder.append(" (" + INTERMEDIATE_COUNT_VARIABLE_NAME);
                 queryBuilder.append(propId + 1);
-                queryBuilder.append("*" + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append("*sum(" + INTERMEDIATE_COUNT_VARIABLE_NAME);
                 queryBuilder.append(propId + 2);
-                queryBuilder.append(" as " + INTERMEDIATE_COUNT_VARIABLE_NAME);
+                queryBuilder.append(") as " + INTERMEDIATE_COUNT_VARIABLE_NAME);
                 queryBuilder.append(propId + 1);
                 queryBuilder.append(")");
             }
