@@ -27,22 +27,24 @@ public class PairCountingQueryGenerator implements QueryGenerator {
 		StringBuilder queryBuilder = new StringBuilder();
 		// This is the first property in the list
 		queryBuilder.append("Select (count(*) as " + COUNT_VARIABLE_NAME + ") where { \n");
-
-		queryBuilder.append("Select distinct ");
-		queryBuilder.append(SUBJECT_VARIABLE_NAME);
-		queryBuilder.append(" " + OBJECT_VARIABLE_NAME + " where { \n");
-
-		queryBuilder.append("?s ");
-		queryBuilder.append(PropertyHelper.getPropertyPath(pathProperties, propURIs));
-		queryBuilder.append(" ?o .\n");
-
-		queryBuilder.append("?s <").append(predicate).append("> ?o . } }");
+		createPropertyQuery_Recursion(0, pathProperties, propURIs, predicate, queryBuilder);
+		queryBuilder.append("} }\n");
+		
 		return queryBuilder.toString();
 	}
 
-	private void createPropertyQuery_Recursion(int propId, List<Property> pathProperties, String[] propURIs,
+	private void createPropertyQuery_Recursion(int propId, List<Property> pathProperties, String[] propURIs , String predicate,
 			StringBuilder queryBuilder) {
 		String localSubject = propId == 0 ? SUBJECT_VARIABLE_NAME : INTERMEDIATE_NODE_VARIABLE_NAME + propId;
+		if(propId != 0)
+			queryBuilder.append("{ ");
+		
+		queryBuilder.append("Select distinct ");
+		queryBuilder.append(localSubject);
+		queryBuilder.append(" " + OBJECT_VARIABLE_NAME + " where { \n");
+		
+		if(propId == 0)
+			queryBuilder.append("?s <").append(predicate).append("> ?o . \n");
 
 		// If this is the end of the recursion
 		if (propId == pathProperties.size() - 1) {
@@ -55,7 +57,8 @@ public class PairCountingQueryGenerator implements QueryGenerator {
 			addTriplePattern(pathProperties.get(propId), propURIs[propId], localSubject,
 					INTERMEDIATE_NODE_VARIABLE_NAME + (propId + 1), queryBuilder);
 			// Start the recursion
-			createPropertyQuery_Recursion(propId + 1, pathProperties, propURIs, queryBuilder);
+			createPropertyQuery_Recursion(propId + 1, pathProperties, propURIs, predicate, queryBuilder);
+			queryBuilder.append("} }\n");
 		}
 	}
 
