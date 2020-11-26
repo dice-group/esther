@@ -4,6 +4,20 @@ import java.util.List;
 import java.util.Map;
 
 public class PropertyHelper {
+	
+	public static StringBuilder getPropertyPath(List<Property> pathProperties, String[] propURIs) {
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < pathProperties.size(); i++) {
+			if(pathProperties.get(i).isInverse()) {
+				builder.append("^");
+			} 
+			builder.append("<").append(propURIs[i]).append(">");
+			if (i + 1 < pathProperties.size())
+				builder.append("/");
+		}
+		return builder;
+	}
+
 
 	/**
 	 * Translates the path of ids into the corresponding IRIs

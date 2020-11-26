@@ -78,6 +78,8 @@ public class QueryExecutioner {
 	}
 	
 	public QueryExecution createExecutioner(Query query) {
-		return QueryExecutionFactory.createServiceRequest(requestURL, query);
+		QueryExecution exec = QueryExecutionFactory.createServiceRequest(requestURL, query);
+		exec.setTimeout(500000);
+		return exec;
 	}
 }
