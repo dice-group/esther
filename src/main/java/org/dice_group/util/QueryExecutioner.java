@@ -42,7 +42,7 @@ public class QueryExecutioner {
 					// if tries are reached, throw the exception anyhow
 					if(tries > MAX_ATTEMPTS_PER_QUERY) {
 						LOGGER.error("Tried the query "+tries+" times and still failed.\n"+queryExec.getQuery());
-						throw e;
+						return 0;
 					}
 				}
 			}

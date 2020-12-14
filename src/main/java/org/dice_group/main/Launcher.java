@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 
+import org.dice_group.datasets.Dataset;
+import org.dice_group.datasets.Freebase;
+import org.dice_group.datasets.Wordnet;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
 import org.dice_group.fact_check.FactChecker;
@@ -42,7 +45,7 @@ public class Launcher {
 		// read dictionary from file
 		LOGGER.info("Reading data from file");
 		DictionaryHelper dictHelper = new DictionaryHelper();
-		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath);
+		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath, getDataset(pArgs.dataset));
 
 		// create d/r edge adjacency matrix
 		LOGGER.info("Creating edge adjacency matrix from d/r");
@@ -71,6 +74,22 @@ public class Launcher {
 		results.printToFile(pArgs.folderPath + pArgs.savePath);
 		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath,
 				results.getPaths(dict.getId2Relations()));
+	}
+
+	private static Dataset getDataset(String type) {
+		Dataset dataset;
+		switch (type) {
+		case "WN":
+			dataset = new Wordnet();
+			break;
+		case "FB":
+			dataset = new Freebase();
+			break;
+		default:
+			dataset = new Dataset();
+			break;
+		}
+		return dataset;
 	}
 
 	private static Matrix getMatrixType(String type, QueryExecutioner sparqlExec, Dictionary dict) {

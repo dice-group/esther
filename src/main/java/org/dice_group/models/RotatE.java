@@ -17,19 +17,19 @@ public class RotatE extends BasicEmbModel {
 	@Override
 	public double computeDistance(Property property, int index, boolean isNewInverse) {
 		double[] newEdge = relations[index];
+		double[] tempInner;
 		
 		// starting condition
 		if (property.getInnerProduct() == null && property.getBackPointer() == null) {
-			double[] tempInner = isNewInverse ? ArrayUtils.getConjugate(newEdge) : newEdge;
-			property.setInnerProduct(tempInner);
+			tempInner = isNewInverse ? ArrayUtils.getConjugate(newEdge) : newEdge;
 		} else {
 			double[] inner = property.getInnerProduct() == null
 					? property.getBackPointer().getProperty().getInnerProduct()
 					: property.getInnerProduct();
 			double[] tempNewEdge = isNewInverse ? ArrayUtils.getConjugate(newEdge) : newEdge;
-			property.setInnerProduct(ArrayUtils.computeHadamardProduct(inner, tempNewEdge));
+			tempInner = ArrayUtils.computeHadamardProduct(inner, tempNewEdge);
 		}
-
+		property.setInnerProduct(tempInner);
 		double[] inner = property.getInnerProduct();
 
 		// (r_1 ° r_2 ° ... °r_n) - r_p

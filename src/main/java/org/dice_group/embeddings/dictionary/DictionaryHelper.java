@@ -16,13 +16,12 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.dice_group.datasets.Dataset;
 import org.dice_group.util.Constants;
 
 public class DictionaryHelper {
 
 	private Dictionary dictionary;
-	
-	private final static String FB_NS = "http://rdf.freebase.com/ns/";
 
 	public DictionaryHelper() {
 		this.dictionary = new Dictionary();
@@ -33,11 +32,11 @@ public class DictionaryHelper {
 	 * 
 	 * @param dataFolderPath
 	 */
-	public Dictionary readDictionary(String dataFolderPath) {
+	public Dictionary readDictionary(String dataFolderPath, Dataset dataset) {
 
 		// read id2entities and id2relations from file
-		Map<Integer, String> id2entities = readMap(dataFolderPath + Constants.ENT_DICT_FILE);
-		Map<Integer, String> id2relations = readMap(dataFolderPath + Constants.REL_DICT_FILE);
+		Map<Integer, String> id2entities = dataset.readMap(dataFolderPath + Constants.ENT_DICT_FILE);
+		Map<Integer, String> id2relations = dataset.readMap(dataFolderPath + Constants.REL_DICT_FILE);
 
 		// compute ent2id and rel2id
 		Map<String, Integer> ent2ID = id2entities.entrySet().stream()
@@ -83,24 +82,6 @@ public class DictionaryHelper {
 			} 				
 		}
 		return dictionary;
-	}
-
-	/**
-	 * Reads a map from file, with key value pairs separated by \t
-	 * 
-	 * @param filePath
-	 * @return
-	 */
-	public Map<Integer, String> readMap(String filePath) {
-		Map<Integer, String> map = new HashMap<Integer, String>();
-		try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
-			lines.filter(line -> line.contains("\t")) // TODO this change is only applicable for freebase dataset! change accordingly
-					.forEach(line -> map.putIfAbsent(Integer.valueOf(line.split("\t")[0]), FB_NS+line.split("\t")[1].replace("/", ".").substring(1)));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return map;
 	}
 
 	/**

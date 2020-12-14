@@ -40,12 +40,16 @@ public class ProgramArgs {
 
 	@Parameter(names = { "-l" }, description = "Maximum Path length")
 	int max_length = 3;
+	
+	@Parameter(names = { "-ds" }, description = "Dataset")
+	String dataset = "";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramArgs.class);
 
 	public void printArgs() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("\nReading data from folder: ").append(folderPath);
+		builder.append("\nDataset: ").append(dataset);
 		builder.append("\nEmbeddings Model: ").append(eModel);
 		builder.append("\nk: ").append(k);
 		builder.append("\nMax Path length: ").append(max_length);

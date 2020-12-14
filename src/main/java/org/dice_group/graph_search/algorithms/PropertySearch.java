@@ -44,7 +44,7 @@ public class PropertySearch implements SearchAlgorithm {
 		for (int i = 0; i < mat.length; i++) {
 			boolean isInverse = i >= offset;
 			if (mat[edgeID].equals(mat[i])) {
-				if(!isLoopAllowed && edgeID == i)
+				if(edgeID == i)
 					continue;
 				Property curProp = new Property(i, isInverse);
 				int index = isInverse ?  i-offset : i;

@@ -43,14 +43,14 @@ public class QueryGeneratorTest {
 			id2rel.put(i, DUMMY_NS + i);
 		}
 
-		QueryExecutioner exec = new QueryExecutioner("http://lemming.cs.uni-paderborn.de:8890/sparql");
+		// any endpoint works here, it's just used to validate the query
+		QueryExecutioner exec = new QueryExecutioner("https://dbpedia.org/sparql");
 		QueryGenerator generator = new CountApproximatingQueryGenerator(exec);
 		for (Property path : paths) {
 			String query = generator.createCountQuery(path.getProperties(), PropertyHelper.translate2IRIArray(path, id2rel), givenPredicate);
 			LOGGER.info("#############");
 			LOGGER.info(path.toString());
 			LOGGER.info(query);
-			// TODO 
 			exec.selectDoubleVar(query, "?sum");
 		}
 		
