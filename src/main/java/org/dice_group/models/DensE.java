@@ -13,27 +13,28 @@ public class DensE extends QuatEmbeddingModel {
 	@Override
 	public double computeDistance(Property property, int index, boolean isNewInverse) {
 		Quaternion[] newQuatEdge = ArrayUtils.getQuaternion(relW[index], relX[index], relY[index], relZ[index]);
+		Quaternion[] innerQuat;
 
-		double[] invNewNorm = ArrayUtils.getQuatNorm(ArrayUtils.getInverseQuat(newQuatEdge));
-		double[] newNorm = ArrayUtils.getQuatNorm(newQuatEdge);
-
-		double[] norm;
-		if (property.getInnerProduct() == null && property.getBackPointer() == null) {
-			norm = isNewInverse ? invNewNorm : newNorm;
+		// (r_1 * r_2 * ... * r_n) 
+		if (property.getInnerQuatProduct() == null && property.getBackPointer() == null) {
+			innerQuat = isNewInverse ? ArrayUtils.getInverseQuat(newQuatEdge) : newQuatEdge;
 		} else {
-			double[] inner = property.getInnerProduct() == null
-					? property.getBackPointer().getProperty().getInnerProduct()
-					: property.getInnerProduct();
+			Quaternion[] inner = property.getInnerQuatProduct() == null
+					? property.getBackPointer().getProperty().getInnerQuatProduct()
+					: property.getInnerQuatProduct();
 			if (isNewInverse) {
-				norm = ArrayUtils.computeHadamardProduct(invNewNorm, inner);
+				innerQuat = ArrayUtils.computeHamiltonProduct(newQuatEdge, inner);
 			} else {
-				norm = ArrayUtils.computeHadamardProduct(newNorm, inner);
+				innerQuat = ArrayUtils.computeHamiltonProduct(ArrayUtils.getInverseQuat(newQuatEdge), inner);
 			}
 		}
-
-		property.setInnerProduct(norm);
-		double[] inner = property.getInnerProduct();
-		double[] res = ArrayUtils.computeHadamardProduct(inner, ArrayUtils.getQuatNorm(ArrayUtils.getInverseQuat(targetEdge)));
+		property.setInnerQuatProduct(innerQuat);
+		
+		// (r_1 * r_2 * ... * r_n) - r_p
+		Quaternion[] sub = ArrayUtils.computeQuatSubtraction(innerQuat, targetEdge);
+		
+		// ||(r_1 * r_2 * ... * r_n) - r_p||
+		double[] res = ArrayUtils.getQuatNorm(sub);
 		double score = ArrayUtils.sumArrayElements(res);
 
 		property.updateCost(score);

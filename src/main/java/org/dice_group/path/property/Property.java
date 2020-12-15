@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.math3.complex.Quaternion;
+
 /**
  * Represents a path
  *
@@ -27,6 +29,8 @@ public class Property implements Comparable<Property> {
 	 * used to ease the score calculations in the case of r_1*...*r_n - r_p
 	 */
 	private double[] innerProduct;
+	
+	private Quaternion[] innerQuatProduct;
 
 	/**
 	 * is this edge traversed in the opposite direction
@@ -205,6 +209,14 @@ public class Property implements Comparable<Property> {
 	public void setInnerProduct(double[] innerProduct) {
 		this.innerProduct = Arrays.copyOf(innerProduct, innerProduct.length);
 	}
+	
+	public Quaternion[] getInnerQuatProduct() {
+		return innerQuatProduct;
+	}
+
+	public void setInnerQuatProduct(Quaternion[] innerQuatProduct) {
+		this.innerQuatProduct = innerQuatProduct;
+	}
 
 	public double getHeuristics() {
 		return heuristics;
@@ -261,11 +273,6 @@ public class Property implements Comparable<Property> {
 		} else if (this.fullCost < arg0.fullCost) {
 			return -1;
 		} else {
-//			if (this.pathLength < arg0.pathLength) {
-//				return 1;
-//			} else if (this.pathLength > arg0.pathLength) {
-//				return -1;
-//			} 
 			return 0;
 		}
 	}

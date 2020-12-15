@@ -33,7 +33,7 @@ public class TransE extends BasicEmbModel {
 			tempInner = isNewInverse ? ArrayUtils.computeVectorSubtraction(inner, newEdge)
 					: ArrayUtils.computeVectorSummation(inner, newEdge);
 		}
-		property.setInnerProduct(tempInner);
+		property.setInnerProduct(tempInner); // deep copy
 		double[] inner = property.getInnerProduct();
 
 		// r_1 + r_2 + ... + r_n - r_p

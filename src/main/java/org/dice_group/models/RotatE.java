@@ -18,12 +18,12 @@ public class RotatE extends BasicEmbModel {
 	public double computeDistance(Property property, int index, boolean isNewInverse) {
 		double[] newEdge = relations[index];
 		double[] tempInner;
+		
 		// starting condition
 		if (property.getInnerProduct() == null && property.getBackPointer() == null) {
 			tempInner = isNewInverse ? ArrayUtils.flipSignArray(newEdge) : newEdge;
 		}
-		// inner contains the phase relations, thus hadamard(a,b) becomes the same as
-		// adding the corresponding phases
+		// (r_1 * r_2 * ... * r_n) = phi_1 + ... + phi_n
 		else {
 			double[] inner = property.getInnerProduct() == null
 					? property.getBackPointer().getProperty().getInnerProduct()
@@ -31,14 +31,14 @@ public class RotatE extends BasicEmbModel {
 			tempInner = isNewInverse ? ArrayUtils.computeVectorSubtraction(inner, newEdge)
 					: ArrayUtils.computeVectorSummation(inner, newEdge);
 		}
-		property.setInnerProduct(tempInner);
+		property.setInnerProduct(tempInner); // deep copy
 		double[] inner = property.getInnerProduct();
 
 		// (r_1 * r_2 * ... * r_n) - r_p
 		double[] realRes = ArrayUtils.computeVectorSubtraction(ArrayUtils.cos(inner), ArrayUtils.cos(targetEdge));
 		double[] imRes = ArrayUtils.computeVectorSubtraction(ArrayUtils.sin(inner), ArrayUtils.sin(targetEdge));
 
-		// sum absolute values 
+		// || (r_1 * r_2 * ... * r_n) - r_p ||
 		double score = ArrayUtils.sumArrayElements(realRes) + ArrayUtils.sumArrayElements(imRes);
 		property.updateCost(score);
 		return score;
