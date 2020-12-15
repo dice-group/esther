@@ -40,7 +40,7 @@ public class TransE extends BasicEmbModel {
 		double[] res = ArrayUtils.computeVectorSubtraction(inner, targetEdge);
 
 		// || r_1 + ... + r_n - r_p ||
-		double score = ArrayUtils.computeVectorsL1(res);
+		double score = ArrayUtils.sumArrayElements(res);
 		property.updateCost(score);
 		return score;
 	}

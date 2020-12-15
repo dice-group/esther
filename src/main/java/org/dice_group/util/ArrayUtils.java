@@ -46,6 +46,23 @@ public class ArrayUtils {
 		}
 		return result;
 	}
+	
+	public static double[] cos(double[] a) {
+		double flippedArray[] = new double[a.length];
+		Arrays.parallelSetAll(flippedArray, i -> Math.cos(a[i]));
+		return flippedArray;
+	}
+	
+	public static double[] sin(double[] a) {
+		double flippedArray[] = new double[a.length];
+		Arrays.parallelSetAll(flippedArray, i -> Math.sin(a[i]));
+		return flippedArray;
+	}
+	
+	public static double[] computeAbsoluteValue(double[] realPart, double[] imPart) {
+		return computeArrayOperation(realPart, imPart,
+				i -> realPart[i] +imPart[i]);
+	}
 
 	/**
 	 * Computes the element-wise product of 2 vectors
@@ -117,7 +134,7 @@ public class ArrayUtils {
 	 * @param a
 	 * @return
 	 */
-	public static double computeVectorsL1(double[] a) {
+	public static double sumArrayElements(double[] a) {
 		double re = 0;
 		for (int i = 0; i < a.length; i++) {
 			re += Math.abs(a[i]);
