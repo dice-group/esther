@@ -4,12 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -38,7 +34,7 @@ public class DictionaryHelper {
 		Map<Integer, String> id2entities = dataset.readMap(dataFolderPath + Constants.ENT_DICT_FILE);
 		Map<Integer, String> id2relations = dataset.readMap(dataFolderPath + Constants.REL_DICT_FILE);
 
-		// compute ent2id and rel2id
+		// get ent2id and rel2id
 		Map<String, Integer> ent2ID = id2entities.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 		Map<String, Integer> rel2ID = id2relations.entrySet().stream()

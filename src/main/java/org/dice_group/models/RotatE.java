@@ -31,15 +31,17 @@ public class RotatE extends BasicEmbModel {
 			tempInner = isNewInverse ? ArrayUtils.computeVectorSubtraction(inner, newEdge)
 					: ArrayUtils.computeVectorSummation(inner, newEdge);
 		}
-		property.setInnerProduct(tempInner); // deep copy
+		property.setInnerProduct(tempInner); // TODO deep copy not actually needed?
 		double[] inner = property.getInnerProduct();
 
 		// (r_1 * r_2 * ... * r_n) - r_p
 		double[] realRes = ArrayUtils.computeVectorSubtraction(ArrayUtils.cos(inner), ArrayUtils.cos(targetEdge));
 		double[] imRes = ArrayUtils.computeVectorSubtraction(ArrayUtils.sin(inner), ArrayUtils.sin(targetEdge));
+		
+		double[] complexNorm = ArrayUtils.computeComplexAbsoluteValue(realRes, imRes);
 
 		// || (r_1 * r_2 * ... * r_n) - r_p ||
-		double score = ArrayUtils.sumArrayElements(realRes) + ArrayUtils.sumArrayElements(imRes);
+		double score = ArrayUtils.sumArrayElements(complexNorm);
 		property.updateCost(score);
 		return score;
 	}

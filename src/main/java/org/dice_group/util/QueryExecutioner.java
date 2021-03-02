@@ -14,7 +14,7 @@ public class QueryExecutioner {
 	
 	private String requestURL;
 	
-	private static final int MAX_ATTEMPTS_PER_QUERY = 4;
+	private static final int MAX_ATTEMPTS_PER_QUERY = 1;
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(QueryExecutioner.class);
 
@@ -79,7 +79,7 @@ public class QueryExecutioner {
 	
 	public QueryExecution createExecutioner(Query query) {
 		QueryExecution exec = QueryExecutionFactory.createServiceRequest(requestURL, query);
-		exec.setTimeout(500000);
+		exec.setTimeout(50000);
 		return exec;
 	}
 }

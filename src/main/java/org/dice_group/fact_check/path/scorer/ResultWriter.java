@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,6 +43,16 @@ public class ResultWriter {
 	 */
 	public void printToFile(String fileName) {
 		try (FileWriter out = new FileWriter(fileName)) {
+			resultsModel.write(out, "NT");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void appendToFile(String fileName) {
+		try (FileWriter fw = new FileWriter(fileName, true);
+				BufferedWriter bw = new BufferedWriter(fw);
+				PrintWriter out = new PrintWriter(bw)) {
 			resultsModel.write(out, "NT");
 		} catch (IOException e) {
 			e.printStackTrace();

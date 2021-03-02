@@ -9,41 +9,31 @@ public class ArrayUtils {
 
 	public static Quaternion[] getQuaternion(double[] relW, double[] relX, double[] relY, double[] relZ) {
 		Quaternion[] quatArray = new Quaternion[relW.length];
-		for (int i = 0; i < relW.length; i++) {
-			quatArray[i] = new Quaternion(relW[i], relX[i], relY[i], relZ[i]);
-		}
+		Arrays.parallelSetAll(quatArray, i -> new Quaternion(relW[i], relX[i], relY[i], relZ[i]));
 		return quatArray;
 	}
 
 	public static Quaternion[] getInverseQuat(Quaternion[] q) {
 		Quaternion[] result = new Quaternion[q.length];
-		for (int i = 0; i < q.length; i++) {
-			result[i] = q[i].getInverse();
-		}
+		Arrays.parallelSetAll(result, i -> q[i].getInverse());
 		return result;
 	}
 
 	public static Quaternion[] computeHamiltonProduct(Quaternion[] a, Quaternion[] b) {
 		Quaternion[] result = new Quaternion[a.length];
-		for (int i = 0; i < a.length; i++) {
-			result[i] = a[i].multiply(b[i]);
-		}
+		Arrays.parallelSetAll(result, i -> a[i].multiply(b[i]));
 		return result;
 	}
 
 	public static Quaternion[] computeQuatSubtraction(Quaternion[] a, Quaternion[] b) {
 		Quaternion[] result = new Quaternion[a.length];
-		for (int i = 0; i < a.length; i++) {
-			result[i] = a[i].subtract(b[i]);
-		}
+		Arrays.parallelSetAll(result, i -> a[i].subtract(b[i]));
 		return result;
 	}
 	
 	public static double[] getQuatNorm(Quaternion[] q) {
 		double[] result = new double[q.length];
-		for (int i = 0; i < q.length; i++) {
-			result[i] = q[i].getNorm();
-		}
+		Arrays.parallelSetAll(result, i -> q[i].getNorm());
 		return result;
 	}
 	
@@ -113,6 +103,11 @@ public class ArrayUtils {
 		return computeArrayOperation(realPart, imPart,
 				i -> Math.sqrt(Math.pow(realPart[i], 2) + Math.pow(imPart[i], 2)));
 	}
+	
+	public static double[] computeComplexAbsoluteValue(double[] real, double [] im) {
+		return computeArrayOperation(real, im,
+				i -> Math.sqrt(Math.pow(real[i], 2) + Math.pow(im[i], 2)));
+	}
 
 	/**
 	 * |v| = sqrt (sum_i(x²_i))
@@ -140,26 +135,6 @@ public class ArrayUtils {
 			re += Math.abs(a[i]);
 		}
 		return re;
-	}
-
-	/**
-	 * Computes the conjugate of an array, where the first half corresponds to the
-	 * real part and the other corresponds to the corresponding imaginary part
-	 * 
-	 * @param a
-	 * @return
-	 */
-	public static double[] getConjugate(double[] a) {
-		double[] conjugate = new double[a.length];
-		int offset = (int) Math.floor(a.length / 2);
-		for (int i = 0; i < a.length; i++) {
-			if (i < offset) {
-				conjugate[i] = a[i];
-			} else {
-				conjugate[i] = -a[i];
-			}
-		}
-		return conjugate;
 	}
 
 	public static double[] flipSignArray(double[] a) {

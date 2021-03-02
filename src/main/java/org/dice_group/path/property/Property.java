@@ -26,7 +26,7 @@ public class Property implements Comparable<Property> {
 	private int pathLength;
 
 	/**
-	 * used to ease the score calculations in the case of r_1*...*r_n - r_p
+	 * used to ease the score calculations
 	 */
 	private double[] innerProduct;
 	

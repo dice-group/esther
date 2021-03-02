@@ -35,8 +35,7 @@ public class DensE extends QuatEmbeddingModel {
 		
 		// ||(r_1 * r_2 * ... * r_n) - r_p||
 		double[] res = ArrayUtils.getQuatNorm(sub);
-		double score = ArrayUtils.sumArrayElements(res);
-
+		double score = ArrayUtils.computeVectorsL2(res);
 		property.updateCost(score);
 		return score;
 	}

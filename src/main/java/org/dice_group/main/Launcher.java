@@ -58,22 +58,25 @@ public class Launcher {
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
-		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, false);
-		Duration elapsed = Duration.between(Instant.now(), startTime);
-		LogUtils.printTextToLog("Meta-paths generated in " + elapsed.toSeconds());
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, pArgs.isLoopsAllowed);
+		LogUtils.printTextToLog("Meta-paths generated in " + Duration.between(Instant.now(), startTime).toSeconds());
 
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
 		Instant startFactTime = Instant.now();
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
+		checker = new FactChecker(pArgs.folderPath + pArgs.negTestData, sparqlExec);
+		Set<Graph> negGraphs = checker.checkFacts(metaPaths, dict.getId2Relations());
 		LogUtils.printTextToLog("Facts checked in " + Duration.between(Instant.now(), startFactTime).toSeconds());
 
 		// write results
-		ResultWriter results = new ResultWriter(pArgs.initID, graphs);
+		ResultWriter results = new ResultWriter(0, graphs);
+		ResultWriter negResults = new ResultWriter(graphs.size(), negGraphs);
 		results.printToFile(pArgs.folderPath + pArgs.savePath);
+		negResults.appendToFile(pArgs.folderPath + pArgs.savePath);
 		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath,
-				results.getPaths(dict.getId2Relations()));
+				results.getPaths(dict.getId2Relations()).append(negResults.getPaths(dict.getId2Relations())));
 	}
 
 	private static Dataset getDataset(String type) {

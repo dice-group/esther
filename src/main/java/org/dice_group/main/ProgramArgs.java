@@ -1,5 +1,7 @@
 package org.dice_group.main;
 
+import java.util.Date;
+
 import org.dice_group.util.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,10 @@ public class ProgramArgs {
 	String savePath;
 
 	@Parameter(names = { "--test", "-t" }, description = "Filename of the facts under folder path")
-	String testData = "true_facts_750.nt";
+	String testData = "true_triples_750.nt";
+	
+	@Parameter(names = { "--neg", "-n" }, description = "Filename of the neg facts under folder path")
+	String negTestData = "false_triples_750.nt";
 
 	@Parameter(names = { "-id" }, description = "Initial ID for the result files")
 	int initID = 0;
@@ -44,20 +49,28 @@ public class ProgramArgs {
 	@Parameter(names = { "-ds" }, description = "Dataset")
 	String dataset = "";
 
+	@Parameter(names = { "-loops" }, description = "Are loops allowed?")
+	boolean isLoopsAllowed = false;
+
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramArgs.class);
 
 	public void printArgs() {
 		StringBuilder builder = new StringBuilder();
+		builder.append(new Date());
 		builder.append("\nReading data from folder: ").append(folderPath);
 		builder.append("\nDataset: ").append(dataset);
-		builder.append("\nEmbeddings Model: ").append(eModel);
+		builder.append("\nEmbeddings Model: new ").append(eModel);
 		builder.append("\nk: ").append(k);
 		builder.append("\nMax Path length: ").append(max_length);
 		builder.append("\nMatrix type: ").append(type);
 		builder.append("\nEndpoint: ").append(serviceRequestURL);
 		builder.append("\nTest data: ").append(testData);
+		builder.append("\nNeg test data: ").append(negTestData);
 		builder.append("\nInit id: ").append(initID);
 		builder.append("\nSaving to: ").append(savePath);
+		builder.append("\nLoops allowed: ").append(isLoopsAllowed);
+		builder.append("\n");
 		LOGGER.info(builder.toString());
 		
 		LogUtils.printTextToLog(builder.toString());
