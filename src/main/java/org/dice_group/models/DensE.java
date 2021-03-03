@@ -1,8 +1,10 @@
 package org.dice_group.models;
 
-import org.apache.commons.math3.complex.Quaternion;
+//import org.apache.commons.math3.complex.Quaternion;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.ArrayUtils;
+
+import com.jme3.math.Quaternion;
 
 public class DensE extends QuatEmbeddingModel {
 
