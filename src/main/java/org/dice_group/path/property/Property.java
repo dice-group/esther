@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.jme3.math.Quaternion;
-
-//import org.apache.commons.math3.complex.Quaternion;
+import org.apache.commons.math3.complex.Quaternion;
 
 /**
  * Represents a path
@@ -31,7 +29,7 @@ public class Property implements Comparable<Property> {
 	 * used to ease the score calculations
 	 */
 	private double[] innerProduct;
-	
+
 	private Quaternion[] innerQuatProduct;
 
 	/**
@@ -173,26 +171,27 @@ public class Property implements Comparable<Property> {
 	 * 
 	 * @param edge
 	 * @param offset
-	 * @return true if the path has already used the given edge before (in either direction)
+	 * @return true if the path has already used the given edge before (in either
+	 *         direction)
 	 */
 	public boolean hasAncestor(int edge, int offset) {
 		if (isEdgeConsecutive(edge, offset)) {
 			return true;
 		}
 		PropertyBackPointer temp = this.backPointer;
-		if(temp == null)
+		if (temp == null)
 			return false;
-		
+
 		while (temp != null) {
 			Property curProp = temp.getProperty();
-			if(curProp.isEdgeConsecutive(edge, offset)) {
+			if (curProp.isEdgeConsecutive(edge, offset)) {
 				return true;
 			}
 			temp = curProp.getBackPointer();
 		}
 		return false;
 	}
-	
+
 	public boolean isEdgeConsecutive(int edge, int offset) {
 		if (this.edge == edge || this.edge == getInverseID(edge, offset)) {
 			return true;
@@ -211,7 +210,7 @@ public class Property implements Comparable<Property> {
 	public void setInnerProduct(double[] innerProduct) {
 		this.innerProduct = Arrays.copyOf(innerProduct, innerProduct.length);
 	}
-	
+
 	public Quaternion[] getInnerQuatProduct() {
 		return innerQuatProduct;
 	}

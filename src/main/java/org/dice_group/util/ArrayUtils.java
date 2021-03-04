@@ -3,9 +3,7 @@ package org.dice_group.util;
 import java.util.Arrays;
 import java.util.function.IntToDoubleFunction;
 
-import com.jme3.math.Quaternion;
-
-//import org.apache.commons.math3.complex.Quaternion;
+import org.apache.commons.math3.complex.Quaternion;
 
 public class ArrayUtils {
 
@@ -17,13 +15,13 @@ public class ArrayUtils {
 
 	public static Quaternion[] getInverseQuat(Quaternion[] q) {
 		Quaternion[] result = new Quaternion[q.length];
-		Arrays.parallelSetAll(result, i -> q[i].inverse());
+		Arrays.parallelSetAll(result, i -> q[i].getInverse());
 		return result;
 	}
 
 	public static Quaternion[] computeHamiltonProduct(Quaternion[] a, Quaternion[] b) {
 		Quaternion[] result = new Quaternion[a.length];
-		Arrays.parallelSetAll(result, i -> a[i].mult(b[i]));
+		Arrays.parallelSetAll(result, i -> a[i].multiply(b[i]));
 		return result;
 	}
 
@@ -35,7 +33,7 @@ public class ArrayUtils {
 	
 	public static double[] getQuatNorm(Quaternion[] q) {
 		double[] result = new double[q.length];
-		Arrays.parallelSetAll(result, i -> q[i].norm());
+		Arrays.parallelSetAll(result, i -> q[i].getNorm());
 		return result;
 	}
 	
