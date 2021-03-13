@@ -68,17 +68,17 @@ public abstract class Matrix implements MatrixInterface {
 					edgeAdjMatrix[i].set(j);
 				}
 
-				// check domain - domain : d_i(p) = d_j(p) [d_i(p) = r_j(p-)]
+				// check domain - domain : d_i(p) = d_j(p) 
 				if (compareSets(domainI, domainJ)) {
 					edgeAdjMatrix[i].set(j + offset);
 				}
 
-				// check range - range : r_i(p) = r_j(p) [d_i(p-) = r_j(p)]
+				// check range - range : r_i(p) = r_j(p) 
 				if (compareSets(rangeI, rangeJ)) {
 					edgeAdjMatrix[i + offset].set(j);
 				}
 
-				// check range - domain : r_i(p) = d_j(p) [d_i(p-) = r_j(p-)]
+				// check range - domain : r_i(p) = d_j(p) 
 				if (compareSets(rangeI, domainJ)) {
 					edgeAdjMatrix[i + offset].set(j + offset);
 				}

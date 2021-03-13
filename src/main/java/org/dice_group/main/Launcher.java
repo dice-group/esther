@@ -1,7 +1,5 @@
 package org.dice_group.main;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +36,7 @@ public class Launcher {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Launcher.class);
 
 	public static void main(String[] args) {
+		System.out.println("Started running");
 		ProgramArgs pArgs = new ProgramArgs();
 		JCommander.newBuilder().addObject(pArgs).build().parse(args);
 		pArgs.printArgs();
@@ -51,7 +50,7 @@ public class Launcher {
 		LOGGER.info("Creating edge adjacency matrix from d/r");
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
 		Matrix matrix = getMatrixType(pArgs.type, sparqlExec, dict);
-		Instant startTime = Instant.now();
+		long startTime = System.currentTimeMillis();
 		matrix.populateMatrix();
 
 		// preprocess the meta-paths for all properties
@@ -59,16 +58,16 @@ public class Launcher {
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, pArgs.isLoopsAllowed);
-		LogUtils.printTextToLog("Meta-paths generated in " + Duration.between(Instant.now(), startTime).toSeconds());
+		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
 
 		// check each fact
 		LOGGER.info("Applying meta-paths to KG");
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
-		Instant startFactTime = Instant.now();
+		long startFactTime = System.currentTimeMillis();
 		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
 		checker = new FactChecker(pArgs.folderPath + pArgs.negTestData, sparqlExec);
 		Set<Graph> negGraphs = checker.checkFacts(metaPaths, dict.getId2Relations());
-		LogUtils.printTextToLog("Facts checked in " + Duration.between(Instant.now(), startFactTime).toSeconds());
+		LogUtils.printTextToLog("Facts checked in " + (System.currentTimeMillis()-startFactTime)/1000);
 
 		// write results
 		ResultWriter results = new ResultWriter(0, graphs);
