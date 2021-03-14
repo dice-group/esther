@@ -1,12 +1,13 @@
 package org.dice_group.models;
 
-import org.apache.commons.math3.complex.Quaternion;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.ArrayUtils;
 
+import com.jme3.math.Quaternion;
+
 public class DensE extends QuatEmbeddingModel {
 
-	public DensE(double[][] relW, double[][] relX, double[][] relY, double[][] relZ) {
+	public DensE(float[][] relW, float[][] relX, float[][] relY, float[][] relZ) {
 		super(relW, relX, relY, relZ);
 	}
 
@@ -40,35 +41,35 @@ public class DensE extends QuatEmbeddingModel {
 		return score;
 	}
 
-	public double[][] getRelW() {
+	public float[][] getRelW() {
 		return relW;
 	}
 
-	public void setRelW(double[][] relW) {
+	public void setRelW(float[][] relW) {
 		this.relW = relW;
 	}
 
-	public double[][] getRelX() {
+	public float[][] getRelX() {
 		return relX;
 	}
 
-	public void setRelX(double[][] relX) {
+	public void setRelX(float[][] relX) {
 		this.relX = relX;
 	}
 
-	public double[][] getRelY() {
+	public float[][] getRelY() {
 		return relY;
 	}
 
-	public void setRelY(double[][] relY) {
+	public void setRelY(float[][] relY) {
 		this.relY = relY;
 	}
 
-	public double[][] getRelZ() {
+	public float[][] getRelZ() {
 		return relZ;
 	}
 
-	public void setRelZ(double[][] relZ) {
+	public void setRelZ(float[][] relZ) {
 		this.relZ = relZ;
 	}
 

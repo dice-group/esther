@@ -10,8 +10,10 @@
 		<slf4jVersion>2.0.0-alpha1</slf4jVersion>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<jme3_g>org.jmonkeyengine</jme3_g>
+		<jme3_v>3.3.2-stable</jme3_v>
 	</properties>
 
 	<packaging>jar</packaging>
@@ -33,9 +35,29 @@
 			<name>University Leipzig, AKSW Maven2 Repository</name>
 			<url>https://maven.aksw.org/repository/snapshots</url>
 		</repository>
+		<repository>
+			<id>jcenter</id>
+			<url>https://jcenter.bintray.com</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>${jme3_g}</groupId>
+			<artifactId>jme3-core</artifactId>
+			<version>${jme3_v}</version>
+		</dependency>
+		<dependency>
+			<groupId>${jme3_g}</groupId>
+			<artifactId>jme3-desktop</artifactId>
+			<version>${jme3_v}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>${jme3_g}</groupId>
+			<artifactId>jme3-lwjgl</artifactId>
+			<version>${jme3_v}</version>
+		</dependency>
 		<dependency>
 			<groupId>grph</groupId>
 			<artifactId>grph</artifactId>

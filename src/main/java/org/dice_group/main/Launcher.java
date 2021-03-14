@@ -124,10 +124,10 @@ public class Launcher {
 			eModel = new RotatE(relations);
 			break;
 		case Constants.DENSE_STRING:
-			double[][] relW = CSVUtils.readCSVFile(folderPath + Constants.REL_W_FILE);
-			double[][] relX = CSVUtils.readCSVFile(folderPath + Constants.REL_X_FILE);
-			double[][] relY = CSVUtils.readCSVFile(folderPath + Constants.REL_Y_FILE);
-			double[][] relZ = CSVUtils.readCSVFile(folderPath + Constants.REL_Z_FILE);
+			float[][] relW = CSVUtils.readFloatCSVFile(folderPath + Constants.REL_W_FILE);
+			float[][] relX = CSVUtils.readFloatCSVFile(folderPath + Constants.REL_X_FILE);
+			float[][] relY = CSVUtils.readFloatCSVFile(folderPath + Constants.REL_Y_FILE);
+			float[][] relZ = CSVUtils.readFloatCSVFile(folderPath + Constants.REL_Z_FILE);
 			eModel = new DensE(relW, relX, relY, relZ);
 			break;
 		default:

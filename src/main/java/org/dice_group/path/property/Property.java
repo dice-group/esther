@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.math3.complex.Quaternion;
+import com.jme3.math.Quaternion;
+
 
 /**
  * Represents a path
