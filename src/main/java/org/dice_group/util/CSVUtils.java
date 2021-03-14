@@ -37,19 +37,6 @@ public class CSVUtils {
 		return embedding;
 	}
 	
-	public static float[][] readFloatCSVFile(String filePath) {
-		LOGGER.info("Reading CSV from: "+filePath);
-		float[][] embedding = null;
-		try (CSVReader reader = new CSVReader(new BufferedReader(new FileReader(filePath)))) {
-			List<String[]> lines = reader.readAll();
-			String [][] s = lines.toArray(new String[lines.size()][]);
-			embedding = Arrays.stream(s).map(a -> Arrays.stream(a).map(Float::parseFloat).toArray()).toArray(float[][]::new);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (CsvException e) {
-			e.printStackTrace();
-		}
-		return embedding;
-	}
+	
 
 }

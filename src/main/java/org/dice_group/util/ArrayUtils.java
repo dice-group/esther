@@ -8,9 +8,9 @@ import com.jme3.math.Quaternion;
 
 public class ArrayUtils {
 
-	public static Quaternion[] getQuaternion(float[] relW, float[] relX, float[] relY, float[] relZ) {
+	public static Quaternion[] getQuaternion(double[] relW, double[] relX, double[] relY, double[] relZ) {
 		Quaternion[] quatArray = new Quaternion[relW.length];
-		Arrays.parallelSetAll(quatArray, i -> new Quaternion(relW[i], relX[i], relY[i], relZ[i]));
+		Arrays.parallelSetAll(quatArray, i -> new Quaternion((float)relW[i], (float)relX[i], (float)relY[i], (float)relZ[i]));
 		return quatArray;
 	}
 

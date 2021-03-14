@@ -7,7 +7,7 @@ import com.jme3.math.Quaternion;
 
 public class DensE extends QuatEmbeddingModel {
 
-	public DensE(float[][] relW, float[][] relX, float[][] relY, float[][] relZ) {
+	public DensE(double[][] relW, double[][] relX, double[][] relY, double[][] relZ) {
 		super(relW, relX, relY, relZ);
 	}
 
@@ -41,35 +41,35 @@ public class DensE extends QuatEmbeddingModel {
 		return score;
 	}
 
-	public float[][] getRelW() {
+	public double[][] getRelW() {
 		return relW;
 	}
 
-	public void setRelW(float[][] relW) {
+	public void setRelW(double[][] relW) {
 		this.relW = relW;
 	}
 
-	public float[][] getRelX() {
+	public double[][] getRelX() {
 		return relX;
 	}
 
-	public void setRelX(float[][] relX) {
+	public void setRelX(double[][] relX) {
 		this.relX = relX;
 	}
 
-	public float[][] getRelY() {
+	public double[][] getRelY() {
 		return relY;
 	}
 
-	public void setRelY(float[][] relY) {
+	public void setRelY(double[][] relY) {
 		this.relY = relY;
 	}
 
-	public float[][] getRelZ() {
+	public double[][] getRelZ() {
 		return relZ;
 	}
 
-	public void setRelZ(float[][] relZ) {
+	public void setRelZ(double[][] relZ) {
 		this.relZ = relZ;
 	}
 

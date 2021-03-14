@@ -10,13 +10,13 @@ import com.jme3.math.Quaternion;
  */
 public abstract class QuatEmbeddingModel extends EmbeddingModel {
 
-	protected float[][] relW;
-	protected float[][] relX;
-	protected float[][] relY;
-	protected float[][] relZ;
+	protected double[][] relW;
+	protected double[][] relX;
+	protected double[][] relY;
+	protected double[][] relZ;
 	protected Quaternion[] targetEdge;
 
-	public QuatEmbeddingModel(float[][] relW, float[][] relX, float[][] relY, float[][] relZ) {
+	public QuatEmbeddingModel(double[][] relW, double[][] relX, double[][] relY, double[][] relZ) {
 		this.relW = relW;
 		this.relX = relX;
 		this.relY = relY;
@@ -36,35 +36,35 @@ public abstract class QuatEmbeddingModel extends EmbeddingModel {
 		this.targetEdge = targetEdge;
 	}
 
-	public float[][] getRelW() {
+	public double [][] getRelW() {
 		return relW;
 	}
 
-	public void setRelW(float[][] relW) {
+	public void setRelW(double[][] relW) {
 		this.relW = relW;
 	}
 
-	public float[][] getRelX() {
+	public double[][] getRelX() {
 		return relX;
 	}
 
-	public void setRelX(float[][] relX) {
+	public void setRelX(double[][] relX) {
 		this.relX = relX;
 	}
 
-	public float[][] getRelY() {
+	public double[][] getRelY() {
 		return relY;
 	}
 
-	public void setRelY(float[][] relY) {
+	public void setRelY(double[][] relY) {
 		this.relY = relY;
 	}
 
-	public float[][] getRelZ() {
+	public double[][] getRelZ() {
 		return relZ;
 	}
 
-	public void setRelZ(float[][] relZ) {
+	public void setRelZ(double[][] relZ) {
 		this.relZ = relZ;
 	}
 
