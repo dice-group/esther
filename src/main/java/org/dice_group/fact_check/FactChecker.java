@@ -38,9 +38,10 @@ public class FactChecker {
 	public Set<Graph> checkFacts(Map<String, Set<Property>> metaPaths, Map<Integer, String> id2rel) {
 		Set<Graph> graphs = new HashSet<Graph>();
 		StmtIterator checkStmts = testData.listStatements();
-		for (int i = 1; checkStmts.hasNext(); i++) {
+		Set<Statement> stmts = new HashSet<Statement>();
+		mainLoop: for (int i = 1; checkStmts.hasNext(); i++) {
 			Statement curStmt = checkStmts.next();
-
+			
 			// get precalculated meta-path
 			Set<Property> p = new HashSet<Property>(metaPaths.get(curStmt.getPredicate().toString()));
 
@@ -67,7 +68,7 @@ public class FactChecker {
 				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					graphs.add(new Graph(p, 0, curStmt));
 					LOGGER.info(i + "/" + testData.size() + " : " + 0 + " - " + curStmt.toString());
-					continue;
+					continue mainLoop;
 				}
 				NPMICalculator cal = new NPMICalculator(path, c);
 				try {

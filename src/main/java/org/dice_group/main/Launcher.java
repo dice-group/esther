@@ -36,7 +36,6 @@ public class Launcher {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Launcher.class);
 
 	public static void main(String[] args) {
-		System.out.println("Started running");
 		ProgramArgs pArgs = new ProgramArgs();
 		JCommander.newBuilder().addObject(pArgs).build().parse(args);
 		pArgs.printArgs();
@@ -76,6 +75,7 @@ public class Launcher {
 		negResults.appendToFile(pArgs.folderPath + pArgs.savePath);
 		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath,
 				results.getPaths(dict.getId2Relations()).append(negResults.getPaths(dict.getId2Relations())));
+		
 	}
 
 	private static Dataset getDataset(String type) {

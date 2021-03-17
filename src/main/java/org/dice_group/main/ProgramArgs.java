@@ -72,7 +72,6 @@ public class ProgramArgs {
 		builder.append("\nLoops allowed: ").append(isLoopsAllowed);
 		builder.append("\n");
 		LOGGER.info(builder.toString());
-		
 		LogUtils.printTextToLog(builder.toString());
 	}
 }
