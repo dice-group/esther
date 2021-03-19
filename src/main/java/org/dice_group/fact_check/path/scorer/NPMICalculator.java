@@ -15,16 +15,18 @@ import org.dice_group.path.property.PropertyHelper;
  * https://github.com/dice-group/COPAAL/blob/45c7f274063f35540fd1dc3163536a1b65179c99/service/src/main/java/org/dice/FactCheck/Corraborative/NPMICalculator.java
  *
  */
-public class NPMICalculator {
+public class NPMICalculator implements Runnable {
 	private Property path;
 	private OccurrencesCounter counter;
+	private Map<Integer, String> id2rel;
 	
-	public NPMICalculator(Property path, OccurrencesCounter counter) {
+	public NPMICalculator(Property path, OccurrencesCounter counter, Map<Integer, String> id2rel) {
 		this.path = path;
 		this.counter = counter;
+		this.id2rel = id2rel;
 	}
 
-	public double calculatePMIScore(Map<Integer, String> id2rel) throws ParseException {
+	public double calculatePMIScore() throws ParseException {
 		List<Property> pathProperties= path.getProperties();
 		String[] iris = PropertyHelper.translate2IRIArray(path, id2rel);
 		
@@ -104,5 +106,14 @@ public class NPMICalculator {
 	@Override
 	public String toString() {
 		return path.getPathNPMI() + "" + path.toString();
+	}
+
+	@Override
+	public void run() {
+		try {
+			calculatePMIScore();
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -2,6 +2,7 @@ package org.dice_group.graph_search.modes;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,22 +47,25 @@ public abstract class Matrix implements MatrixInterface {
 			}
 			return;
 		}
+		
+		Map<String, List<Resource>> domainMap = new HashMap<String, List<Resource>>();
+		Map<String, List<Resource>> rangeMap = new HashMap<String, List<Resource>>();
 
 		Map<Integer, String> id2relmap = dictionary.getId2Relations();
 
 		for (int i = 0; i < dictionary.getRelCount(); i++) {
 			String curProperty = id2relmap.get(i);
-
-			List<Resource> domainI = sparqlExec.selectResources(SparqlHelper.getDomainQuery(curProperty));
-			List<Resource> rangeI = sparqlExec.selectResources(SparqlHelper.getRangeQuery(curProperty));
+			
+			List<Resource> domainI = domainMap.computeIfAbsent(curProperty, cur -> sparqlExec.selectResources(SparqlHelper.getDomainQuery(curProperty)));
+			List<Resource> rangeI = rangeMap.computeIfAbsent(curProperty, cur -> sparqlExec.selectResources(SparqlHelper.getRangeQuery(curProperty)));
 
 			int offset = dictionary.getRelCount();
 
 			for (int j = 0; j < offset; j++) {
 				String curJ = id2relmap.get(j);
 
-				List<Resource> domainJ = sparqlExec.selectResources(SparqlHelper.getDomainQuery(curJ));
-				List<Resource> rangeJ = sparqlExec.selectResources(SparqlHelper.getRangeQuery(curJ));
+				List<Resource> domainJ = domainMap.computeIfAbsent(curJ, cur -> sparqlExec.selectResources(SparqlHelper.getDomainQuery(curJ)));
+				List<Resource> rangeJ = rangeMap.computeIfAbsent(curJ, cur -> sparqlExec.selectResources(SparqlHelper.getRangeQuery(curJ)));
 
 				// check domain - range : d_i(p) = r_j(p)
 				if (compareSets(domainI, rangeJ)) {

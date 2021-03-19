@@ -11,11 +11,11 @@ public class RotatE extends BasicEmbModel {
 
 	public RotatE(double[][] relations, int i) {
 		super(relations);
-		updateTargetEdge(i);
 	}
 
 	@Override
-	public double computeDistance(Property property, int index, boolean isNewInverse) {
+	public double computeDistance(Property property, int index, boolean isNewInverse, int targetID) {
+		double[] targetEdge = relations[targetID];
 		double[] newEdge = relations[index];
 		double[] tempInner;
 		

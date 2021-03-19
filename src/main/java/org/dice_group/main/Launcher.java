@@ -9,7 +9,6 @@ import org.dice_group.datasets.Wordnet;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.embeddings.dictionary.DictionaryHelper;
 import org.dice_group.fact_check.FactChecker;
-import org.dice_group.fact_check.path.scorer.ResultWriter;
 import org.dice_group.graph_search.modes.IrrelevantDR;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.graph_search.modes.NDSubsumedDR;
@@ -20,7 +19,6 @@ import org.dice_group.models.DensE;
 import org.dice_group.models.EmbeddingModel;
 import org.dice_group.models.RotatE;
 import org.dice_group.models.TransE;
-import org.dice_group.path.Graph;
 import org.dice_group.path.PathCreator;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.CSVUtils;
@@ -59,22 +57,12 @@ public class Launcher {
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, pArgs.isLoopsAllowed);
 		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
 
-		// check each fact
+		// check facts and save to file
 		LOGGER.info("Applying meta-paths to KG");
-		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.testData, sparqlExec);
+		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.facts, sparqlExec);
 		long startFactTime = System.currentTimeMillis();
-		Set<Graph> graphs = checker.checkFacts(metaPaths, dict.getId2Relations());
-		checker = new FactChecker(pArgs.folderPath + pArgs.negTestData, sparqlExec);
-		Set<Graph> negGraphs = checker.checkFacts(metaPaths, dict.getId2Relations());
+		checker.checkFactsParallel(metaPaths, dict.getId2Relations(), pArgs.folderPath + pArgs.savePath);
 		LogUtils.printTextToLog("Facts checked in " + (System.currentTimeMillis()-startFactTime)/1000);
-
-		// write results
-		ResultWriter results = new ResultWriter(0, graphs);
-		ResultWriter negResults = new ResultWriter(graphs.size(), negGraphs);
-		results.printToFile(pArgs.folderPath + pArgs.savePath);
-		negResults.appendToFile(pArgs.folderPath + pArgs.savePath);
-		results.printPathsToFile(pArgs.folderPath + "paths_" + pArgs.savePath,
-				results.getPaths(dict.getId2Relations()).append(negResults.getPaths(dict.getId2Relations())));
 		
 	}
 

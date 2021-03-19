@@ -13,7 +13,7 @@ import com.beust.jcommander.Parameter;
  *
  */
 public class ProgramArgs {
-	@Parameter(names = { "--data", "-d" }, description = "Folder path", required = true)
+	@Parameter(names = { "--data", "-d" }, description = "Folder path where the embeddings files, the dictionary and the facts reside.", required = true)
 	String folderPath;
 
 	@Parameter(names = { "--topk",
@@ -28,25 +28,19 @@ public class ProgramArgs {
 			"-e" }, description = "The embedding model used: RotatE, TransE or DensE. TransE is the default value.")
 	String eModel = "TransE";
 
-	@Parameter(names = { "--sparql-endpoint", "-se" }, description = "The sparql endpoint ", required = true)
+	@Parameter(names = { "--endpoint", "-se" }, description = "The sparql endpoint ", required = true)
 	String serviceRequestURL;
 
-	@Parameter(names = { "--save", "-s" }, description = "Desired result file name ")
+	@Parameter(names = { "--save", "-s" }, description = "Desired result file name. ")
 	String savePath;
 
-	@Parameter(names = { "--test", "-t" }, description = "Filename of the facts under folder path")
-	String testData = "true_triples_750.nt";
-	
-	@Parameter(names = { "--neg", "-n" }, description = "Filename of the neg facts under folder path")
-	String negTestData = "false_triples_750.nt";
+	@Parameter(names = { "--facts", "-f" }, description = "Filename of the facts under the folder path", required = true)
+	String facts = "";
 
-	@Parameter(names = { "-id" }, description = "Initial ID for the result files")
-	int initID = 0;
-
-	@Parameter(names = { "-l" }, description = "Maximum Path length")
+	@Parameter(names = { "-l" }, description = "Maximum Path length. The default length is 3.")
 	int max_length = 3;
 	
-	@Parameter(names = { "-ds" }, description = "Dataset")
+	@Parameter(names = { "-ds" }, description = "Dataset, it's only needed if the dictionary is not written in the id to full uri form")
 	String dataset = "";
 
 	@Parameter(names = { "-loops" }, description = "Are loops allowed?")
@@ -57,20 +51,17 @@ public class ProgramArgs {
 
 	public void printArgs() {
 		StringBuilder builder = new StringBuilder();
-		builder.append(new Date());
+		builder.append("\n").append(new Date());
 		builder.append("\nReading data from folder: ").append(folderPath);
 		builder.append("\nDataset: ").append(dataset);
-		builder.append("\nEmbeddings Model: new ").append(eModel);
+		builder.append("\nEmbeddings Model: ").append(eModel);
 		builder.append("\nk: ").append(k);
 		builder.append("\nMax Path length: ").append(max_length);
 		builder.append("\nMatrix type: ").append(type);
 		builder.append("\nEndpoint: ").append(serviceRequestURL);
-		builder.append("\nTest data: ").append(testData);
-		builder.append("\nNeg test data: ").append(negTestData);
-		builder.append("\nInit id: ").append(initID);
+		builder.append("\nFacts file: ").append(facts);
 		builder.append("\nSaving to: ").append(savePath);
 		builder.append("\nLoops allowed: ").append(isLoopsAllowed);
-		builder.append("\n");
 		LOGGER.info(builder.toString());
 		LogUtils.printTextToLog(builder.toString());
 	}

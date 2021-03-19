@@ -5,10 +5,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import org.dice_group.embeddings.dictionary.Dictionary;
@@ -46,7 +47,7 @@ public class PathCreator {
 	 * @param edge
 	 * @return the paths found
 	 */
-	public Set<Property> getMetaPaths(String edge, int l, boolean isLoopsAllowed) {
+	public Set<Property> getMetaPaths(String edge, int l, boolean isLoopsAllowed, int targetID) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
 
 		// get corresponding ids for embeddings
@@ -59,7 +60,7 @@ public class PathCreator {
 
 		// search for property combos
 		SearchAlgorithm propertyCombos = new PropertySearch(matrix, emodel);
-		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, k, l, isLoopsAllowed);
+		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, k, l, isLoopsAllowed, targetID);
 
 		return propertyPaths;
 	}
@@ -72,20 +73,19 @@ public class PathCreator {
 	 */
 	public Map<String, Set<Property>> getMultipleMetaPaths(Set<String> edges, int l, boolean isLoopsAllowed) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
-		Map<String, Set<Property>> metaPaths = new HashMap<String, Set<Property>>();
-		int count = 0;
+		ConcurrentMap<String, Set<Property>> metaPaths = new ConcurrentHashMap<String, Set<Property>>();
 		StringBuilder builder = new StringBuilder();
-		for (String edge : edges) {
-			//String edge = "http://rdf.freebase.com/ns/people.person.nationality";
-			emodel.updateTargetEdge(rel2ID.get(edge));
-			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed);
+		edges.parallelStream().forEach(edge -> {
+			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed, rel2ID.get(edge));
 			metaPaths.put(edge, propertyPaths);
-			LOGGER.info(++count + "/" + edges.size() + " meta-paths processed.");
+			LOGGER.info("Processed meta-path: "+ edge);
+			synchronized (builder) {
+				// prepare meta-paths to be printed
+				builder.append("\nPredicate:").append("\t").append(edge);
+				addPrintableMetaPaths(builder, propertyPaths);
+			}
+		});
 
-			// prepare meta-paths to be printed
-			builder.append("\nPredicate:").append("\t").append(edge);
-			addPrintableMetaPaths(builder, propertyPaths);
-		}
 		print(builder);
 		return metaPaths;
 	}

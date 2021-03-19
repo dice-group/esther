@@ -12,7 +12,8 @@ public class DensE extends QuatEmbeddingModel {
 	}
 
 	@Override
-	public double computeDistance(Property property, int index, boolean isNewInverse) {
+	public double computeDistance(Property property, int index, boolean isNewInverse, int targetID) {
+		Quaternion[] targetEdge = ArrayUtils.getQuaternion(relW[targetID], relX[targetID], relY[targetID], relZ[targetID]);
 		Quaternion[] newQuatEdge = ArrayUtils.getQuaternion(relW[index], relX[index], relY[index], relZ[index]);
 		Quaternion[] innerQuat;
 
@@ -71,14 +72,6 @@ public class DensE extends QuatEmbeddingModel {
 
 	public void setRelZ(double[][] relZ) {
 		this.relZ = relZ;
-	}
-
-	public Quaternion[] getTargetEdge() {
-		return targetEdge;
-	}
-
-	public void setTargetEdge(Quaternion[] targetEdge) {
-		this.targetEdge = targetEdge;
 	}
 
 	@Override

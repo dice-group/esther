@@ -1,9 +1,9 @@
 package org.dice_group.graph_search.algorithms;
 
 import java.util.BitSet;
-import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.dice_group.graph_search.modes.Matrix;
@@ -30,9 +30,9 @@ public class PropertySearch implements SearchAlgorithm {
 	}
 
 	@Override
-	public Set<Property> findPaths(int edgeID, int k, int maxPathLength, boolean isLoopAllowed) {
+	public Set<Property> findPaths(int edgeID, int k, int maxPathLength, boolean isLoopAllowed, int targetID) {
 		BitSet[] mat = matrix.getEdgeAdjMatrix();
-		Set<Property> propertyPaths = new HashSet<Property>();
+		Set<Property> propertyPaths = ConcurrentHashMap.newKeySet();
 		int offset = mat.length / 2;
 		int pathCount = 0;
 
@@ -48,7 +48,7 @@ public class PropertySearch implements SearchAlgorithm {
 					continue;
 				Property curProp = new Property(i, isInverse);
 				int index = isInverse ?  i-offset : i;
-				eModel.computeDistance(curProp, index, isInverse);
+				eModel.computeDistance(curProp, index, isInverse, targetID);
 				queue.add(curProp);
 			}
 		}
@@ -83,7 +83,7 @@ public class PropertySearch implements SearchAlgorithm {
 					}
 					Property newProp = new Property(i, new PropertyBackPointer(curProperty), isInverse);
 					int index = isInverse ?  i-offset : i;
-					eModel.computeDistance(newProp, index, isInverse);
+					eModel.computeDistance(newProp, index, isInverse, targetID);
 					queue.add(newProp);
 				}
 			}

@@ -17,5 +17,5 @@ public interface SearchAlgorithm {
 	 * @param isLoopAllowed whether loops are allowed in the meta-paths
 	 * @return the meta-paths
 	 */
-	Set<Property> findPaths(int edgeID, int k, int l, boolean isLoopAllowed);
+	Set<Property> findPaths(int edgeID, int k, int l, boolean isLoopAllowed, int targetID);
 }

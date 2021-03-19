@@ -13,6 +13,6 @@ public interface Distance {
 	 * @param isNewInverse true if the new edge is traversed inversely
 	 * @return
 	 */
-	double computeDistance(Property property, int index, boolean isNewInverse);
+	double computeDistance(Property property, int index, boolean isNewInverse, int targetEdge);
 
 }
