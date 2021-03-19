@@ -1,9 +1,6 @@
 package org.dice_group.path;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +17,7 @@ import org.dice_group.models.EmbeddingModel;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.LogUtils;
+import org.dice_group.util.PrintToFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,19 +72,15 @@ public class PathCreator {
 	public Map<String, Set<Property>> getMultipleMetaPaths(Set<String> edges, int l, boolean isLoopsAllowed) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
 		ConcurrentMap<String, Set<Property>> metaPaths = new ConcurrentHashMap<String, Set<Property>>();
-		StringBuilder builder = new StringBuilder();
+		StringBuffer buffer = new StringBuffer();
 		edges.parallelStream().forEach(edge -> {
 			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed, rel2ID.get(edge));
 			metaPaths.put(edge, propertyPaths);
-			LOGGER.info("Processed meta-path: "+ edge);
-			synchronized (builder) {
-				// prepare meta-paths to be printed
-				builder.append("\nPredicate:").append("\t").append(edge);
-				addPrintableMetaPaths(builder, propertyPaths);
-			}
+			LOGGER.info("Processed meta-path: " + edge);
+			buffer.append("\nPredicate:").append("\t").append(edge);
+			addPrintableMetaPaths(buffer, propertyPaths);
 		});
-
-		print(builder);
+		print(buffer.toString());
 		return metaPaths;
 	}
 
@@ -106,7 +100,7 @@ public class PathCreator {
 		this.dictionary = dictionary;
 	}
 
-	public void addPrintableMetaPaths(StringBuilder builder, Set<Property> propertyPaths) {
+	public void addPrintableMetaPaths(StringBuffer builder, Set<Property> propertyPaths) {
 		List<Property> result = propertyPaths.stream()
 				.sorted(Comparator.comparingDouble(Property::getPathLength).thenComparing(Property::getPathCost))
 				.collect(Collectors.toList());
@@ -118,7 +112,7 @@ public class PathCreator {
 		}
 	}
 
-	public void print(StringBuilder builder) {
+	public void print(String string) {
 		int index = 1;
 		String fileName = index + "_metapaths_" + k + ".txt";
 		File file = new File(fileName);
@@ -126,14 +120,8 @@ public class PathCreator {
 			String newFileName = ++index + "_metapaths_" + k + ".txt";
 			file = new File(newFileName);
 		}
-		
 		LogUtils.printTextToLog(file.getAbsolutePath());
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write(builder.toString());
-			writer.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		PrintToFileUtils.printStringToFile(string, file);
 	}
 
 }

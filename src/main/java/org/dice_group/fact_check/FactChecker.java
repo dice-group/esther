@@ -1,9 +1,6 @@
 package org.dice_group.fact_check;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +25,7 @@ import org.dice_group.fact_check.path.scorer.ScoreSummarist;
 import org.dice_group.path.Graph;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyHelper;
+import org.dice_group.util.PrintToFileUtils;
 import org.dice_group.util.QueryExecutioner;
 import org.dice_group.util.SparqlHelper;
 import org.slf4j.Logger;
@@ -72,13 +70,8 @@ public class FactChecker {
 			LOGGER.info(i + "/" + resultsModel.size() + " : " + singleGraph.getScore() + " - " + singleGraph.getTriple());
 		}
 		
-		printPathsToFile(savePath+"_paths.txt", effectiveMetaPaths.toString());
-
-		try (FileWriter out = new FileWriter(savePath+".nt")) {
-			resultsModel.write(out, "NT");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		PrintToFileUtils.printStringToFile(effectiveMetaPaths.toString(), new File(savePath+"_paths.txt"));
+		PrintToFileUtils.printRDFToFile(resultsModel, savePath+".nt");
 	}
 	
 	
@@ -97,13 +90,9 @@ public class FactChecker {
 			}
 			
 		});
-		printPathsToFile(savePath+"_paths.txt", effectiveMetaPaths.toString());
 		
-		try (FileWriter out = new FileWriter(savePath+".nt")) {
-			resultsModel.write(out, "NT");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		PrintToFileUtils.printStringToFile(effectiveMetaPaths.toString(), new File(savePath+"_paths.txt"));
+		PrintToFileUtils.printRDFToFile(resultsModel, savePath+".nt");
 	}
 
 	public Graph checkSingle(Resource subject, Map<String, Set<Property>> metaPaths, Map<Integer, String> id2rel) {
@@ -156,16 +145,6 @@ public class FactChecker {
 		double score = summarist.summarize(scores);
 
 		return new Graph(newMetaPaths, score, fact);
-	}
-	
-	public void printPathsToFile(String fileName, String string) {
-		File file = new File(fileName);
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write(string);
-			writer.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 }
