@@ -11,6 +11,7 @@ import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyHelper;
 
 /**
+ * Calculates the PNMPI.
  * NPMI Calculation as per:
  * https://github.com/dice-group/COPAAL/blob/45c7f274063f35540fd1dc3163536a1b65179c99/service/src/main/java/org/dice/FactCheck/Corraborative/NPMICalculator.java
  *
@@ -33,8 +34,8 @@ public class NPMICalculator implements Runnable {
 		QueryGenerator generator = new CountApproximatingQueryGenerator(counter.getSparqlExec());
 		QueryGenerator pairGenerator = new PairCountingQueryGenerator();
 		
-		String pathQueryString = generator.createCountQuery(pathProperties, iris, counter.getStmt().getPredicate());
-		String pathPredicateQueryString = pairGenerator.createCountQuery(pathProperties, iris, counter.getStmt().getPredicate());
+		String pathQueryString = generator.createCountQuery(pathProperties, iris, counter.getProperty());
+		String pathPredicateQueryString = pairGenerator.createCountQuery(pathProperties, iris, counter.getProperty());
 		
 		double count_Path_Occurrence = counter.getSparqlExec().selectDoubleVar(pathQueryString, "?sum");
 		double count_path_Predicate_Occurrence = counter.getSparqlExec().selectDoubleVar(pathPredicateQueryString, "?sum");
@@ -79,12 +80,9 @@ public class NPMICalculator implements Runnable {
 					logSubObjTriples);
 
 		}
-//        if ((filter != null) && (!filter.npmiIsOk(npmi, pathLength, count_path_Predicate_Occurrence,
-//                count_Path_Occurrence, count_predicate_Occurrence))) {
-//            throw new NPMIFilterException("The NPMI filter rejected the calculated NPMI.");
-//        }
-		if(npmi > 0)
-			path.setPathNPMI(npmi);
+
+		npmi=Math.max(npmi, 0);
+		path.setPathNPMI(npmi);
 		return npmi;
 	}
 

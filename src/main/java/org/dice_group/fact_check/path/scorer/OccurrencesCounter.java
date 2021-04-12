@@ -11,7 +11,6 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -45,33 +44,25 @@ public class OccurrencesCounter {
 
 	private Set<Node> objectTypes;
 
-	private Statement stmt;
+	private Property property;
 
 	private QueryExecutioner sparqlExec;
 
-	public OccurrencesCounter(Statement stmt, QueryExecutioner sparqlExec, boolean vTy) {
-		this.stmt = stmt;
+	public OccurrencesCounter(Property property, QueryExecutioner sparqlExec, boolean vTy) {
+		this.property = property;
 		this.sparqlExec = sparqlExec;
 		this.subjectTypes = new HashSet<Node>();
 		this.objectTypes = new HashSet<Node>();
 		getDomainRangeInfo();
-		this.predicateTriplesCount = countPredicateOccurrences(NodeFactory.createVariable("s"), stmt.getPredicate(),
+		this.predicateTriplesCount = countPredicateOccurrences(NodeFactory.createVariable("s"), property,
 				NodeFactory.createVariable("o"));
 		this.subjectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, subjectTypes);
 		this.objectTriplesCount = countOccurrences(NodeFactory.createVariable("s"), RDF.type, objectTypes);
 	}
 
 	private void getDomainRangeInfo() {
-		subjectTypes = SparqlHelper.getTypeInformation(stmt.getPredicate(), RDFS.domain, sparqlExec);
-		objectTypes =  SparqlHelper.getTypeInformation(stmt.getPredicate(), RDFS.range, sparqlExec);
-
-		if (subjectTypes.isEmpty()) {
-			subjectTypes =  SparqlHelper.getTypeInformation(stmt.getSubject().asResource(), RDF.type, sparqlExec);
-		}
-
-		if (objectTypes.isEmpty()) {
-			objectTypes =  SparqlHelper.getTypeInformation(stmt.getSubject().asResource(), RDF.type, sparqlExec);
-		}
+		subjectTypes = SparqlHelper.getTypeInformation(property, RDFS.domain, sparqlExec);
+		objectTypes =  SparqlHelper.getTypeInformation(property, RDFS.range, sparqlExec);
 	}
 
 	public int countSOOccurrances(String var, Property property) {
@@ -163,14 +154,6 @@ public class OccurrencesCounter {
 		this.predicateTriplesCount = predicateTriplesCount;
 	}
 
-	public Statement getStmt() {
-		return stmt;
-	}
-
-	public void setStmt(Statement stmt) {
-		this.stmt = stmt;
-	}
-
 	public QueryExecutioner getSparqlExec() {
 		return sparqlExec;
 	}
@@ -178,6 +161,16 @@ public class OccurrencesCounter {
 	public void setSparqlExec(QueryExecutioner sparqlExec) {
 		this.sparqlExec = sparqlExec;
 	}
+
+	public Property getProperty() {
+		return property;
+	}
+
+	public void setProperty(Property property) {
+		this.property = property;
+	}
+	
+	
 
 
 }

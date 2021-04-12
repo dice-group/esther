@@ -35,12 +35,12 @@ public class ProgramArgs {
 	String savePath;
 
 	@Parameter(names = { "--facts", "-f" }, description = "Filename of the facts under the folder path", required = true)
-	String facts = "";
+	String facts;
 
 	@Parameter(names = { "-l" }, description = "Maximum Path length. The default length is 3.")
 	int max_length = 3;
 	
-	@Parameter(names = { "-ds" }, description = "Dataset, it's only needed if the dictionary is not written in the id to full uri form")
+	@Parameter(names = { "-ds" }, description = "Dataset, it's only needed if the dictionary is not written in the id to full URI form.")
 	String dataset = "";
 
 	@Parameter(names = { "-loops" }, description = "Are loops allowed?")

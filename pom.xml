@@ -42,6 +42,13 @@
 	</repositories>
 
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-stable -->
+		<dependency>
+			<groupId>nz.ac.waikato.cms.weka</groupId>
+			<artifactId>weka-stable</artifactId>
+			<version>3.8.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>${jme3_g}</groupId>
 			<artifactId>jme3-core</artifactId>

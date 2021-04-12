@@ -5,9 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
@@ -19,8 +16,6 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.rdf.model.impl.StatementImpl;
 import org.apache.jena.vocabulary.RDF;
 import org.dice_group.fact_check.path.scorer.CubicMeanSummarist;
-import org.dice_group.fact_check.path.scorer.NPMICalculator;
-import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
 import org.dice_group.fact_check.path.scorer.ScoreSummarist;
 import org.dice_group.path.Graph;
 import org.dice_group.path.property.Property;
@@ -38,8 +33,6 @@ public class FactChecker {
 	private Model reifiedStmts;
 
 	private QueryExecutioner sparqlExec;
-	
-	private static final int MAX_THREADS = 10;
 
 	private static final org.apache.jena.rdf.model.Property TRUTH_VALUE = ResourceFactory
 			.createProperty("http://swc2017.aksw.org/hasTruthValue");
@@ -50,6 +43,15 @@ public class FactChecker {
 		this.sparqlExec = sparqlExec;
 	}
 
+	/**
+	 * Computes the veracity of the facts and saves both the applicable meta-paths
+	 * and the score to file
+	 * 
+	 * @param metaPaths Map of pre-computed meta-paths for all possible predicates
+	 * @param id2rel    Map of ID to Predicate URI
+	 * @param savePath  Desired file name for the results file, the meta-paths will
+	 *                  be saved under the same name with a suffix
+	 */
 	public void checkFacts(Map<String, Set<Property>> metaPaths, Map<Integer, String> id2rel, String savePath) {
 		Model resultsModel = ModelFactory.createDefaultModel();
 		StringBuilder effectiveMetaPaths = new StringBuilder();
@@ -64,18 +66,24 @@ public class FactChecker {
 
 			resultsModel.add(ResourceFactory.createStatement(subject, TRUTH_VALUE, ResourceFactory
 					.createTypedLiteral(Double.toString(singleGraph.getScore()), XSDDatatype.XSDdouble)));
-			
+
 			effectiveMetaPaths.append(singleGraph.getPrintableResults(id2rel));
 
-			LOGGER.info(i + "/" + resultsModel.size() + " : " + singleGraph.getScore() + " - " + singleGraph.getTriple());
+			LOGGER.info(i +" : " + singleGraph.getScore() + " - " + singleGraph.getTriple());
 		}
-		
-		PrintToFileUtils.printStringToFile(effectiveMetaPaths.toString(), new File(savePath+"_paths.txt"));
-		PrintToFileUtils.printRDFToFile(resultsModel, savePath+".nt");
-	}
-	
-	
 
+		PrintToFileUtils.printStringToFile(effectiveMetaPaths.toString(), new File(savePath + "_paths.txt"));
+		PrintToFileUtils.printRDFToFile(resultsModel, savePath + ".nt");
+	}
+
+	/**
+	 * Similar to checkFacts, but does so in parallel
+	 * 
+	 * @param metaPaths Map of pre-computed meta-paths for all possible predicates
+	 * @param id2rel    Map of ID to Predicate URI
+	 * @param savePath  Desired file name for the results file, the meta-paths will
+	 *                  be saved under the same name with a suffix
+	 */
 	public void checkFactsParallel(Map<String, Set<Property>> metaPaths, Map<Integer, String> id2rel, String savePath) {
 		Model resultsModel = ModelFactory.createDefaultModel();
 		List<Statement> stmts = reifiedStmts.listStatements(null, RDF.type, RDF.Statement).toList();
@@ -85,24 +93,40 @@ public class FactChecker {
 			LOGGER.info(r + " - " + singleGraph.getScore() + " - " + singleGraph.getTriple());
 			effectiveMetaPaths.append(singleGraph.getPrintableResults(id2rel));
 			synchronized (resultsModel) {
-				resultsModel.add(ResourceFactory.createStatement(r, TRUTH_VALUE,
-						ResourceFactory.createTypedLiteral(Double.toString(singleGraph.getScore()), XSDDatatype.XSDdouble)));
+				resultsModel.add(ResourceFactory.createStatement(r, TRUTH_VALUE, ResourceFactory
+						.createTypedLiteral(Double.toString(singleGraph.getScore()), XSDDatatype.XSDdouble)));
 			}
-			
 		});
-		
-		PrintToFileUtils.printStringToFile(effectiveMetaPaths.toString(), new File(savePath+"_paths.txt"));
-		PrintToFileUtils.printRDFToFile(resultsModel, savePath+".nt");
+		PrintToFileUtils.printStringToFile(effectiveMetaPaths.toString(), new File(savePath + "_paths.txt"));
+		PrintToFileUtils.printRDFToFile(resultsModel, savePath + ".nt");
 	}
 
+	/**
+	 * Computes the veracity score for one fact
+	 * 
+	 * @param subject   The statement number (since we're using reified statements)
+	 * @param metaPaths Map of pre-computed meta-paths for all possible predicates
+	 * @param id2rel    Map of ID to Predicate URI
+	 * @return The graph object containing the triple, its equivalent paths and
+	 *         their individual scores and the aggregated score.
+	 */
 	public Graph checkSingle(Resource subject, Map<String, Set<Property>> metaPaths, Map<Integer, String> id2rel) {
 		Statement statement = new StatementImpl(subject.getPropertyResourceValue(RDF.subject),
 				subject.getPropertyResourceValue(RDF.predicate).as(org.apache.jena.rdf.model.Property.class),
 				subject.getPropertyResourceValue(RDF.object));
 		return checkSingleFact(statement, metaPaths.get(statement.getPredicate().toString()), id2rel);
-		
+
 	}
 
+	/**
+	 * Computes the veracity score for one fact
+	 * 
+	 * @param fact      The fact we want to check
+	 * @param metaPaths Map of pre-computed meta-paths for all possible predicates
+	 * @param id2rel    Map of ID to Predicate URI
+	 * @return The graph object containing the triple, its equivalent paths and
+	 *         their individual scores and the aggregated score.
+	 */
 	public Graph checkSingleFact(Statement fact, Set<Property> metaPaths, Map<Integer, String> id2rel) {
 		Set<Property> newMetaPaths = new HashSet<Property>(metaPaths);
 		int pSize = newMetaPaths.size();
@@ -112,29 +136,11 @@ public class FactChecker {
 				curProp -> !sparqlExec.ask(SparqlHelper.getAskQuery(PropertyHelper.getPropertyPath(curProp, id2rel),
 						fact.getSubject().toString(), fact.getObject().toString())));
 
-		// if there are metapaths but none apply, assume false
-		// if no metapaths are found, conclude nothing (0.0)
+		// if there are metapaths but none apply, assume -0.1
+		// if no metapaths are found, 0.0
 		if (newMetaPaths.isEmpty()) {
 			double npmi = pSize != 0 ? -0.1 : 0;
 			return new Graph(newMetaPaths, npmi, fact);
-		}
-
-		// count occurrences
-		OccurrencesCounter c = new OccurrencesCounter(fact, sparqlExec, false);
-		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
-		// calculate npmi for each path found
-		for (Property path : newMetaPaths) {
-			if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
-				return new Graph(newMetaPaths, 0, fact);
-			}
-			Runnable task = new NPMICalculator(path, c, id2rel); 
-			executor.execute(task);
-		}
-		executor.shutdown();
-		try {
-			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 
 		// aggregate scores

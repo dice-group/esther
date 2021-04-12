@@ -53,7 +53,7 @@ public class Launcher {
 		// preprocess the meta-paths for all properties
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
-		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k);
+		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k, sparqlExec);
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, pArgs.isLoopsAllowed);
 		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
 
