@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.fact_check.path.scorer.NPMICalculator;
 import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
@@ -87,25 +88,24 @@ public class PathCreator {
 		StringBuffer buffer = new StringBuffer();
 		edges.parallelStream().forEach(edge -> {
 			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed, rel2ID.get(edge));
-			
+			LOGGER.info("Processing meta-path: " + edge);
 			// calculate pnpmi for each meta-path
 			org.apache.jena.rdf.model.Property edgeProp = ResourceFactory.createProperty(edge);
 			
 			OccurrencesCounter c = new OccurrencesCounter(edgeProp, sparqlExec, false);
-			ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
 			for (Property path : propertyPaths) {
 				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
 					path.setPathNPMI(0);
 				}
-				Runnable task = new NPMICalculator(path, c, dictionary.getId2Relations());
-				executor.execute(task);
+				NPMICalculator task = new NPMICalculator(path, c, dictionary.getId2Relations());
+				try {
+					task.calculatePMIScore();
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-			executor.shutdown();
-			try {
-				executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			
 			metaPaths.put(edge, propertyPaths);
 			LOGGER.info("Processed meta-path: " + edge);
 			buffer.append("\nPredicate:").append("\t").append(edge);
