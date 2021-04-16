@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
@@ -41,6 +42,16 @@ public class FactChecker {
 		reifiedStmts = ModelFactory.createDefaultModel();
 		reifiedStmts.read(fileName);
 		this.sparqlExec = sparqlExec;
+	}
+	
+	public Set<String> getExistingPropertiesFromFile() {
+		StmtIterator iter = reifiedStmts.listStatements(null, RDF.predicate, (RDFNode) null);
+		Set<String> existingProperties = new HashSet<String>();
+		while(iter.hasNext()) {
+			Statement curStmt = iter.next();
+			existingProperties.add(curStmt.getObject().toString());
+		}
+		return existingProperties;
 	}
 
 	/**

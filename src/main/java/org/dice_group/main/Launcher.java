@@ -53,20 +53,14 @@ public class Launcher {
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
 		Matrix matrix = getMatrixType(pArgs.type, sparqlExec, dict);
 		long startTime = System.currentTimeMillis();
-		matrix.populateMatrix();
+		//matrix.populateMatrix();
 
 		// preprocess the meta-paths for all properties
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k, sparqlExec);
 		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.facts, sparqlExec);
-		StmtIterator iter = checker.getReifiedStmts().listStatements(null, RDF.predicate, (RDFNode) null);
-		Set<String> existingProperties = new HashSet<String>();
-		while(iter.hasNext()) {
-			Statement curStmt = iter.next();
-			existingProperties.add(curStmt.getObject().toString());
-		}
-		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(existingProperties, pArgs.max_length, pArgs.isLoopsAllowed);
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(checker.getExistingPropertiesFromFile(), pArgs.max_length, pArgs.isLoopsAllowed);
 		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
 
 		// check facts and save to file
