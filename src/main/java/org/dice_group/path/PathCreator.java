@@ -107,7 +107,7 @@ public class PathCreator {
 			}
 			
 			metaPaths.put(edge, propertyPaths);
-			LOGGER.info("Processed meta-path: " + edge);
+			LOGGER.info(metaPaths.size()+" - Processed meta-path: " + edge);
 			buffer.append("\nPredicate:").append("\t").append(edge);
 			addPrintableMetaPaths(buffer, propertyPaths);
 		});
