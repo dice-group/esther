@@ -1,8 +1,13 @@
 package org.dice_group.main;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.vocabulary.RDF;
 import org.dice_group.datasets.Dataset;
 import org.dice_group.datasets.Freebase;
 import org.dice_group.datasets.Wordnet;
@@ -42,7 +47,7 @@ public class Launcher {
 		LOGGER.info("Reading data from file");
 		DictionaryHelper dictHelper = new DictionaryHelper();
 		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath, getDataset(pArgs.dataset));
-
+		
 		// create d/r edge adjacency matrix
 		LOGGER.info("Creating edge adjacency matrix from d/r");
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
@@ -54,12 +59,19 @@ public class Launcher {
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k, sparqlExec);
-		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(dict.getRelations2ID().keySet(), pArgs.max_length, pArgs.isLoopsAllowed);
+		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.facts, sparqlExec);
+		StmtIterator iter = checker.getReifiedStmts().listStatements(null, RDF.predicate, (RDFNode) null);
+		Set<String> existingProperties = new HashSet<String>();
+		while(iter.hasNext()) {
+			Statement curStmt = iter.next();
+			existingProperties.add(curStmt.getObject().toString());
+		}
+		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(existingProperties, pArgs.max_length, pArgs.isLoopsAllowed);
 		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
 
 		// check facts and save to file
 		LOGGER.info("Applying meta-paths to KG");
-		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.facts, sparqlExec);
+		
 		long startFactTime = System.currentTimeMillis();
 		checker.checkFactsParallel(metaPaths, dict.getId2Relations(), pArgs.folderPath + pArgs.savePath);
 		LogUtils.printTextToLog("Facts checked in " + (System.currentTimeMillis()-startFactTime)/1000);

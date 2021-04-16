@@ -153,4 +153,9 @@ public class FactChecker {
 		return new Graph(newMetaPaths, score, fact);
 	}
 
+	public Model getReifiedStmts() {
+		return reifiedStmts;
+	}
+
+	
 }
