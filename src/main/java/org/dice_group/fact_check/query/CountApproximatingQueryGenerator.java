@@ -32,8 +32,8 @@ public class CountApproximatingQueryGenerator implements QueryGenerator {
     @Override
     public String createCountQuery(List<Property> pathProperties, String[] propURIs, org.apache.jena.rdf.model.Property predicate) {
     	
-    	Set<Node> subjectTypes = SparqlHelper.getTypeInformation(predicate, RDFS.domain, sparqlExec);
-		Set<Node> objectTypes = SparqlHelper.getTypeInformation(predicate, RDFS.range, sparqlExec);
+    	Set<Node> subjectTypes = sparqlExec.getTypeInformation(predicate, RDFS.domain);
+		Set<Node> objectTypes = sparqlExec.getTypeInformation(predicate, RDFS.range);
     	
         StringBuilder sTypeTriples = generateTypeRestrictions(subjectTypes, SUBJECT_VARIABLE_NAME);
         StringBuilder oTypeTriples = generateTypeRestrictions(objectTypes, OBJECT_VARIABLE_NAME);
