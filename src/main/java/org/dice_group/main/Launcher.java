@@ -53,7 +53,7 @@ public class Launcher {
 		QueryExecutioner sparqlExec = new QueryExecutioner(pArgs.serviceRequestURL);
 		Matrix matrix = getMatrixType(pArgs.type, sparqlExec, dict);
 		long startTime = System.currentTimeMillis();
-		//matrix.populateMatrix();
+		matrix.populateMatrix();
 
 		// preprocess the meta-paths for all properties
 		LOGGER.info("Preprocessing meta-paths");
@@ -65,7 +65,6 @@ public class Launcher {
 
 		// check facts and save to file
 		LOGGER.info("Applying meta-paths to KG");
-		
 		long startFactTime = System.currentTimeMillis();
 		checker.checkFactsParallel(metaPaths, dict.getId2Relations(), pArgs.folderPath + pArgs.savePath);
 		LogUtils.printTextToLog("Facts checked in " + (System.currentTimeMillis()-startFactTime)/1000);
