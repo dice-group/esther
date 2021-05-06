@@ -32,6 +32,7 @@ public class PBGraphInputFormatter {
 				}
 				String outputLine = String.join("\t", lineItems);
 				bw.write(outputLine);
+				writeCount++;
 				if (writeCount % 10000 == 0) {
 					bw.flush();
 					LOGGER.info("Processed "+writeCount);
