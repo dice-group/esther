@@ -6,12 +6,18 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Class to convert a N-triple file into a TSV file (PBG's input format)
  */
 public class PBGraphInputFormatter {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(PBGraphInputFormatter.class);
 
 	public static void main(String[] args) throws IOException {
+		LOGGER.info("Starting...");
 		try (BufferedReader br = new BufferedReader(new FileReader(args[0]));
 				BufferedWriter bw = new BufferedWriter(new FileWriter(args[1]));) {
 			int writeCount = 0;
@@ -28,9 +34,11 @@ public class PBGraphInputFormatter {
 				bw.write(outputLine);
 				if (writeCount % 10000 == 0) {
 					bw.flush();
+					LOGGER.info("Processed "+writeCount);
 				}
 			}
 		}
+		LOGGER.info("Done!");
 	}
 
 }
