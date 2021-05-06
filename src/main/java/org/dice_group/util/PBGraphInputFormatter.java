@@ -30,7 +30,7 @@ public class PBGraphInputFormatter {
 					// remove surrounding <>
 					curItem = curItem.substring(1, curItem.length() - 1);
 				}
-				String outputLine = String.join("\t", lineItems);
+				String outputLine = String.join("\t", lineItems)+"\n";
 				bw.write(outputLine);
 				writeCount++;
 				if (writeCount % 10000 == 0) {
