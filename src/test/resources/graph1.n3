@@ -1,0 +1,4 @@
+<http://example.org/entity1> <http://example.org/relation1> <http://example.org/class1> .
+<http://example.org/entity1> <http://example.org/relation2> <http://example.org/entity2> .
+<http://example.org/entity2> <http://example.org/relation1> <http://example.org/class1> .
+<http://example.org/entity1> <http://example.org/relation1> <http://example.org/entity3> .
