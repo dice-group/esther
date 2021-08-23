@@ -2,6 +2,8 @@
 
 Source code of ESTHER - Using Compositional Embeddings for Fact Checking
 
+Esther currently supports TransE, RotatE and DensE embeddings.
+
 ## How to run
 1. Upload the corresponding knowledge graph to a SPARQL endpoint
 2. Run ESTHER
@@ -23,8 +25,6 @@ java -jar esther.jar -m S -d ESTHER_Files/Fb15k-237/TransE/ -e TransE -k 200 -se
 ```
 
 ## Parameters
-
-
 
 <table>
   <tr><th align="left">Parameter</th><th>Required</th><th>Default</th><th>Description</th></tr>
