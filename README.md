@@ -4,6 +4,9 @@ Source code of ESTHER - Using Compositional Embeddings for Fact Checking
 
 Esther currently supports TransE, RotatE and DensE embeddings.
 
+## Adding new KGE models
+Extend [BasicEmbModel](https://github.com/dice-group/esther/blob/master/src/main/java/org/dice_group/models/BasicEmbModel.java) or [QuatEmbeddingModel](https://github.com/dice-group/esther/blob/master/src/main/java/org/dice_group/models/QuatEmbeddingModel.java) depending on the nature of the model you want to add and implement the required methods.
+
 ## How to run
 1. Upload the corresponding knowledge graph to a SPARQL endpoint
 2. Run ESTHER
