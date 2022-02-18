@@ -58,3 +58,20 @@ java -jar esther.jar -m S -d ESTHER_Files/Fb15k-237/TransE/ -e TransE -k 200 -se
 - **-l**: Maximum path length. (Default = 3)
 - **-loops**: Specify if you want loops to be allowed in paths.
 -->
+
+## How to cite
+
+``` 
+@InProceedings{esther2021,
+  author="da Silva, Ana Alexandra Morim
+  and R{\"o}der, Michael
+  and Ngomo, Axel-Cyrille Ngonga",
+  title="Using Compositional Embeddings for Fact Checking",
+  booktitle="The Semantic Web -- ISWC 2021",
+  year="2021",
+  publisher="Springer International Publishing",
+  address="Cham",
+  pages="270--286",
+  isbn="978-3-030-88361-4"
+}
+```
