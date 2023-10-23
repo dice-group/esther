@@ -18,7 +18,7 @@ ESTHER was developed using Java 11.
 You can run ESTHER with maven's exec plugin :
 
 ``` 
-mvn exec:java -Dexec.cleanupDaemonThreads=false -Dexec.mainClass="main.Launcher" -Dexec.args="-m S -d ESTHER_files/Fb15k-237/TransE/ -e TransE -k 200 -se http://localhost:8890/sparql/ -s results_file -l 4 -loops -f fb15k-237/fb15k-237_facts.ttl --dict ESTHER_files/Fb15k-237/relations.dict"
+mvn exec:java -Dexec.cleanupDaemonThreads=false -Dexec.mainClass="org.dice_group.main.Launcher" -Dexec.args="-m S -d ESTHER_files/Fb15k-237/TransE/ -e TransE -k 200 -se http://localhost:8890/sparql/ -s results_file -l 4 -loops -f fb15k-237/fb15k-237_facts.ttl --dict ESTHER_files/Fb15k-237/relations.dict"
 ```
 
 Or through its jar file:
