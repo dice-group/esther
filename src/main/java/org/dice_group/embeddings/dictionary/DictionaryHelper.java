@@ -37,19 +37,20 @@ public class DictionaryHelper {
 	 * 
 	 * @param dataFolderPath
 	 */
-	public static Dictionary readDictionary(String dataFolderPath, Dataset dataset) {
-		String filePath = dataFolderPath + Constants.REL_DICT_FILE;
+	public static Dictionary readDictionary(String folder, Dataset dataset) {		
+		String filePath = folder + Constants.REL_EMB_FILE;
+		String dictPath = folder + Constants.REL_DICT_FILE;
 		
 		// create dictionary and save it to file if the file doesn't exist
-		if(!new File(filePath).isFile()) {
-			LOGGER.info("Dictionary not found, creating it at "+filePath);
+		if(!new File(dictPath).isFile()) {
+			LOGGER.info("Dictionary not found, creating it at "+dictPath);
 			Dictionary dict = DictionaryHelper.createDictionaryFromTSV(filePath);
-			DictionaryHelper.saveDict2File(dict, filePath);
+			DictionaryHelper.saveDict2File(dict, dictPath);
 			return dict;
 		}
 		
 		// read id2relations from file, infer relations2id
-		Map<Integer, String> id2relations = dataset.readMap(filePath);
+		Map<Integer, String> id2relations = dataset.readMap(dictPath);
 		Map<String, Integer> rel2ID = id2relations.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 
@@ -105,8 +106,8 @@ public class DictionaryHelper {
 	 * @param dictionary
 	 * @param dataFolderPath
 	 */
-	public static void saveDict2File(Dictionary dict, String dataFolderPath) {
-		writeMapToFile(dict.getId2Relations(), dataFolderPath + Constants.REL_DICT_FILE);
+	public static void saveDict2File(Dictionary dict, String path) {
+		writeMapToFile(dict.getId2Relations(), path);
 	}
 
 	/**

@@ -47,7 +47,7 @@ public class CSVUtils {
 		try (Reader reader = new FileReader(filePath); CSVParser csvParser = new CSVParser(reader, CSVFormat.TDF)) {
 			List<double[]> lines = new ArrayList<>();
 			for (CSVRecord csvRecord : csvParser) {
-				double[] row = new double[csvRecord.size()-1];
+				double[] row = new double[csvRecord.size()];
 				for (int i = 1; i < csvRecord.size(); i++) {
 					row[i] = Double.parseDouble(csvRecord.get(i));
 				}

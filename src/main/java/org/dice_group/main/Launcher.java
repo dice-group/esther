@@ -1,13 +1,8 @@
 package org.dice_group.main;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.vocabulary.RDF;
 import org.dice_group.datasets.Dataset;
 import org.dice_group.datasets.Freebase;
 import org.dice_group.datasets.Wordnet;
@@ -58,7 +53,7 @@ public class Launcher {
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
 		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k, sparqlExec);
-		FactChecker checker = new FactChecker(pArgs.folderPath + pArgs.facts, sparqlExec);
+		FactChecker checker = new FactChecker(pArgs.facts, sparqlExec);
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(checker.getExistingPropertiesFromFile(), pArgs.max_length, pArgs.isLoopsAllowed);
 		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
 
@@ -123,7 +118,7 @@ public class Launcher {
 			eModel = new DensE(relW, relX, relY, relZ);
 			break;
 		default:
-			double[][] relations2 = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE);
+			double[][] relations2 = CSVUtils.readTSVFile(folderPath + Constants.REL_EMB_FILE);
 			eModel = new TransE(relations2);
 			break;
 		}
