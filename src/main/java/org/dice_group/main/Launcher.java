@@ -45,8 +45,7 @@ public class Launcher {
 
 		// read dictionary from file
 		LOGGER.info("Reading data from file");
-		DictionaryHelper dictHelper = new DictionaryHelper();
-		Dictionary dict = dictHelper.readDictionary(pArgs.folderPath, getDataset(pArgs.dataset));
+		Dictionary dict = DictionaryHelper.readDictionary(pArgs.folderPath, getDataset(pArgs.dataset));
 		
 		// create d/r edge adjacency matrix
 		LOGGER.info("Creating edge adjacency matrix from d/r");

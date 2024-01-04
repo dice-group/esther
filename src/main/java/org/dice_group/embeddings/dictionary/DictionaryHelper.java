@@ -2,82 +2,101 @@ package org.dice_group.embeddings.dictionary;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.dice_group.datasets.Dataset;
 import org.dice_group.util.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+
+/**
+ * Helper class to help the reading, creation and saving of the relation dictionary.
+ * 
+ * @author Ana Silva
+ *
+ */
 public class DictionaryHelper {
-
-	private Dictionary dictionary;
-
-	public DictionaryHelper() {
-		this.dictionary = new Dictionary();
-	}
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(DictionaryHelper.class);
 
 	/**
 	 * Reads the dictionary from a given file path
 	 * 
 	 * @param dataFolderPath
 	 */
-	public Dictionary readDictionary(String dataFolderPath, Dataset dataset) {
-
-		// read id2entities and id2relations from file
-		Map<Integer, String> id2entities = dataset.readMap(dataFolderPath + Constants.ENT_DICT_FILE);
-		Map<Integer, String> id2relations = dataset.readMap(dataFolderPath + Constants.REL_DICT_FILE);
-
-		// get ent2id and rel2id
-		Map<String, Integer> ent2ID = id2entities.entrySet().stream()
-				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+	public static Dictionary readDictionary(String dataFolderPath, Dataset dataset) {
+		String filePath = dataFolderPath + Constants.REL_DICT_FILE;
+		
+		// create dictionary and save it to file if the file doesn't exist
+		if(!new File(filePath).isFile()) {
+			LOGGER.info("Dictionary not found, creating it at "+filePath);
+			Dictionary dict = DictionaryHelper.createDictionaryFromTSV(filePath);
+			DictionaryHelper.saveDict2File(dict, filePath);
+			return dict;
+		}
+		
+		// read id2relations from file, infer relations2id
+		Map<Integer, String> id2relations = dataset.readMap(filePath);
 		Map<String, Integer> rel2ID = id2relations.entrySet().stream()
 				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 
-		return new Dictionary(ent2ID, rel2ID, id2entities, id2relations);
+		return new Dictionary(rel2ID, id2relations);
 
 	}
 
 	/**
-	 * Reads a single model from path and creates the corresponding dictionary
+	 * Reads a single model from path and creates the corresponding dictionary.
+	 *
 	 * 
 	 * @param filePath
 	 * @return 
 	 */
-	public Dictionary createDictionary(String filePath) {
+	public static Dictionary createDictionaryFromModel(String filePath) {
+		Dictionary dictionary = new Dictionary();
 		Model model = ModelFactory.createDefaultModel();
-		model.read(filePath+ "/train.txt", "TTL");
-		return createDictionary(model);
-	}
-
-	/**
-	 * Creates the entities and relations dictionary for a given model
-	 * 
-	 * @param model
-	 * @return 
-	 */
-	public Dictionary createDictionary(Model model) {
+		model.read(filePath, "TTL");
 		StmtIterator stmtIterator = model.listStatements();
 		while (stmtIterator.hasNext()) {
 			Statement curStmt = stmtIterator.next();
-
-			String subject = curStmt.getSubject().toString();
 			String predicate = curStmt.getPredicate().toString();
-			RDFNode object = curStmt.getObject();
-
-			if (object.isResource()) {
-				dictionary.addEntity(subject);
-				dictionary.addRelation(predicate);
-				dictionary.addEntity(object.asResource().toString());
-			} 				
+			dictionary.addRelation(predicate);				
 		}
 		return dictionary;
+	}
+
+	/**
+	 * Creates the relations dictionary from a TSV
+	 * 
+	 * @param filePath
+	 * @return 
+	 */
+	public static Dictionary createDictionaryFromTSV(String filePath) {
+		LOGGER.info("Creating dictionary from TSV in: " + filePath);
+		Dictionary dictionary = new Dictionary();
+		try (Reader reader = new FileReader(filePath); CSVParser csvParser = new CSVParser(reader, CSVFormat.TDF)) {
+			for (CSVRecord csvRecord : csvParser) {
+				String uri = csvRecord.get(0);
+				dictionary.addRelation(uri);
+			}
+		} catch (IOException | NumberFormatException e) {
+			e.printStackTrace();
+		}
+
+		return dictionary;
+		
 	}
 
 	/**
@@ -86,18 +105,17 @@ public class DictionaryHelper {
 	 * @param dictionary
 	 * @param dataFolderPath
 	 */
-	public void saveDict2File(String dataFolderPath) {
-		printMap(dictionary.getId2Entities(), dataFolderPath + Constants.ENT_DICT_FILE);
-		printMap(dictionary.getId2Relations(), dataFolderPath + Constants.REL_DICT_FILE);
+	public static void saveDict2File(Dictionary dict, String dataFolderPath) {
+		writeMapToFile(dict.getId2Relations(), dataFolderPath + Constants.REL_DICT_FILE);
 	}
 
 	/**
-	 * Writes a map to a file: each key value pair in a new line separated by \t
+	 * Writes a map to a file as a TSV
 	 * 
 	 * @param dictionary
 	 * @param savedFile
 	 */
-	public void printMap(Map<?, ?> dictionary, String savedFile) {
+	public static void writeMapToFile(Map<?, ?> dictionary, String savedFile) {
 		StringBuilder builder = new StringBuilder();
 		dictionary.forEach((k, v) -> {
 			builder.append(k).append("\t").append(v.toString()).append("\n");
@@ -117,7 +135,7 @@ public class DictionaryHelper {
 	 * @param dataFolderPath
 	 * @return
 	 */
-	public Model readDatasetFolder(String dataFolderPath) {
+	public static Model readDatasetFolder(String dataFolderPath) {
 		Model model = ModelFactory.createDefaultModel();
 		File folder = new File(dataFolderPath);
 		if (folder != null && folder.isDirectory() && folder.listFiles().length > 0) {
@@ -126,10 +144,6 @@ public class DictionaryHelper {
 			}
 		}
 		return model;
-	}
-
-	public Dictionary getDictionary() {
-		return dictionary;
 	}
 
 }
