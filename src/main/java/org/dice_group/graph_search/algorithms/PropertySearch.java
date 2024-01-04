@@ -83,6 +83,11 @@ public class PropertySearch implements SearchAlgorithm {
 					}
 					Property newProp = new Property(i, new PropertyBackPointer(curProperty), isInverse);
 					int index = isInverse ?  i-offset : i;
+					
+					// skip, don't calculate distances for invalid properties 
+					if(newProp.getPathLength() > maxPathLength)
+						continue;
+					
 					eModel.computeDistance(newProp, index, isInverse, targetID);
 					queue.add(newProp);
 				}

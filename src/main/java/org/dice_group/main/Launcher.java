@@ -60,7 +60,7 @@ public class Launcher {
 		// check facts and save to file
 		LOGGER.info("Applying meta-paths to KG");
 		long startFactTime = System.currentTimeMillis();
-		checker.checkFactsParallel(metaPaths, dict.getId2Relations(), pArgs.folderPath + pArgs.savePath);
+		checker.checkFactsParallel(metaPaths, dict.getId2Relations(), pArgs.savePath);
 		LogUtils.printTextToLog("Facts checked in " + (System.currentTimeMillis()-startFactTime)/1000);
 		
 	}
