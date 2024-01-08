@@ -12,10 +12,9 @@ import org.dice_group.util.QueryExecutioner;
  *
  */
 public class StrictDR extends Matrix {
-	
 	public StrictDR() {
+		// TODO Auto-generated constructor stub
 	}
-
 	public StrictDR(QueryExecutioner sparqlExec, Dictionary dictionary) {
 		super(sparqlExec, dictionary);
 	}

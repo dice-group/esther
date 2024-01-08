@@ -15,6 +15,7 @@ import org.dice_group.util.SparqlHelper;
 public class SubsumedDR extends Matrix {
 	
 	public SubsumedDR() {
+		// TODO Auto-generated constructor stub
 	}
 	
 	public SubsumedDR(QueryExecutioner sparqlExec, Dictionary dictionary) {

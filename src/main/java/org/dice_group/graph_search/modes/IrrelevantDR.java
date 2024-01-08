@@ -11,10 +11,9 @@ import org.dice_group.util.QueryExecutioner;
  *
  */
 public class IrrelevantDR extends Matrix {
-	
 	public IrrelevantDR() {
+		// TODO Auto-generated constructor stub
 	}
-
 	public IrrelevantDR(QueryExecutioner sparqlExec, Dictionary dictionary) {
 		super(sparqlExec, dictionary);
 	}

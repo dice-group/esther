@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
@@ -19,8 +18,8 @@ import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.fact_check.path.scorer.NPMICalculator;
 import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
+import org.dice_group.graph_search.algorithms.MetaPathSearcher;
 import org.dice_group.graph_search.algorithms.PropertySearch;
-import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.models.EmbeddingModel;
 import org.dice_group.path.property.Property;
@@ -43,16 +42,17 @@ public class PathCreator {
 	private int k;
 
 	private QueryExecutioner sparqlExec;
-
-	private static final int MAX_THREADS = 16;
+	
+	private String metaSave;
 
 	public PathCreator(Dictionary dictionary, EmbeddingModel emodel, Matrix matrix, int k,
-			QueryExecutioner sparqlExec) {
+			QueryExecutioner sparqlExec, String metaSave) {
 		this.dictionary = dictionary;
 		this.emodel = emodel;
 		this.matrix = matrix;
 		this.k = k;
 		this.sparqlExec = sparqlExec;
+		this.metaSave = metaSave;
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class PathCreator {
 		}
 
 		// search for property combos
-		SearchAlgorithm propertyCombos = new PropertySearch(matrix, emodel);
+		PropertySearch propertyCombos = new MetaPathSearcher(matrix, emodel);
 		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, k, l, isLoopsAllowed, targetID);
 
 		return propertyPaths;
@@ -91,7 +91,7 @@ public class PathCreator {
 		ConcurrentMap<String, Set<Property>> metaPaths = new ConcurrentHashMap<String, Set<Property>>();
 		String endSignal = "stop";
 		BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
-		Thread writingThread = createAndRunWritingThread(endSignal, "metapaths.txt", queue);
+		Thread writingThread = createAndRunWritingThread(endSignal, this.metaSave+"_metapaths.txt", queue);
 
 		edges.parallelStream().forEach(edge -> {
 			LOGGER.info("Processing meta-path: " + edge);

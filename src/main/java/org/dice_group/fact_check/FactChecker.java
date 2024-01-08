@@ -16,14 +16,14 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.rdf.model.impl.StatementImpl;
 import org.apache.jena.vocabulary.RDF;
-import org.dice_group.fact_check.path.scorer.CubicMeanSummarist;
-import org.dice_group.fact_check.path.scorer.ScoreSummarist;
 import org.dice_group.path.Graph;
 import org.dice_group.path.property.Property;
 import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.PrintToFileUtils;
 import org.dice_group.util.QueryExecutioner;
 import org.dice_group.util.SparqlHelper;
+import org.dice_research.fc.sum.CubicMeanSummarist;
+import org.dice_research.fc.sum.ScoreSummarist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

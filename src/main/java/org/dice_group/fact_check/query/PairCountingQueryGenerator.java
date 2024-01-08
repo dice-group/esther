@@ -3,7 +3,6 @@ package org.dice_group.fact_check.query;
 import java.util.List;
 
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyHelper;
 
 public class PairCountingQueryGenerator implements QueryGenerator {
 

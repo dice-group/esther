@@ -87,9 +87,9 @@ public class DictionaryHelper {
 	public static Dictionary createDictionaryFromTSV(String filePath) {
 		LOGGER.info("Creating dictionary from TSV in: " + filePath);
 		Dictionary dictionary = new Dictionary();
-		try (Reader reader = new FileReader(filePath); CSVParser csvParser = new CSVParser(reader, CSVFormat.TDF)) {
+		try (Reader reader = new FileReader(filePath); CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT)) {
 			for (CSVRecord csvRecord : csvParser) {
-				String uri = csvRecord.get(0);
+				String uri = csvRecord.get(0).substring(1,csvRecord.get(0).length()-1);
 				dictionary.addRelation(uri);
 			}
 		} catch (IOException | NumberFormatException e) {

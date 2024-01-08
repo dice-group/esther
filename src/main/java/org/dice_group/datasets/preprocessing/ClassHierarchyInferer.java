@@ -8,19 +8,25 @@ import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.thrift.wire.RDF_StreamRow;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 
+/**
+ * Infers a class hierarchy for the instance data.
+ * If we have two types A and B and all instances of A are instances of B, A is a subclass of B.
+ * 
+ * @author Ana Silva
+ *
+ */
 public class ClassHierarchyInferer {
 
 	public static void main(String[] args) {
 		Model model = ModelFactory.createDefaultModel();
 		model.read(args[0]);
 		
+		// class hierarchy
 		Model subclassModel = ModelFactory.createDefaultModel();
 		
 		Map<RDFNode, Set<Resource>> map = new HashMap<RDFNode, Set<Resource>>();
@@ -51,6 +57,7 @@ public class ClassHierarchyInferer {
 			}
 		}
 		
+		// print model
 		System.out.println(subclassModel.size());
 		try (FileWriter out = new FileWriter(args[1])) {
 			subclassModel.write(out, "NT");

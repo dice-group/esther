@@ -26,7 +26,7 @@ public class RotatE extends BasicEmbModel {
 		// (r_1 * r_2 * ... * r_n) = phi_1 + ... + phi_n
 		else {
 			double[] inner = property.getInnerProduct() == null
-					? property.getBackPointer().getProperty().getInnerProduct()
+					? property.getBackPointer().getInnerProduct()
 					: property.getInnerProduct();
 			tempInner = isNewInverse ? ArrayUtils.computeVectorSubtraction(inner, newEdge)
 					: ArrayUtils.computeVectorSummation(inner, newEdge);

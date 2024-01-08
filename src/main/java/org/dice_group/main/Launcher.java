@@ -3,6 +3,7 @@ package org.dice_group.main;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.csv.CSVFormat;
 import org.dice_group.datasets.Dataset;
 import org.dice_group.datasets.Freebase;
 import org.dice_group.datasets.Wordnet;
@@ -52,7 +53,7 @@ public class Launcher {
 		// preprocess the meta-paths for all properties
 		LOGGER.info("Preprocessing meta-paths");
 		EmbeddingModel eModel = getModel(pArgs.eModel, pArgs.folderPath);
-		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k, sparqlExec);
+		PathCreator creator = new PathCreator(dict, eModel, matrix, pArgs.k, sparqlExec, pArgs.savePath);
 		FactChecker checker = new FactChecker(pArgs.facts, sparqlExec);
 		Map<String, Set<Property>> metaPaths = creator.getMultipleMetaPaths(checker.getExistingPropertiesFromFile(), pArgs.max_length, pArgs.isLoopsAllowed);
 		LogUtils.printTextToLog("Meta-paths generated in " + (System.currentTimeMillis()-startTime)/1000);
@@ -107,19 +108,23 @@ public class Launcher {
 		EmbeddingModel eModel = null;
 		switch (model) {
 		case Constants.ROTATE_STRING:
-			double[][] relations = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE);
+			double[][] relations = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE, CSVFormat.DEFAULT);
 			eModel = new RotatE(relations);
 			break;
 		case Constants.DENSE_STRING:
-			double[][] relW = CSVUtils.readCSVFile(folderPath + Constants.REL_W_FILE);
-			double[][] relX = CSVUtils.readCSVFile(folderPath + Constants.REL_X_FILE);
-			double[][] relY = CSVUtils.readCSVFile(folderPath + Constants.REL_Y_FILE);
-			double[][] relZ = CSVUtils.readCSVFile(folderPath + Constants.REL_Z_FILE);
+			double[][] relW = CSVUtils.readCSVFile(folderPath + Constants.REL_W_FILE, CSVFormat.DEFAULT);
+			double[][] relX = CSVUtils.readCSVFile(folderPath + Constants.REL_X_FILE, CSVFormat.DEFAULT);
+			double[][] relY = CSVUtils.readCSVFile(folderPath + Constants.REL_Y_FILE, CSVFormat.DEFAULT);
+			double[][] relZ = CSVUtils.readCSVFile(folderPath + Constants.REL_Z_FILE, CSVFormat.DEFAULT);
 			eModel = new DensE(relW, relX, relY, relZ);
 			break;
-		default:
-			double[][] relations2 = CSVUtils.readTSVFile(folderPath + Constants.REL_EMB_FILE);
+		case Constants.TRANSE_STRING:
+			double[][] relations2 = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE, CSVFormat.DEFAULT);
 			eModel = new TransE(relations2);
+			break;
+		default:
+			double[][] relations3 = CSVUtils.readCSVFile(folderPath + Constants.REL_EMB_FILE, CSVFormat.TDF);
+			eModel = new TransE(relations3);
 			break;
 		}
 		return eModel;
