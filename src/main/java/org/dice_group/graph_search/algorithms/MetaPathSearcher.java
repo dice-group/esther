@@ -12,55 +12,61 @@ import org.dice_group.path.property.Property;
 /**
  * Implementation for start, anchor and end nodes retrieval through the set bits
  * indices.
- * <p>
- * TODO: not ready yet
  * 
  * @author Alexandra Silva
  *
  */
 public class MetaPathSearcher extends PropertySearch {
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param matrix Adjacency matrix
+	 * @param eModel Embedding model
+	 */
 	public MetaPathSearcher(Matrix matrix, EmbeddingModel eModel) {
 		super(matrix, eModel);
 	}
 
-	/**
-	 * d_n(p_i⁻) = 1
-	 */
 	@Override
-	public Set<Integer> getIntermediateNodes(BitSet[] mat, int targetID, boolean isLoopAllowed, Property curProperty,
+	public Set<Integer> getIntermediateNodes(BitSet[] mat, boolean isLoopAllowed, Property curProperty,
 			int maxPathLength, Set<Integer> stopEdges) {
 		Set<Integer> intermediateEdges = new HashSet<>();
 		int offset = mat.length / 2;
-		Set<Integer> setBits = mat[matrix.getInverseID(curProperty.getEdge())].stream().boxed()
-				.collect(Collectors.toSet());
+		BitSet setBits = mat[matrix.getInverseID(curProperty.getEdge())];
 
-		for (int i : setBits) {
+		/**
+		 * intermediate properties get all the properties that have as domain, the range
+		 * of the previous property
+		 */
+		for (int i = 0; i < mat.length; i++) {
+			if (setBits.equals(mat[i])) {
 
-			// skip if we don't want cycles in our paths
-			if (!isLoopAllowed && curProperty.hasAncestor(i, offset)) {
-				continue;
+				// paths instead of walks
+				if (!isLoopAllowed && curProperty.hasAncestor(i, offset)) {
+					continue;
+				}
+
+				// don't add to queue if path length is exceeded
+				if (curProperty.getPathLength() > maxPathLength - 1) {
+					continue;
+				}
+
+				// don't add to queue if pathLength-1 and not in stop options
+				if (curProperty.getPathLength() == maxPathLength - 1 && !stopEdges.contains(matrix.getInverseID(i))) {
+					continue;
+				}
+
+				// add remainder to queue
+				intermediateEdges.add(i);
 			}
-
-			// don't add to queue if path length is exceeded
-			if (curProperty.getPathLength() > maxPathLength - 1) {
-				continue;
-			}
-
-			// don't add to queue if pathLength-1 and not in stop options
-			if (curProperty.getPathLength() == maxPathLength - 1 && !stopEdges.contains(matrix.getInverseID(i))) {
-				continue;
-			}
-
-			// add remainder to queue
-			intermediateEdges.add(matrix.getInverseID(i));
 		}
-		return intermediateEdges;
 
+		return intermediateEdges;
 	}
 
 	/**
-	 * d_n(P)=1
+	 * d_n(P)= 1
 	 */
 	@Override
 	public Set<Integer> getStartingEdges(BitSet[] mat, int targetID) {
@@ -71,7 +77,7 @@ public class MetaPathSearcher extends PropertySearch {
 	}
 
 	/**
-	 * d(P⁻)=1
+	 * d(P⁻) = 1
 	 */
 	@Override
 	public Set<Integer> getEndingEdges(BitSet[] mat, int targetID) {
