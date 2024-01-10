@@ -55,7 +55,7 @@ public abstract class PropertySearch implements SearchAlgorithm {
 		// iterate intermediate properties
 		while (!queue.isEmpty() && pathCount < k) {
 			Property curProperty = queue.poll();
-			
+
 			// skip if path is longer than desired
 			if (curProperty.getPathLength() > maxPathLength)
 				continue;
@@ -67,7 +67,7 @@ public abstract class PropertySearch implements SearchAlgorithm {
 			}
 
 			// Add intermediate nodes to half-baked paths
-			Set<Integer> intermediateNodes = getIntermediateNodes(mat, targetID, isLoopAllowed, curProperty,
+			Set<Integer> intermediateNodes = getIntermediateNodes(mat, isLoopAllowed, curProperty,
 					maxPathLength, stopEdges);
 			for (int curNodeID : intermediateNodes) {
 				boolean isInverse = curNodeID >= offset;
@@ -108,7 +108,6 @@ public abstract class PropertySearch implements SearchAlgorithm {
 	 * end edge in a path.
 	 * 
 	 * @param mat           Edge-adjacency matrix
-	 * @param targetID      Target predicate's ID
 	 * @param isLoopAllowed True if cycles are allowed in our paths
 	 * @param curProperty   The property we want to find a new connection for
 	 * @param stopEdges     The set of possible stop edges, the only possible edges
@@ -116,6 +115,6 @@ public abstract class PropertySearch implements SearchAlgorithm {
 	 * @param maxPathLength Maximum path length
 	 * @return
 	 */
-	public abstract Set<Integer> getIntermediateNodes(BitSet[] mat, int targetID, boolean isLoopAllowed,
-			Property curProperty, int maxPathLength, Set<Integer> stopEdges);
+	public abstract Set<Integer> getIntermediateNodes(BitSet[] mat, boolean isLoopAllowed, Property curProperty,
+			int maxPathLength, Set<Integer> stopEdges);
 }

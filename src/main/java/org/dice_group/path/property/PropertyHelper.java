@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 public class PropertyHelper {
-	
+
 	public static StringBuilder getPropertyPath(List<Property> pathProperties, String[] propURIs) {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < pathProperties.size(); i++) {
-			if(pathProperties.get(i).isInverse()) {
+			if (pathProperties.get(i).isInverse()) {
 				builder.append("^");
-			} 
+			}
 			builder.append("<").append(propURIs[i]).append(">");
 			if (i + 1 < pathProperties.size())
 				builder.append("/");
@@ -18,10 +18,8 @@ public class PropertyHelper {
 		return builder;
 	}
 
-
 	/**
-	 * Translates the path of ids into the corresponding IRIs
-	 *TODO to be deleted
+	 * Translates the path of ids into the corresponding IRIs TODO to be deleted
 	 * 
 	 * @param property
 	 * @param id2rel
@@ -43,7 +41,7 @@ public class PropertyHelper {
 		}
 		return builder.toString();
 	}
-	
+
 	/**
 	 * Translates the path of ids into the corresponding IRIs
 	 * 
@@ -107,4 +105,7 @@ public class PropertyHelper {
 		return builder.toString();
 	}
 
+	public static int getInverseID(int edge, int offset) {
+		return edge >= offset ? edge - offset : edge + offset;
+	}
 }

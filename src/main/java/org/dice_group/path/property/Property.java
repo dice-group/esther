@@ -7,7 +7,7 @@ import java.util.List;
 import com.jme3.math.Quaternion;
 
 /**
- * Represents a path
+ * Represents a property path with intermediate score calculations
  *
  */
 public class Property implements Comparable<Property> {
@@ -43,6 +43,8 @@ public class Property implements Comparable<Property> {
 	 * score = heuristics + path length
 	 */
 	private double fullCost;
+	
+	private double pathWeight = 1.0;
 
 	/**
 	 * calculated depending on the embeddings model
@@ -58,14 +60,11 @@ public class Property implements Comparable<Property> {
 		this.edge = edge;
 		backPointer = null;
 		this.pathLength = 1;
-		this.fullCost = pathLength;
+		this.fullCost = pathWeight*pathLength;
 	}
 
 	public Property(int edge, boolean isInverse) {
-		this.edge = edge;
-		backPointer = null;
-		this.pathLength = 1;
-		this.fullCost = pathLength;
+		this(edge);
 		this.isInverse = isInverse;
 	}
 
@@ -74,7 +73,7 @@ public class Property implements Comparable<Property> {
 		this.backPointer = backPointer;
 		this.pathLength = backPointer.getPathLength() + 1;
 		this.heuristics = heuristics;
-		this.fullCost = heuristics + pathLength;
+		this.fullCost = heuristics + pathWeight*pathLength;
 		this.isInverse = isInverse;
 	}
 
@@ -82,7 +81,7 @@ public class Property implements Comparable<Property> {
 		this.edge = edge;
 		this.backPointer = backPointer;
 		this.pathLength = backPointer.getPathLength() + 1;
-		this.fullCost = pathLength;
+		this.fullCost = pathWeight*pathLength;
 		this.isInverse = isInverse;
 	}
 
@@ -109,7 +108,7 @@ public class Property implements Comparable<Property> {
 	 * @param score
 	 */
 	public void updateCost(double score) {
-		this.fullCost = score + pathLength;
+		this.fullCost = score + pathWeight*pathLength;
 		this.heuristics = score;
 	}
 
@@ -176,32 +175,33 @@ public class Property implements Comparable<Property> {
 	 *         direction)
 	 */
 	public boolean hasAncestor(int edge, int offset) {
+		
+		// if immediate prior is the same
 		if (isEdgeConsecutive(edge, offset)) {
 			return true;
 		}
+		
+		// if there is no backpointer yet, it can't have seen any edge
 		Property temp = this.backPointer;
 		if (temp == null)
 			return false;
 
+		// iterate hierarchy
 		while (temp != null) {
 			Property curProp = temp;
 			if (curProp.isEdgeConsecutive(edge, offset)) {
 				return true;
 			}
-			temp = curProp;
+			temp = curProp.getBackPointer();
 		}
 		return false;
 	}
 
 	public boolean isEdgeConsecutive(int edge, int offset) {
-		if (this.edge == edge || this.edge == getInverseID(edge, offset)) {
+		if (this.edge == edge || this.edge == PropertyHelper.getInverseID(edge, offset)) {
 			return true;
 		}
 		return false;
-	}
-
-	public int getInverseID(int edge, int offset) {
-		return edge >= offset ? edge - offset : edge + offset;
 	}
 
 	public double[] getInnerProduct() {
