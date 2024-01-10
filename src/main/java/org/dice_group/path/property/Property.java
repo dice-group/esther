@@ -43,7 +43,7 @@ public class Property implements Comparable<Property> {
 	 * score = heuristics + path length
 	 */
 	private double fullCost;
-	
+
 	private double pathWeight = 1.0;
 
 	/**
