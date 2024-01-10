@@ -14,7 +14,7 @@ Create a class that extends [EmbeddingModel](https://github.com/dice-group/esthe
 
 ### Running ESTHER
 
-ESTHER was developed using Java 11.
+ESTHER was developed using Java 17.
 
 You can run ESTHER with maven's exec plugin :
 
