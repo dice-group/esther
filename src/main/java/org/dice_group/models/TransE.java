@@ -28,7 +28,7 @@ public class TransE extends BasicEmbModel {
 			tempInner = isNewInverse ? ArrayUtils.flipSignArray(newEdge) : newEdge;
 		} else {
 			double[] inner = property.getInnerProduct() == null
-					? property.getBackPointer().getProperty().getInnerProduct()
+					? property.getBackPointer().getInnerProduct()
 					: property.getInnerProduct();
 			tempInner = isNewInverse ? ArrayUtils.computeVectorSubtraction(inner, newEdge)
 					: ArrayUtils.computeVectorSummation(inner, newEdge);

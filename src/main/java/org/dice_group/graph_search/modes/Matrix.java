@@ -11,12 +11,28 @@ import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.util.QueryExecutioner;
 import org.dice_group.util.SparqlHelper;
 
+/**
+ * Determines the default behaviour of how the edge adjacency matrix should be
+ * populated
+ * 
+ * @author Alexandra Silva
+ *
+ */
 public abstract class Matrix implements MatrixInterface {
 
+	/**
+	 * Edge adjacency matrix
+	 */
 	protected BitSet[] edgeAdjMatrix;
 
+	/**
+	 * Relations ID and URI dictionary
+	 */
 	protected Dictionary dictionary;
 
+	/**
+	 * SPARQL Query executioner
+	 */
 	protected QueryExecutioner sparqlExec;
 
 	public Matrix() {

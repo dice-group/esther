@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.dice_group.path.property.Property;
-import org.dice_group.path.property.PropertyBackPointer;
 import org.dice_group.path.property.PropertyHelper;
 import org.dice_group.util.QueryExecutioner;
 import org.junit.Test;
@@ -25,11 +24,11 @@ public class QueryGeneratorTest {
 		Set<Property> paths = new HashSet<Property>();
 		
 		Property singleProp = new Property(0); // 0
-		Property property2 = new Property(1, new PropertyBackPointer(singleProp), false); // 0 - 1
-		Property property3 = new Property(2, new PropertyBackPointer(property2), false);  // 0 - 1 - 2
-		Property property4 = new Property(3, new PropertyBackPointer(property3), false);  // 0 - 1 - 2 - 3
-		Property property5 = new Property(4+6, new PropertyBackPointer(property4), true); // 0 - 1 - 2 - 3 - 4⁻¹(10)
-		Property property6 = new Property(5, new PropertyBackPointer(property5), false);  // 0 - 1 - 2 - 3 - 4⁻¹(10) - 5
+		Property property2 = new Property(1, singleProp, false); // 0 - 1
+		Property property3 = new Property(2, property2, false);  // 0 - 1 - 2
+		Property property4 = new Property(3, property3, false);  // 0 - 1 - 2 - 3
+		Property property5 = new Property(4+6, property4, true); // 0 - 1 - 2 - 3 - 4⁻¹(10)
+		Property property6 = new Property(5, property5, false);  // 0 - 1 - 2 - 3 - 4⁻¹(10) - 5
 
 		paths.add(singleProp);
 		paths.add(property2);

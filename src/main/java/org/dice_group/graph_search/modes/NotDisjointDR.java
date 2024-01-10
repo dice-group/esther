@@ -14,6 +14,7 @@ import org.dice_group.util.QueryExecutioner;
 public class NotDisjointDR extends Matrix {
 	
 	public NotDisjointDR() {
+		// TODO Auto-generated constructor stub
 	}
 	
 	public NotDisjointDR(QueryExecutioner sparqlExec, Dictionary dictionary) {

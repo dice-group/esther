@@ -1,15 +1,16 @@
 package org.dice_group.path;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -17,8 +18,8 @@ import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.dice_group.embeddings.dictionary.Dictionary;
 import org.dice_group.fact_check.path.scorer.NPMICalculator;
 import org.dice_group.fact_check.path.scorer.OccurrencesCounter;
+import org.dice_group.graph_search.algorithms.MetaPathSearcher;
 import org.dice_group.graph_search.algorithms.PropertySearch;
-import org.dice_group.graph_search.algorithms.SearchAlgorithm;
 import org.dice_group.graph_search.modes.Matrix;
 import org.dice_group.models.EmbeddingModel;
 import org.dice_group.path.property.Property;
@@ -39,17 +40,19 @@ public class PathCreator {
 	private Matrix matrix;
 
 	private int k;
-	
+
 	private QueryExecutioner sparqlExec;
 	
-	private static final int MAX_THREADS = 16;
+	private String metaSave;
 
-	public PathCreator(Dictionary dictionary, EmbeddingModel emodel, Matrix matrix, int k, QueryExecutioner sparqlExec) {
+	public PathCreator(Dictionary dictionary, EmbeddingModel emodel, Matrix matrix, int k,
+			QueryExecutioner sparqlExec, String metaSave) {
 		this.dictionary = dictionary;
 		this.emodel = emodel;
 		this.matrix = matrix;
 		this.k = k;
 		this.sparqlExec = sparqlExec;
+		this.metaSave = metaSave;
 	}
 
 	/**
@@ -70,7 +73,7 @@ public class PathCreator {
 		}
 
 		// search for property combos
-		SearchAlgorithm propertyCombos = new PropertySearch(matrix, emodel);
+		PropertySearch propertyCombos = new MetaPathSearcher(matrix, emodel);
 		Set<Property> propertyPaths = propertyCombos.findPaths(edgeID, k, l, isLoopsAllowed, targetID);
 
 		return propertyPaths;
@@ -81,17 +84,22 @@ public class PathCreator {
 	 * 
 	 * @param edges
 	 * @return the edge to paths found map
+	 * @throws InterruptedException 
 	 */
 	public Map<String, Set<Property>> getMultipleMetaPaths(Set<String> edges, int l, boolean isLoopsAllowed) {
 		Map<String, Integer> rel2ID = dictionary.getRelations2ID();
 		ConcurrentMap<String, Set<Property>> metaPaths = new ConcurrentHashMap<String, Set<Property>>();
-		StringBuffer buffer = new StringBuffer();
+		String endSignal = "stop";
+		BlockingQueue<String> queue = new LinkedBlockingQueue<String>();
+		Thread writingThread = createAndRunWritingThread(endSignal, this.metaSave+"_metapaths.txt", queue);
+
 		edges.parallelStream().forEach(edge -> {
-			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed, rel2ID.get(edge));
 			LOGGER.info("Processing meta-path: " + edge);
+			Set<Property> propertyPaths = getMetaPaths(edge, l, isLoopsAllowed, rel2ID.get(edge));
+			
 			// calculate pnpmi for each meta-path
 			org.apache.jena.rdf.model.Property edgeProp = ResourceFactory.createProperty(edge);
-			
+
 			OccurrencesCounter c = new OccurrencesCounter(edgeProp, sparqlExec, false);
 			for (Property path : propertyPaths) {
 				if (c.getSubjectTypes().isEmpty() || c.getObjectTypes().isEmpty()) {
@@ -105,14 +113,53 @@ public class PathCreator {
 					e.printStackTrace();
 				}
 			}
-			
+
 			metaPaths.put(edge, propertyPaths);
-			LOGGER.info(metaPaths.size()+" - Processed meta-path: " + edge);
-			buffer.append("\nPredicate:").append("\t").append(edge);
-			addPrintableMetaPaths(buffer, propertyPaths);
+			LOGGER.info(metaPaths.size() + " - Processed meta-path: " + edge);
+			StringBuilder builder = new StringBuilder();
+			builder.append("\nPredicate:").append("\t").append(edge);
+			addPrintableMetaPaths(builder, propertyPaths);
+			try {
+				queue.put(builder.toString());
+			} catch (InterruptedException e) {
+				// just skip it if something goes wrong
+				return;
+			}
 		});
-		print(buffer.toString());
+		
+		// wait for the thread to finish
+		try {
+			queue.put(endSignal);
+			writingThread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		return metaPaths;
+	}
+
+	/**
+	 * Creates a thread on an infinite loop responsible for writing the results to
+	 * file until an endSignal is received.
+	 * 
+	 * @param endSignal String to signal the thread to stop
+	 * @return
+	 */
+	public Thread createAndRunWritingThread(String endSignal, String destinationPath, BlockingQueue<String> queue) {
+		Thread consumerThread = new Thread(() -> {
+			try (FileWriter fileWriter = new FileWriter(destinationPath, true)) {
+				while (true) {
+					String message = queue.take();
+					if (message.equals(endSignal)) {
+						break;
+					}
+					fileWriter.write(message + "\n");
+				}
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+		consumerThread.start();
+		return consumerThread;
 	}
 
 	public EmbeddingModel getEmodel() {
@@ -131,7 +178,7 @@ public class PathCreator {
 		this.dictionary = dictionary;
 	}
 
-	public void addPrintableMetaPaths(StringBuffer builder, Set<Property> propertyPaths) {
+	public void addPrintableMetaPaths(StringBuilder builder, Set<Property> propertyPaths) {
 		List<Property> result = propertyPaths.stream()
 				.sorted(Comparator.comparingDouble(Property::getPathLength).thenComparing(Property::getPathCost))
 				.collect(Collectors.toList());

@@ -23,7 +23,7 @@
 		<repository>
 			<id>lhogie.i3s.maven.repo</id>
 			<name>Luc Hogie Maven repository</name>
-			<url>http://www.i3s.unice.fr/~hogie/maven_repository/</url>
+			<url>https://www.i3s.unice.fr/~hogie/maven_repository/</url>
 		</repository>
 		<repository>
 			<id>maven.aksw.internal</id>
@@ -42,6 +42,12 @@
 	</repositories>
 
 	<dependencies>
+		<!-- COPAAL -->
+		<dependency>
+			<groupId>org.dice.FactCheck</groupId>
+			<artifactId>Corraborative</artifactId>
+			<version>0.2.0</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-stable -->
 		<dependency>
 			<groupId>nz.ac.waikato.cms.weka</groupId>
@@ -112,7 +118,7 @@
 		<dependency>
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
-			<version>5.2</version>
+			<version>5.5</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.beust/jcommander -->
 		<dependency>

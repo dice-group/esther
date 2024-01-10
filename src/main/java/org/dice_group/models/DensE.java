@@ -22,7 +22,7 @@ public class DensE extends QuatEmbeddingModel {
 			innerQuat = isNewInverse ? ArrayUtils.getInverseQuat(newQuatEdge) : newQuatEdge;
 		} else {
 			Quaternion[] inner = property.getInnerQuatProduct() == null
-					? property.getBackPointer().getProperty().getInnerQuatProduct()
+					? property.getBackPointer().getInnerQuatProduct()
 					: property.getInnerQuatProduct();
 			if (isNewInverse) {
 				innerQuat = ArrayUtils.computeHamiltonProduct(newQuatEdge, inner);

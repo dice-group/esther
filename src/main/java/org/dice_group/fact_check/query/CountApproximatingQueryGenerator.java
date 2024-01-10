@@ -7,7 +7,6 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.vocabulary.RDFS;
 import org.dice_group.path.property.Property;
 import org.dice_group.util.QueryExecutioner;
-import org.dice_group.util.SparqlHelper;
 
 public class CountApproximatingQueryGenerator implements QueryGenerator {
 

@@ -3,59 +3,50 @@ package org.dice_group.embeddings.dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Relation Dictionary
+ * 
+ * @author Ana Silva
+ *
+ */
 public class Dictionary {
 
-	private Map<String, Integer> entities2ID;
+	// Relation String to an Integer ID
 	private Map<String, Integer> relations2ID;
 
-	private Map<Integer, String> id2Entities;
+	// Relation ID to the String relation
 	private Map<Integer, String> id2Relations;
 
-	private int entCount;
-	private int relCount;
-
+	/**
+	 * Empty constructor.
+	 */
 	public Dictionary() {
-		entities2ID = new HashMap<String, Integer>();
 		relations2ID = new HashMap<String, Integer>();
-
-		id2Entities = new HashMap<Integer, String>();
 		id2Relations = new HashMap<Integer, String>();
 	}
 
-	public Dictionary(Map<String, Integer> entities2id, Map<String, Integer> relations2id,
-			Map<Integer, String> id2Entities, Map<Integer, String> id2Relations) {
-		this.entities2ID = entities2id;
+	/**
+	 * Constructor.
+	 * 
+	 * @param relations2id Relation Strings to Integer IDs
+	 * @param id2Relations Relation IDs to String relations
+	 */
+	public Dictionary(Map<String, Integer> relations2id, Map<Integer, String> id2Relations) {
 		this.relations2ID = relations2id;
-
-		this.id2Entities = id2Entities;
 		this.id2Relations = id2Relations;
-
-		this.entCount = id2Entities.size();
-		this.relCount = id2Relations.size();
 	}
 	
-	public void addEntity(String entToBeAdded) {
-		if(!entities2ID.containsKey(entToBeAdded)) {
-			entities2ID.put(entToBeAdded, entCount);
-			id2Entities.put(entCount, entToBeAdded);
-			entCount++;
-		}
-	}
-	
+	/**
+	 * Adds relation to the maps
+	 * 
+	 * @param relToBeAdded
+	 */
 	public void addRelation(String relToBeAdded) {
+		int relCount = id2Relations.size();
 		if(!relations2ID.containsKey(relToBeAdded)) {
 			relations2ID.put(relToBeAdded, relCount);
 			id2Relations.put(relCount, relToBeAdded);
-			relCount++;
 		}
-	}
-
-	public Map<String, Integer> getEntities2ID() {
-		return entities2ID;
-	}
-
-	public void setEntities2ID(Map<String, Integer> entities2id) {
-		entities2ID = entities2id;
 	}
 
 	public Map<String, Integer> getRelations2ID() {
@@ -66,14 +57,6 @@ public class Dictionary {
 		relations2ID = relations2id;
 	}
 
-	public Map<Integer, String> getId2Entities() {
-		return id2Entities;
-	}
-
-	public void setId2Entities(Map<Integer, String> id2Entities) {
-		this.id2Entities = id2Entities;
-	}
-
 	public Map<Integer, String> getId2Relations() {
 		return id2Relations;
 	}
@@ -82,20 +65,12 @@ public class Dictionary {
 		this.id2Relations = id2Relations;
 	}
 
-	public int getEntCount() {
-		return entCount;
-	}
-
-	public void setEntCount(int entCount) {
-		this.entCount = entCount;
-	}
-
+	/**
+	 * 
+	 * @return Number of relations in the dictionary
+	 */
 	public int getRelCount() {
-		return relCount;
-	}
-
-	public void setRelCount(int relCount) {
-		this.relCount = relCount;
+		return id2Relations.size();
 	}
 
 }

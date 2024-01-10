@@ -6,9 +6,8 @@ import java.util.List;
 
 import com.jme3.math.Quaternion;
 
-
 /**
- * Represents a path
+ * Represents a property path with intermediate score calculations
  *
  */
 public class Property implements Comparable<Property> {
@@ -19,11 +18,13 @@ public class Property implements Comparable<Property> {
 	private int edge;
 
 	/**
-	 * back tracker in the hierarchy TODO: might not be necessary to encase in
-	 * another class anymore
+	 * back tracker in the hierarchy
 	 */
-	private PropertyBackPointer backPointer;
+	private Property backPointer;
 
+	/**
+	 * Path Length
+	 */
 	private int pathLength;
 
 	/**
@@ -43,6 +44,8 @@ public class Property implements Comparable<Property> {
 	 */
 	private double fullCost;
 
+	private double pathWeight = 1.0;
+
 	/**
 	 * calculated depending on the embeddings model
 	 */
@@ -57,31 +60,28 @@ public class Property implements Comparable<Property> {
 		this.edge = edge;
 		backPointer = null;
 		this.pathLength = 1;
-		this.fullCost = pathLength;
+		this.fullCost = pathWeight*pathLength;
 	}
 
 	public Property(int edge, boolean isInverse) {
-		this.edge = edge;
-		backPointer = null;
-		this.pathLength = 1;
-		this.fullCost = pathLength;
+		this(edge);
 		this.isInverse = isInverse;
 	}
 
-	public Property(int edge, PropertyBackPointer backPointer, double heuristics, boolean isInverse) {
+	public Property(int edge, Property backPointer, double heuristics, boolean isInverse) {
 		this.edge = edge;
 		this.backPointer = backPointer;
-		this.pathLength = backPointer.getProperty().getPathLength() + 1;
+		this.pathLength = backPointer.getPathLength() + 1;
 		this.heuristics = heuristics;
-		this.fullCost = heuristics + pathLength;
+		this.fullCost = heuristics + pathWeight*pathLength;
 		this.isInverse = isInverse;
 	}
 
-	public Property(int edge, PropertyBackPointer backPointer, boolean isInverse) {
+	public Property(int edge, Property backPointer, boolean isInverse) {
 		this.edge = edge;
 		this.backPointer = backPointer;
-		this.pathLength = backPointer.getProperty().getPathLength() + 1;
-		this.fullCost = pathLength;
+		this.pathLength = backPointer.getPathLength() + 1;
+		this.fullCost = pathWeight*pathLength;
 		this.isInverse = isInverse;
 	}
 
@@ -97,8 +97,7 @@ public class Property implements Comparable<Property> {
 		this.fullCost = property.getPathCost();
 		this.isInverse = property.isInverse();
 		this.pathNpmi = property.getPathNPMI();
-		this.backPointer = property.getBackPointer() == null ? null
-				: new PropertyBackPointer(property.getBackPointer());
+		this.backPointer = property.getBackPointer();
 		this.innerProduct = property.getInnerProduct() == null ? null
 				: Arrays.copyOf(property.getInnerProduct(), property.getInnerProduct().length);
 	}
@@ -109,7 +108,7 @@ public class Property implements Comparable<Property> {
 	 * @param score
 	 */
 	public void updateCost(double score) {
-		this.fullCost = score + pathLength;
+		this.fullCost = score + pathWeight*pathLength;
 		this.heuristics = score;
 	}
 
@@ -122,10 +121,10 @@ public class Property implements Comparable<Property> {
 		List<Integer> list = new ArrayList<Integer>();
 		list.add(this.edge);
 		if (this.backPointer != null) {
-			PropertyBackPointer temp = this.backPointer;
+			Property temp = this.backPointer;
 			while (temp != null) {
-				list.add(0, temp.getProperty().getEdge());
-				temp = temp.getProperty().getBackPointer();
+				list.add(0, temp.getEdge());
+				temp = temp.getBackPointer();
 			}
 		}
 		return list;
@@ -141,11 +140,11 @@ public class Property implements Comparable<Property> {
 		int edge = this.isInverse ? -this.edge : this.edge;
 		list.add(edge);
 		if (this.backPointer != null) {
-			PropertyBackPointer temp = this.backPointer;
+			Property temp = this.backPointer;
 			while (temp != null) {
-				int tEdge = temp.getProperty().isInverse ? -temp.getProperty().getEdge() : temp.getProperty().getEdge();
+				int tEdge = temp.isInverse ? -temp.getEdge() : temp.getEdge();
 				list.add(0, tEdge);
-				temp = temp.getProperty().getBackPointer();
+				temp = temp.getBackPointer();
 			}
 		}
 		return list;
@@ -159,10 +158,10 @@ public class Property implements Comparable<Property> {
 		List<Property> list = new ArrayList<Property>();
 		list.add(this);
 		if (this.backPointer != null) {
-			PropertyBackPointer temp = this.backPointer;
+			Property temp = this.backPointer;
 			while (temp != null) {
-				list.add(0, temp.getProperty());
-				temp = temp.getProperty().getBackPointer();
+				list.add(0, temp);
+				temp = temp.getBackPointer();
 			}
 		}
 		return list;
@@ -176,15 +175,20 @@ public class Property implements Comparable<Property> {
 	 *         direction)
 	 */
 	public boolean hasAncestor(int edge, int offset) {
+		
+		// if immediate prior is the same
 		if (isEdgeConsecutive(edge, offset)) {
 			return true;
 		}
-		PropertyBackPointer temp = this.backPointer;
+		
+		// if there is no backpointer yet, it can't have seen any edge
+		Property temp = this.backPointer;
 		if (temp == null)
 			return false;
 
+		// iterate hierarchy
 		while (temp != null) {
-			Property curProp = temp.getProperty();
+			Property curProp = temp;
 			if (curProp.isEdgeConsecutive(edge, offset)) {
 				return true;
 			}
@@ -194,14 +198,10 @@ public class Property implements Comparable<Property> {
 	}
 
 	public boolean isEdgeConsecutive(int edge, int offset) {
-		if (this.edge == edge || this.edge == getInverseID(edge, offset)) {
+		if (this.edge == edge || this.edge == PropertyHelper.getInverseID(edge, offset)) {
 			return true;
 		}
 		return false;
-	}
-
-	public int getInverseID(int edge, int offset) {
-		return edge >= offset ? edge - offset : edge + offset;
 	}
 
 	public double[] getInnerProduct() {
@@ -236,11 +236,11 @@ public class Property implements Comparable<Property> {
 		this.edge = edge;
 	}
 
-	public PropertyBackPointer getBackPointer() {
+	public Property getBackPointer() {
 		return backPointer;
 	}
 
-	public void setBackPointer(PropertyBackPointer backPointer) {
+	public void setBackPointer(Property backPointer) {
 		this.backPointer = backPointer;
 	}
 
